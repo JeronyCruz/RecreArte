@@ -1,3 +1,12 @@
 package edu.ucne.recrearte.presentation.navigation
 
-sealed class Screen {}
+import kotlinx.serialization.Serializable
+
+sealed class Screen {
+    @Serializable
+    data object Home: Screen()
+    @Serializable
+    data object PaymentMethodList: Screen()
+    @Serializable
+    data class PaymentMethodScreen(val id: Int): Screen()
+}
