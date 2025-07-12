@@ -25,6 +25,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,11 +74,11 @@ fun TechniqueScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         TechniqueBodyScreen(
             modifier = Modifier.padding(padding),
@@ -101,13 +102,26 @@ fun TechniqueBodyScreen(
         modifier = modifier
             .padding(16.dp)
     ) {
+        val uiState = viewModel.uiSate.collectAsState().value
+
         OutlinedTextField(
             value = uiState.techniqueName,
-            onValueChange = { viewModel.onEvent(TechniqueEvent.NameChange(it)) },
+            onValueChange = {
+                viewModel.onEvent(TechniqueEvent.NameChange(it))
+            },
             label = { Text("Name Technique") },
+            isError = uiState.errorMessage != null,
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+
+        if (uiState.errorMessage != null) {
+            Text(
+                text = uiState.errorMessage ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -137,7 +151,6 @@ fun TechniqueBodyScreen(
                     } else {
                         viewModel.onEvent(TechniqueEvent.UpdateTechnique(techniqueId))
                     }
-                    goBack()
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
@@ -149,6 +162,13 @@ fun TechniqueBodyScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Save")
             }
+
+            LaunchedEffect(uiState.isSuccess) {
+                if (uiState.isSuccess) {
+                    goBack
+                }
+            }
+
         }
     }
 }

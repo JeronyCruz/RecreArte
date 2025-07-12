@@ -85,6 +85,13 @@ class PaymentMethodViewModel @Inject constructor(
     }
 
     private fun createPaymentMethod(){
+        val name = _uiState.value.paymentMethodName.trim()
+        val validationError = isValidPaymentMethodName(name)
+
+        if (validationError != null) {
+            _uiState.value = _uiState.value.copy(errorMessage = validationError)
+            return
+        }
         viewModelScope.launch {
             try {
                 val method = PaymentMethodsDto(
@@ -106,6 +113,13 @@ class PaymentMethodViewModel @Inject constructor(
     }
 //revisar
     private fun updatePaymentMethod(id: Int){
+        val name = _uiState.value.paymentMethodName.trim()
+        val validationError = isValidPaymentMethodName(name)
+
+        if (validationError != null) {
+            _uiState.value = _uiState.value.copy(errorMessage = validationError)
+            return
+        }
         viewModelScope.launch {
             try {
                 val method = PaymentMethodsDto(
@@ -188,5 +202,18 @@ class PaymentMethodViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun isValidPaymentMethodName(name: String): String? {
+        if (name.isBlank()) {
+            return "The name cannot be empty."
+        }
+
+        val regex = Regex("^[a-zA-Z0-9\\sáéíóúÁÉÍÓÚñÑüÜ.-]*$")
+        if (!regex.matches(name)) {
+            return "The name contains illegal characters."
+        }
+
+        return null
     }
 }

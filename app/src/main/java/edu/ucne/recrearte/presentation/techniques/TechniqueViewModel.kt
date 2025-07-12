@@ -44,7 +44,7 @@ class TechniqueViewModel @Inject constructor(
         }
     }
     init {
-
+        getTechniques()
         //Para la busqueda
         viewModelScope.launch {
             _searchQuery
@@ -76,7 +76,10 @@ class TechniqueViewModel @Inject constructor(
 
     private fun nameOnChange(name: String){
         _uiState.value = _uiState.value
-            .copy(techniqueName = name)
+            .copy(
+                techniqueName = name,
+                errorMessage = null
+            )
     }
 
     private fun techniqueIdOnChange(id: Int){
@@ -85,6 +88,13 @@ class TechniqueViewModel @Inject constructor(
     }
 
     private fun createPaymentMethod(){
+        val name = _uiState.value.techniqueName.trim()
+        val validationError = isValidTechniqueName(name)
+
+        if (validationError != null) {
+            _uiState.value = _uiState.value.copy(errorMessage = validationError)
+            return
+        }
         viewModelScope.launch {
             try {
                 val method = TechniquesDto(
@@ -106,6 +116,14 @@ class TechniqueViewModel @Inject constructor(
     }
     //revisar
     private fun updateTechnique(id: Int){
+        val name = _uiState.value.techniqueName.trim()
+        val validationError = isValidTechniqueName(name)
+
+        if (validationError != null) {
+            _uiState.value = _uiState.value.copy(errorMessage = validationError)
+            return
+        }
+
         viewModelScope.launch {
             try {
                 val method = TechniquesDto(
@@ -117,7 +135,7 @@ class TechniqueViewModel @Inject constructor(
                     isSuccess = true,
                     successMessage = "Technique updated successfully"
                 )
-               // onEvent(PaymentMethodEvent.GetPaymentMethods)
+               onEvent(TechniqueEvent.GetTechniques)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = "Error updating: ${e.message}")
             }
@@ -154,7 +172,7 @@ class TechniqueViewModel @Inject constructor(
                     isSuccess = true,
                     successMessage = "Technique successfully removed"
                 )
-                //onEvent(PaymentMethodEvent.GetPaymentMethods)
+                onEvent(TechniqueEvent.GetTechniques)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
             }
@@ -189,4 +207,18 @@ class TechniqueViewModel @Inject constructor(
             }
         }
     }
+
+    private fun isValidTechniqueName(name: String): String? {
+        if (name.isBlank()) {
+            return "The name cannot be empty."
+        }
+
+        val regex = Regex("^[a-zA-Z0-9\\sáéíóúÁÉÍÓÚñÑüÜ.-]*$")
+        if (!regex.matches(name)) {
+            return "The name contains illegal characters."
+        }
+
+        return null
+    }
+
 }

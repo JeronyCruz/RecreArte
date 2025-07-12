@@ -25,6 +25,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,12 +101,25 @@ fun PaymentMethodBodyScreen(
         modifier = modifier
             .padding(16.dp)
     ) {
+        val uiState = viewModel.uiSate.collectAsState().value
+
         OutlinedTextField(
             value = uiState.paymentMethodName,
-            onValueChange = { viewModel.onEvent(PaymentMethodEvent.NameChange(it)) },
-            label = { Text("Payment Method Name") },
+            onValueChange = {
+                viewModel.onEvent(PaymentMethodEvent.NameChange(it))
+            },
+            label = { Text("Nombre de la técnica") },
+            isError = uiState.errorMessage != null,
             modifier = Modifier.fillMaxWidth()
         )
+
+        if (uiState.errorMessage != null) {
+            Text(
+                text = uiState.errorMessage ?: "",
+                color = Color.Red,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -135,7 +149,6 @@ fun PaymentMethodBodyScreen(
                     } else {
                         viewModel.onEvent(PaymentMethodEvent.UpdatePaymentMethod(paymentMethodId))
                     }
-                    goBack()
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
@@ -146,6 +159,12 @@ fun PaymentMethodBodyScreen(
                 Icon(Icons.Default.Add, contentDescription = "Save")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Save")
+            }
+
+            LaunchedEffect(uiState.isSuccess) {
+                if (uiState.isSuccess) {
+                    goBack
+                }
             }
         }
     }
