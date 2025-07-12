@@ -17,6 +17,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,6 +29,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,21 +54,29 @@ fun PaymentMethodScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (paymentMethodId != null) "Editar Método de Pago" else "Crear Método de Pago",
-                        color = Color.White
+                        text = if (paymentMethodId != null) "Update Payment Method" else "Create Payment Method",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = goBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Go back",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Blue
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         PaymentMethodBodyScreen(
             modifier = Modifier.padding(padding),
@@ -92,7 +103,7 @@ fun PaymentMethodBodyScreen(
         OutlinedTextField(
             value = uiState.paymentMethodName,
             onValueChange = { viewModel.onEvent(PaymentMethodEvent.NameChange(it)) },
-            label = { Text("Nombre del Método de Pago") },
+            label = { Text("Payment Method Name") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -108,13 +119,13 @@ fun PaymentMethodBodyScreen(
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Gray,
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = "Limpiar")
+                Icon(Icons.Default.Refresh, contentDescription = "Clear")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Limpiar")
+                Text("Clear")
             }
 
             Button(
@@ -128,13 +139,13 @@ fun PaymentMethodBodyScreen(
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue,
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.tertiary
                 )
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Guardar")
+                Icon(Icons.Default.Add, contentDescription = "Save")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Guardar")
+                Text("Save")
             }
         }
     }

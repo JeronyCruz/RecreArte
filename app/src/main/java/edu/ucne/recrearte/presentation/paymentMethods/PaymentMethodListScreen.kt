@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -94,16 +95,16 @@ fun PaymentMethodListScreen(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Confirmar eliminación") },
-            text = { Text("¿Estás seguro de eliminar el método de pago ${methodToDelete?.paymentMethodName}?") },
+            title = { Text("Confirm deletion") },
+            text = { Text("Are you sure you want to delete the payment method ${methodToDelete?.paymentMethodName}?") },
             confirmButton = {
                 TextButton(onClick = onDeleteConfirmed) {
-                    Text("Eliminar", color = Color.Red)
+                    Text("Delete", color = Color.Red)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text("Cancelar")
+                    Text("Cancel")
                 }
             }
         )
@@ -150,16 +151,18 @@ fun PaymentMethodListBodyScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Métodos de Pago",
+                        text = " Payment Methods ",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Blue,
-                    actionIconContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    actionIconContentColor = MaterialTheme.colorScheme.surface
                 ),
                 actions = {
                     IconButton(
@@ -169,7 +172,7 @@ fun PaymentMethodListBodyScreen(
                         Icon(
                             imageVector = Icons.Filled.Refresh,
                             contentDescription = "Refresh",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -179,10 +182,10 @@ fun PaymentMethodListBodyScreen(
             FloatingActionButton(
                 onClick = createPaymentMethod
             ) {
-                Icon(Icons.Filled.Add, "Crear nuevo método de pago")
+                Icon(Icons.Filled.Add, "Create a new payment method")
             }
         },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         Box(
             modifier = Modifier
@@ -194,7 +197,7 @@ fun PaymentMethodListBodyScreen(
                 uiState.isLoading && uiState.PaymentMethods.isEmpty() -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = Color.Cyan
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
                 uiState.PaymentMethods.isEmpty() -> {
@@ -203,9 +206,9 @@ fun PaymentMethodListBodyScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No se encontraron métodos de pago",
+                            text = "No payment methods found",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -243,7 +246,7 @@ fun PaymentMethodListBodyScreen(
                 refreshing = uiState.isLoading,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
-                contentColor = Color.Cyan
+                contentColor = MaterialTheme.colorScheme.secondary
             )
 
             if (!uiState.errorMessage.isNullOrEmpty()) {
@@ -254,7 +257,7 @@ fun PaymentMethodListBodyScreen(
                 ) {
                     Text(
                         text = uiState.errorMessage,
-                        color = Color.Red,
+                        color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -274,7 +277,7 @@ fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        label = { Text("Buscar método de pago...") },
+        label = { Text("Find payment method...") },
         singleLine = true
     )
 }
@@ -292,7 +295,7 @@ fun PaymentMethodCard(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.background
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -323,7 +326,7 @@ fun PaymentMethodCard(
                         append(paymentMethod.paymentMethodId.toString())
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.surfaceDim
                 )
             }
 
@@ -334,8 +337,8 @@ fun PaymentMethodCard(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Edit,
-                    contentDescription = "Editar método de pago",
-                    tint = Color.DarkGray,
+                    contentDescription = "Update",
+                    tint = MaterialTheme.colorScheme.onTertiary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -347,8 +350,8 @@ fun PaymentMethodCard(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Eliminar método de pago",
-                    tint = Color.Red,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp)
                 )
             }
