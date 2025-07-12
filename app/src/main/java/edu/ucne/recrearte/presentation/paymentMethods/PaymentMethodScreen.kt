@@ -54,7 +54,7 @@ fun PaymentMethodScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (paymentMethodId != null) "Update Payment Method" else "Create Payment Method",
+                        text = if (paymentMethodId != 0) "Update Payment Method" else "Create Payment Method",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -139,8 +139,8 @@ fun PaymentMethodBodyScreen(
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.tertiary
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Save")
