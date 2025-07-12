@@ -1,3 +1,15 @@
 package edu.ucne.recrearte.data.repository
 
-//Este archivo es de prueba puede ser eliminado
+import edu.ucne.recrearte.data.remote.RemoteDataSource
+import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
+import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
+import javax.inject.Inject
+
+class LoginRepository  @Inject constructor(
+    private val remoteDataSource: RemoteDataSource
+){
+    suspend fun loginUser(loginRequest: LoginRequestDto): LoginResponseDto {
+        return remoteDataSource.loginUser(loginRequest)
+    }
+}
