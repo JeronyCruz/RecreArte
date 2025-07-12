@@ -108,7 +108,7 @@ class TechniqueViewModel @Inject constructor(
                     techniqueName = "",
                     techniqueId = null
                 )
-                //onEvent(PaymentMethodEvent.GetPaymentMethods)
+                onEvent(TechniqueEvent.GetTechniques)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
             }
@@ -221,4 +221,27 @@ class TechniqueViewModel @Inject constructor(
         return null
     }
 
+    fun loadTechnique(id: Int) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            when (val result = repository.getTechniqueById(id)) {
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        techniqueId = result.data?.techniqueId,
+                        techniqueName = result.data?.techniqueName ?: "",
+                        isLoading = false
+                    )
+                }
+                is Resource.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = result.message,
+                        isLoading = false
+                    )
+                }
+                else -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+            }
+        }
+    }
 }
