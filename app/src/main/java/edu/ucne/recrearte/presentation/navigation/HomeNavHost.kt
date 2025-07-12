@@ -4,11 +4,13 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import edu.ucne.recrearte.presentation.Home.HomeScreen
+import edu.ucne.recrearte.presentation.login.LoginScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
@@ -16,20 +18,26 @@ import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
 
 @Composable
 fun HomeNavHost(
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    modifier: Modifier = Modifier
 ){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     NavHost(
         navController = navHostController,
-        startDestination = Screen.Home
+        startDestination = Screen.LoginScreen
     ){
-        composable<Screen.Home> {
-            HomeScreen(
-                navController = navHostController
-            )
+
+        composable<Screen.LoginScreen> {
+            LoginScreen(navController = navHostController)
         }
+
+        composable<Screen.Home> {
+           HomeScreen(
+               navController = navHostController
+           )
+       }
 
         composable<Screen.PaymentMethodList> {
             PaymentMethodListScreen(

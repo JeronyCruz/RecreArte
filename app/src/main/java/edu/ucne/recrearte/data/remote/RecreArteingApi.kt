@@ -1,6 +1,8 @@
 package edu.ucne.recrearte.data.remote
 
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
+import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
+import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import retrofit2.Response
 import retrofit2.http.Body
@@ -12,7 +14,11 @@ import retrofit2.http.Path
 
 interface RecreArteingApi {
 
-    //PaymentMethods
+    // Login
+    @POST("api/Login")
+    suspend fun loginUser(@Body LoginRequest: LoginRequestDto): LoginResponseDto
+
+    //PaymentMethod
     @GET("api/PaymentMethods")
     suspend fun getAllPaymentMethod(): List<PaymentMethodsDto>
 
@@ -27,6 +33,7 @@ interface RecreArteingApi {
     ): PaymentMethodsDto
     @DELETE("api/PaymentMethods/{id}")
     suspend fun deletePaymentMethod(@Path("id") id: Int): Response<Unit>
+
 
     // Techniques
     @GET("api/Techniques")

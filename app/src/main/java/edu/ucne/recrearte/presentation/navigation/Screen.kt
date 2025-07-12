@@ -10,6 +10,10 @@ sealed class Screen {
     @Serializable
     data class PaymentMethodScreen(val id: Int): Screen()
     @Serializable
+    data object LoginScreen: Screen()
+    @Serializable
+    data object RegisterScreen: Screen()
+    @Serializable
     data object TechniqueList: Screen()
     @Serializable
     data class TechniqueScreen(val id: Int): Screen()
