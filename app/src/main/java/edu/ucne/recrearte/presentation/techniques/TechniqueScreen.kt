@@ -56,9 +56,10 @@ fun TechniqueScreen(
 ) {
 
     LaunchedEffect(techniqueId) {
-        techniqueId?.let { id ->
-            viewModel.onEvent(TechniqueEvent.TechniquedIdChange(id))
-            viewModel.onEvent(TechniqueEvent.GetTechniques)
+        if (techniqueId != null && techniqueId != 0) {
+            viewModel.loadTechnique(techniqueId)
+        } else {
+            viewModel.onEvent(TechniqueEvent.New)
         }
     }
 
