@@ -51,12 +51,11 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,14 +66,14 @@ fun PaymentMethodListScreen(
     viewModel: PaymentMethodViewModel = hiltViewModel(),
     goToPaymentMethod: (Int) -> Unit,
     createPaymentMethod: () -> Unit,
-    editPaymentMethod: (PaymentMethodDto) -> Unit
+    editPaymentMethod: (PaymentMethodsDto) -> Unit
 ) {
     val uiState by viewModel.uiSate.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var methodToDelete by remember { mutableStateOf<PaymentMethodDto?>(null) }
+    var methodToDelete by remember { mutableStateOf<PaymentMethodsDto?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    val handleDelete = { method: PaymentMethodDto ->
+    val handleDelete = { method: PaymentMethodsDto ->
         methodToDelete = method
         showDeleteConfirmation = true
     }
@@ -134,10 +133,10 @@ fun PaymentMethodListBodyScreen(
     reloadPaymentMethods: () -> Unit,
     goToPaymentMethod: (Int) -> Unit,
     createPaymentMethod: () -> Unit,
-    deletePaymentMethod: (PaymentMethodDto) -> Unit,
-    editPaymentMethod: (PaymentMethodDto) -> Unit,
+    deletePaymentMethod: (PaymentMethodsDto) -> Unit,
+    editPaymentMethod: (PaymentMethodsDto) -> Unit,
     query: String,
-    searchResults: List<PaymentMethodDto>,
+    searchResults: List<PaymentMethodsDto>,
     onSearchQueryChanged: (String) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(
@@ -284,10 +283,10 @@ fun SearchBar(
 
 @Composable
 fun PaymentMethodCard(
-    paymentMethod: PaymentMethodDto,
+    paymentMethod: PaymentMethodsDto,
     goToPaymentMethod: () -> Unit,
-    deletePaymentMethod: (PaymentMethodDto) -> Unit,
-    editPaymentMethod: (PaymentMethodDto) -> Unit
+    deletePaymentMethod: (PaymentMethodsDto) -> Unit,
+    editPaymentMethod: (PaymentMethodsDto) -> Unit
 ) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),

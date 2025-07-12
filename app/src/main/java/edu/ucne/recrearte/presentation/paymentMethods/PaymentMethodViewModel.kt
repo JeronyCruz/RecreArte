@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.repository.PaymentMethodRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,8 +27,8 @@ class PaymentMethodViewModel @Inject constructor(
     val loading : StateFlow<Boolean> = _loading
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    private val _searchResults = MutableStateFlow<List<PaymentMethodDto>>(emptyList())
-    val searchResults: StateFlow<List<PaymentMethodDto>> = _searchResults.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<PaymentMethodsDto>>(emptyList())
+    val searchResults: StateFlow<List<PaymentMethodsDto>> = _searchResults.asStateFlow()
 
     fun onEvent(event: PaymentMethodEvent){
         when(event){
@@ -45,6 +45,7 @@ class PaymentMethodViewModel @Inject constructor(
     }
 
     init {
+        getPaymentMethods()
         //Para la busqueda
         viewModelScope.launch {
             _searchQuery
@@ -63,7 +64,7 @@ class PaymentMethodViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    private fun filterPaymentMethod(query: String): List<PaymentMethodDto> {
+    private fun filterPaymentMethod(query: String): List<PaymentMethodsDto> {
         return if (query.isBlank()) {
             _uiState.value.PaymentMethods
         } else {
@@ -86,7 +87,7 @@ class PaymentMethodViewModel @Inject constructor(
     private fun createPaymentMethod(){
         viewModelScope.launch {
             try {
-                val method = PaymentMethodDto(
+                val method = PaymentMethodsDto(
                     paymentMethodId = 0,
                     paymentMethodName = _uiState.value.paymentMethodName
                 )
@@ -107,7 +108,7 @@ class PaymentMethodViewModel @Inject constructor(
     private fun updatePaymentMethod(id: Int){
         viewModelScope.launch {
             try {
-                val method = PaymentMethodDto(
+                val method = PaymentMethodsDto(
                     paymentMethodId = id,
                     paymentMethodName = _uiState.value.paymentMethodName
                 )

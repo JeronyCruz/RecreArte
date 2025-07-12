@@ -1,6 +1,6 @@
 package edu.ucne.recrearte.presentation.paymentMethods
 
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 
 data class PaymentMethodUiState(
     val paymentMethodId: Int? = null,
@@ -10,5 +10,5 @@ data class PaymentMethodUiState(
     val isSuccess: Boolean = false,
     val successMessage: String? = null,
     val errorName: String? = null,
-    val PaymentMethods: List<PaymentMethodDto> = emptyList()
+    val PaymentMethods: List<PaymentMethodsDto> = emptyList()
 )
