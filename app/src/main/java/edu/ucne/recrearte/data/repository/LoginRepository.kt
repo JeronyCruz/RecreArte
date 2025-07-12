@@ -3,7 +3,6 @@ package edu.ucne.recrearte.data.repository
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
 import javax.inject.Inject
 
 class LoginRepository  @Inject constructor(
