@@ -1,4 +1,4 @@
-package edu.ucne.recrearte.presentation.paymentMethods
+package edu.ucne.recrearte.presentation.techniques
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,15 +38,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentMethodScreen(
-    paymentMethodId: Int? = null,
-    viewModel: PaymentMethodViewModel = hiltViewModel(),
+fun TechniqueScreen(
+    techniqueId: Int? = null,
+    viewModel: TechniqueViewModel = hiltViewModel(),
     goBack: () -> Unit
 ) {
-    LaunchedEffect(paymentMethodId) {
-        paymentMethodId?.let { id ->
-            viewModel.onEvent(PaymentMethodEvent.PaymentMethodIdChange(id))
-            viewModel.onEvent(PaymentMethodEvent.GetPaymentMethods)
+    LaunchedEffect(techniqueId) {
+        techniqueId?.let { id ->
+            viewModel.onEvent(TechniqueEvent.TechniquedIdChange(id))
+            viewModel.onEvent(TechniqueEvent.GetTechniques)
         }
     }
 
@@ -55,7 +55,7 @@ fun PaymentMethodScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (paymentMethodId != 0) "Update Payment Method" else "Create Payment Method",
+                        text = if (techniqueId != 0) "Update technique" else "Create technique ",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -69,7 +69,8 @@ fun PaymentMethodScreen(
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "Go back",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -79,9 +80,9 @@ fun PaymentMethodScreen(
         },
         containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
-        PaymentMethodBodyScreen(
+        TechniqueBodyScreen(
             modifier = Modifier.padding(padding),
-            paymentMethodId = paymentMethodId,
+            techniqueId = techniqueId,
             viewModel = viewModel,
             goBack = goBack
         )
@@ -89,10 +90,10 @@ fun PaymentMethodScreen(
 }
 
 @Composable
-fun PaymentMethodBodyScreen(
+fun TechniqueBodyScreen(
     modifier: Modifier = Modifier,
-    paymentMethodId: Int?,
-    viewModel: PaymentMethodViewModel,
+    techniqueId: Int?,
+    viewModel: TechniqueViewModel,
     goBack: () -> Unit
 ) {
     val uiState by viewModel.uiSate.collectAsStateWithLifecycle()
@@ -104,19 +105,20 @@ fun PaymentMethodBodyScreen(
         val uiState = viewModel.uiSate.collectAsState().value
 
         OutlinedTextField(
-            value = uiState.paymentMethodName,
+            value = uiState.techniqueName,
             onValueChange = {
-                viewModel.onEvent(PaymentMethodEvent.NameChange(it))
+                viewModel.onEvent(TechniqueEvent.NameChange(it))
             },
-            label = { Text("Nombre de la técnica") },
+            label = { Text("Name Technique") },
             isError = uiState.errorMessage != null,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         if (uiState.errorMessage != null) {
             Text(
                 text = uiState.errorMessage ?: "",
-                color = Color.Red,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -129,7 +131,7 @@ fun PaymentMethodBodyScreen(
         ) {
             Button(
                 onClick = {
-                    viewModel.onEvent(PaymentMethodEvent.New)
+                    viewModel.onEvent(TechniqueEvent.New)
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
@@ -144,10 +146,10 @@ fun PaymentMethodBodyScreen(
 
             Button(
                 onClick = {
-                    if (paymentMethodId == null) {
-                        viewModel.onEvent(PaymentMethodEvent.CreatePaymentMethod)
+                    if (techniqueId == null) {
+                        viewModel.onEvent(TechniqueEvent.CreateTechnique)
                     } else {
-                        viewModel.onEvent(PaymentMethodEvent.UpdatePaymentMethod(paymentMethodId))
+                        viewModel.onEvent(TechniqueEvent.UpdateTechnique(techniqueId))
                     }
                 },
                 modifier = Modifier.weight(1f),
@@ -166,6 +168,7 @@ fun PaymentMethodBodyScreen(
                     goBack
                 }
             }
+
         }
     }
 }

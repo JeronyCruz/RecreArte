@@ -1,4 +1,4 @@
-package edu.ucne.recrearte.presentation.paymentMethods
+package edu.ucne.recrearte.presentation.techniques
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -55,47 +55,47 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
+import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentMethodListScreen(
+fun TechniqueListScreen(
     drawerState: DrawerState,
     scope: CoroutineScope,
-    viewModel: PaymentMethodViewModel = hiltViewModel(),
-    goToPaymentMethod: (Int) -> Unit,
-    createPaymentMethod: () -> Unit,
-    editPaymentMethod: (PaymentMethodsDto) -> Unit
+    viewModel: TechniqueViewModel = hiltViewModel(),
+    goToTechnique: (Int) -> Unit,
+    createTechnique: () -> Unit,
+    editTechnique: (TechniquesDto) -> Unit
 ) {
     val uiState by viewModel.uiSate.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var methodToDelete by remember { mutableStateOf<PaymentMethodsDto?>(null) }
+    var techniqueToDelete by remember { mutableStateOf<TechniquesDto?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    val handleDelete = { method: PaymentMethodsDto ->
-        methodToDelete = method
+    val handleDelete = { technique: TechniquesDto ->
+        techniqueToDelete = technique
         showDeleteConfirmation = true
     }
 
     val onDeleteConfirmed = {
-        methodToDelete?.let { method ->
-            viewModel.onEvent(PaymentMethodEvent.DeletePaymentMethod(method.paymentMethodId!!))
+        techniqueToDelete?.let { technique ->
+            viewModel.onEvent(TechniqueEvent.DeleteTechnique(technique.techniqueId!!))
         }
         showDeleteConfirmation = false
-        methodToDelete = null
+        techniqueToDelete = null
     }
 
     // Cargar lista
     LaunchedEffect(Unit) {
-        viewModel.onEvent(PaymentMethodEvent.GetPaymentMethods)
+        viewModel.onEvent(TechniqueEvent.GetTechniques)
     }
 
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
             title = { Text("Confirm deletion") },
-            text = { Text("Are you sure you want to delete the payment method ${methodToDelete?.paymentMethodName}?") },
+            text = { Text("¿Are you sure you want to delete the technique ${techniqueToDelete?.techniqueName}?") },
             confirmButton = {
                 TextButton(onClick = onDeleteConfirmed) {
                     Text("Delete", color = Color.Red)
@@ -109,15 +109,15 @@ fun PaymentMethodListScreen(
         )
     }
 
-    PaymentMethodListBodyScreen(
+    TechniqueListBodyScreen(
         drawerState = drawerState,
         scope = scope,
         uiState = uiState,
-        reloadPaymentMethods = { viewModel.onEvent(PaymentMethodEvent.GetPaymentMethods) },
-        goToPaymentMethod = goToPaymentMethod,
-        createPaymentMethod = createPaymentMethod,
-        deletePaymentMethod = handleDelete,
-        editPaymentMethod = editPaymentMethod,
+        reloadTechniques = { viewModel.onEvent(TechniqueEvent.GetTechniques) },
+        goToTechnique = goToTechnique,
+        createTechnique = createTechnique,
+        deleteTechnique = handleDelete,
+        editTechnique = editTechnique,
         query = viewModel.searchQuery.collectAsStateWithLifecycle().value,
         searchResults = viewModel.searchResults.collectAsStateWithLifecycle().value,
         onSearchQueryChanged = viewModel::onSearchQueryChanged
@@ -126,22 +126,22 @@ fun PaymentMethodListScreen(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun PaymentMethodListBodyScreen(
+fun TechniqueListBodyScreen(
     drawerState: DrawerState,
     scope: CoroutineScope,
-    uiState: PaymentMethodUiState,
-    reloadPaymentMethods: () -> Unit,
-    goToPaymentMethod: (Int) -> Unit,
-    createPaymentMethod: () -> Unit,
-    deletePaymentMethod: (PaymentMethodsDto) -> Unit,
-    editPaymentMethod: (PaymentMethodsDto) -> Unit,
+    uiState: TechniqueUiState,
+    reloadTechniques: () -> Unit,
+    goToTechnique: (Int) -> Unit,
+    createTechnique: () -> Unit,
+    deleteTechnique: (TechniquesDto) -> Unit,
+    editTechnique: (TechniquesDto) -> Unit,
     query: String,
-    searchResults: List<PaymentMethodsDto>,
+    searchResults: List<TechniquesDto>,
     onSearchQueryChanged: (String) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(
         refreshing = uiState.isLoading,
-        onRefresh = reloadPaymentMethods
+        onRefresh = reloadTechniques
     )
 
     Scaffold(
@@ -150,7 +150,7 @@ fun PaymentMethodListBodyScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = " Payment Methods ",
+                        text = "Techniques",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -165,12 +165,12 @@ fun PaymentMethodListBodyScreen(
                 ),
                 actions = {
                     IconButton(
-                        onClick = reloadPaymentMethods,
+                        onClick = reloadTechniques,
                         enabled = !uiState.isLoading
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Refresh",
+                            contentDescription = "Update",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
@@ -179,9 +179,9 @@ fun PaymentMethodListBodyScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = createPaymentMethod
+                onClick = createTechnique,
             ) {
-                Icon(Icons.Filled.Add, "Create a new payment method")
+                Icon(Icons.Filled.Add, "Create")
             }
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -193,21 +193,21 @@ fun PaymentMethodListBodyScreen(
                 .pullRefresh(pullRefreshState)
         ) {
             when {
-                uiState.isLoading && uiState.PaymentMethods.isEmpty() -> {
+                uiState.isLoading && uiState.Techniques.isEmpty() -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
-                uiState.PaymentMethods.isEmpty() -> {
+                uiState.Techniques.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No payment methods found",
+                            text = "No techniques found",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -217,7 +217,7 @@ fun PaymentMethodListBodyScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        // Busqueda
+                        // Búsqueda
                         item {
                             SearchBar(
                                 query = query,
@@ -226,14 +226,14 @@ fun PaymentMethodListBodyScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        val methodsToShow = if (query.isNotBlank()) searchResults else uiState.PaymentMethods
+                        val techniquesToShow = if (query.isNotBlank()) searchResults else uiState.Techniques
 
-                        items(methodsToShow) { paymentMethod ->
-                            PaymentMethodCard(
-                                paymentMethod = paymentMethod,
-                                goToPaymentMethod = { goToPaymentMethod(paymentMethod.paymentMethodId!!) },
-                                deletePaymentMethod = deletePaymentMethod,
-                                editPaymentMethod = editPaymentMethod
+                        items(techniquesToShow) { technique ->
+                            TechniqueCard(
+                                technique = technique,
+                                goToTechnique = { goToTechnique(technique.techniqueId!!) },
+                                deleteTechnique = deleteTechnique,
+                                editTechnique = editTechnique
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -245,7 +245,7 @@ fun PaymentMethodListBodyScreen(
                 refreshing = uiState.isLoading,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
-                contentColor = MaterialTheme.colorScheme.secondary
+                contentColor = MaterialTheme.colorScheme.primary
             )
 
             if (!uiState.errorMessage.isNullOrEmpty()) {
@@ -276,17 +276,17 @@ fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        label = { Text("Find payment method...") },
+        label = { Text("Find technique...") },
         singleLine = true
     )
 }
 
 @Composable
-fun PaymentMethodCard(
-    paymentMethod: PaymentMethodsDto,
-    goToPaymentMethod: () -> Unit,
-    deletePaymentMethod: (PaymentMethodsDto) -> Unit,
-    editPaymentMethod: (PaymentMethodsDto) -> Unit
+fun TechniqueCard(
+    technique: TechniquesDto,
+    goToTechnique: () -> Unit,
+    deleteTechnique: (TechniquesDto) -> Unit,
+    editTechnique: (TechniquesDto) -> Unit
 ) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
@@ -294,7 +294,7 @@ fun PaymentMethodCard(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -307,14 +307,15 @@ fun PaymentMethodCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clickable(onClick = goToPaymentMethod)
+                    .clickable(onClick = goToTechnique)
             ) {
                 Text(
-                    text = paymentMethod.paymentMethodName,
+                    text = technique.techniqueName,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    modifier = Modifier.padding(bottom = 4.dp),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
@@ -322,29 +323,29 @@ fun PaymentMethodCard(
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                             append("ID: ")
                         }
-                        append(paymentMethod.paymentMethodId.toString())
+                        append(technique.techniqueId.toString())
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.surfaceDim
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             // Botón de editar
             IconButton(
-                onClick = { editPaymentMethod(paymentMethod) },
+                onClick = { editTechnique(technique) },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Edit,
                     contentDescription = "Update",
-                    tint = MaterialTheme.colorScheme.onTertiary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
             }
 
             // Botón de eliminar
             IconButton(
-                onClick = { deletePaymentMethod(paymentMethod) },
+                onClick = { deleteTechnique(technique) },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(

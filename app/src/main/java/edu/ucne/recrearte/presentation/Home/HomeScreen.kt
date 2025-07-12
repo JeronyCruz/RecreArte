@@ -78,6 +78,29 @@ fun HomeScreen(
                         color = Color.Black
                     )
                 }
+                //Technique
+                OutlinedButton(
+                    onClick = { navController.navigate(Screen.TechniqueList) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .border(
+                            width = 2.dp,
+                            color = Color.Blue,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        backgroundColor = Color.Transparent,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text(
+                        text = "Techniques",
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                }
             }
         }
     }

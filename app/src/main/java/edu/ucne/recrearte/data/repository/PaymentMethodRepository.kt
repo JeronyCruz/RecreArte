@@ -2,7 +2,7 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
@@ -12,7 +12,7 @@ import javax.inject.Inject
 class PaymentMethodRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource
 ){
-    fun getPaymentMethods(): Flow<Resource<List<PaymentMethodDto>>> = flow {
+    fun getPaymentMethods(): Flow<Resource<List<PaymentMethodsDto>>> = flow {
         try {
             println("📡 [DEBUG] Intentando obtener payment methods...")
             emit(Resource.Loading())
@@ -37,12 +37,14 @@ class PaymentMethodRepository @Inject constructor(
             val errorMsg = "Error inesperado: ${e.message}"
             println("🔴 [DEBUG] Unexpected Error: $errorMsg")
             emit(Resource.Error(errorMsg))
+        }catch (e: HttpException){
+            emit(Resource.Error("Internet error: ${e.message()}"))
         }
     }
 
-    suspend fun createPaymentMethod(paymentMethodDto: PaymentMethodDto) = remoteDataSource.createPaymentMethod(paymentMethodDto)
+    suspend fun createPaymentMethod(paymentMethodsDto: PaymentMethodsDto) = remoteDataSource.createPaymentMethod(paymentMethodsDto)
 
-    suspend fun updatePaymentMethod(id: Int, paymentMethodDto: PaymentMethodDto) = remoteDataSource.updatePaymentMethod(id, paymentMethodDto)
+    suspend fun updatePaymentMethod(id: Int, paymentMethodsDto: PaymentMethodsDto) = remoteDataSource.updatePaymentMethod(id, paymentMethodsDto)
 
     suspend fun deletePaymentMethod(id: Int) = remoteDataSource.deletePaymentMethod(id)
 }

@@ -1,12 +1,11 @@
-package edu.ucne.recrearte.presentation.paymentMethods
+package edu.ucne.recrearte.presentation.techniques
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
-import edu.ucne.recrearte.data.repository.PaymentMethodRepository
-import edu.ucne.recrearte.util.TokenManager
+import edu.ucne.recrearte.data.remote.dto.TechniquesDto
+import edu.ucne.recrearte.data.repository.TechniqueRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,95 +18,78 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PaymentMethodViewModel @Inject constructor(
-    private val repository: PaymentMethodRepository,
-    private val tokenManager: TokenManager
-): ViewModel(){
-    private val _uiState = MutableStateFlow(PaymentMethodUiState())
+class TechniqueViewModel @Inject constructor(
+    private val repository: TechniqueRepository
+): ViewModel() {
+    private val _uiState = MutableStateFlow(TechniqueUiState())
     val uiSate = _uiState.asStateFlow()
     private val _loading = MutableStateFlow(false)
     val loading : StateFlow<Boolean> = _loading
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    private val _searchResults = MutableStateFlow<List<PaymentMethodsDto>>(emptyList())
-    val searchResults: StateFlow<List<PaymentMethodsDto>> = _searchResults.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<TechniquesDto>>(emptyList())
+    val searchResults: StateFlow<List<TechniquesDto>> = _searchResults.asStateFlow()
 
-    fun onEvent(event: PaymentMethodEvent){
-        when(event){
-            PaymentMethodEvent.ClearErrorMessage -> clearErrorMessage()
-            PaymentMethodEvent.CreatePaymentMethod -> createPaymentMethod()
-            is PaymentMethodEvent.DeletePaymentMethod -> deletePaymentMethods(event.id)
-            PaymentMethodEvent.GetPaymentMethods -> getPaymentMethods()
-            is PaymentMethodEvent.NameChange -> nameOnChange(event.name)
-            PaymentMethodEvent.New -> new()
-            is PaymentMethodEvent.PaymentMethodIdChange -> paymentMethodIdOnChange(event.paymentMethodId)
-            PaymentMethodEvent.ResetSuccessMessage -> resetSuccessMessage()
-            is PaymentMethodEvent.UpdatePaymentMethod -> updatePaymentMethod(event.id)
+    fun onEvent(event: TechniqueEvent){
+        when(event) {
+            TechniqueEvent.ClearErrorMessage -> clearErrorMessage()
+            TechniqueEvent.CreateTechnique -> createPaymentMethod()
+            is TechniqueEvent.DeleteTechnique -> deleteTechnique(event.id)
+            TechniqueEvent.GetTechniques -> getTechniques()
+            is TechniqueEvent.NameChange -> nameOnChange(event.name)
+            TechniqueEvent.New -> new()
+            TechniqueEvent.ResetSuccessMessage -> resetSuccessMessage()
+            is TechniqueEvent.TechniquedIdChange -> techniqueIdOnChange(event.techniqueId)
+            is TechniqueEvent.UpdateTechnique -> updateTechnique(event.id)
         }
     }
-
     init {
-        getPaymentMethods()
+        getTechniques()
         //Para la busqueda
         viewModelScope.launch {
             _searchQuery
                 .debounce(600)
                 .distinctUntilChanged()
                 .mapLatest { query ->
-                    filterPaymentMethod(query)
+                    filter(query)
                 }
                 .collectLatest { filtered ->
                     _searchResults.value = filtered
                 }
         }
 
-        verifyTokenBeforeLoading()
-    }
-
-
-    private fun verifyTokenBeforeLoading() {
-        viewModelScope.launch {
-            val token = tokenManager.getToken()
-            if (token == null) {
-                _uiState.update {
-                    it.copy(
-                        errorMessage = "No autenticado. Por favor inicia sesión",
-                        isLoading = false
-                    )
-                }
-            } else {
-                getPaymentMethods()
-            }
-        }
     }
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
     }
 
-    private fun filterPaymentMethod(query: String): List<PaymentMethodsDto> {
+    private fun filter(query: String): List<TechniquesDto> {
         return if (query.isBlank()) {
-            _uiState.value.PaymentMethods
+            _uiState.value.Techniques
         } else {
-            _uiState.value.PaymentMethods.filter {
-                it.paymentMethodName.contains(query, ignoreCase = true)
+            _uiState.value.Techniques.filter {
+                it.techniqueName.contains(query, ignoreCase = true)
             }
         }
     }
 
     private fun nameOnChange(name: String){
         _uiState.value = _uiState.value
-            .copy(paymentMethodName = name)
+            .copy(
+                techniqueName = name,
+                errorMessage = null
+            )
     }
 
-    private fun paymentMethodIdOnChange(id: Int){
+    private fun techniqueIdOnChange(id: Int){
         _uiState.value = _uiState.value
-            .copy(paymentMethodId = id)
+            .copy(techniqueId = id)
     }
 
     private fun createPaymentMethod(){
-        val name = _uiState.value.paymentMethodName.trim()
-        val validationError = isValidPaymentMethodName(name)
+        val name = _uiState.value.techniqueName.trim()
+        val validationError = isValidTechniqueName(name)
 
         if (validationError != null) {
             _uiState.value = _uiState.value.copy(errorMessage = validationError)
@@ -115,44 +97,45 @@ class PaymentMethodViewModel @Inject constructor(
         }
         viewModelScope.launch {
             try {
-                val method = PaymentMethodsDto(
-                    paymentMethodId = 0,
-                    paymentMethodName = _uiState.value.paymentMethodName
+                val method = TechniquesDto(
+                    techniqueId = 0,
+                    techniqueName = _uiState.value.techniqueName
                 )
-                repository.createPaymentMethod(method)
+                repository.createTechnique(method)
                 _uiState.value = _uiState.value.copy(
                     isSuccess = true,
-                    successMessage = "Payment method created successfully",
-                    paymentMethodName = "",
-                    paymentMethodId = null
+                    successMessage = "Technique created successfully",
+                    techniqueName = "",
+                    techniqueId = null
                 )
-                onEvent(PaymentMethodEvent.GetPaymentMethods)
+                //onEvent(PaymentMethodEvent.GetPaymentMethods)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
             }
         }
     }
-//revisar
-    private fun updatePaymentMethod(id: Int){
-        val name = _uiState.value.paymentMethodName.trim()
-        val validationError = isValidPaymentMethodName(name)
+    //revisar
+    private fun updateTechnique(id: Int){
+        val name = _uiState.value.techniqueName.trim()
+        val validationError = isValidTechniqueName(name)
 
         if (validationError != null) {
             _uiState.value = _uiState.value.copy(errorMessage = validationError)
             return
         }
+
         viewModelScope.launch {
             try {
-                val method = PaymentMethodsDto(
-                    paymentMethodId = id,
-                    paymentMethodName = _uiState.value.paymentMethodName
+                val method = TechniquesDto(
+                    techniqueId = id,
+                    techniqueName = _uiState.value.techniqueName
                 )
-                repository.updatePaymentMethod(id, method)
+                repository.updateTechnique(id, method)
                 _uiState.value = _uiState.value.copy(
                     isSuccess = true,
-                    successMessage = "Payment method updated successfully"
+                    successMessage = "Technique updated successfully"
                 )
-                onEvent(PaymentMethodEvent.GetPaymentMethods)
+               onEvent(TechniqueEvent.GetTechniques)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = "Error updating: ${e.message}")
             }
@@ -161,8 +144,8 @@ class PaymentMethodViewModel @Inject constructor(
 
     private fun new(){
         _uiState.value = _uiState.value.copy(
-            paymentMethodId = null,
-            paymentMethodName = "",
+            techniqueId = null,
+            techniqueName = "",
             errorMessage = null,
             isSuccess = false,
             successMessage = null
@@ -181,24 +164,24 @@ class PaymentMethodViewModel @Inject constructor(
             .copy(errorMessage = null)
     }
 
-    private fun deletePaymentMethods(id: Int){
+    private fun deleteTechnique(id: Int){
         viewModelScope.launch {
             try {
-                repository.deletePaymentMethod(id)
+                repository.deleteTechnique(id)
                 _uiState.value = _uiState.value.copy(
                     isSuccess = true,
-                    successMessage = "Payment method successfully removed"
+                    successMessage = "Technique successfully removed"
                 )
-                onEvent(PaymentMethodEvent.GetPaymentMethods)
+                onEvent(TechniqueEvent.GetTechniques)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
             }
         }
     }
 
-    fun getPaymentMethods(){
+    fun getTechniques(){
         viewModelScope.launch {
-            repository.getPaymentMethods().collectLatest { getting ->
+            repository.getTechniques().collectLatest { getting ->
                 when (getting){
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true) }
@@ -207,7 +190,7 @@ class PaymentMethodViewModel @Inject constructor(
                     is Resource.Success -> {
                         _uiState.update {
                             it.copy(
-                                PaymentMethods = getting.data ?: emptyList(),
+                                Techniques = getting.data ?: emptyList(),
                                 isLoading = false
                             )
                         }
@@ -225,7 +208,7 @@ class PaymentMethodViewModel @Inject constructor(
         }
     }
 
-    private fun isValidPaymentMethodName(name: String): String? {
+    private fun isValidTechniqueName(name: String): String? {
         if (name.isBlank()) {
             return "The name cannot be empty."
         }
@@ -237,4 +220,5 @@ class PaymentMethodViewModel @Inject constructor(
 
         return null
     }
+
 }
