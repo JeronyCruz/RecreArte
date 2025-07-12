@@ -1,5 +1,6 @@
 package edu.ucne.recrearte.presentation.paymentMethods
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,11 +31,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,9 +48,10 @@ fun PaymentMethodScreen(
     goBack: () -> Unit
 ) {
     LaunchedEffect(paymentMethodId) {
-        paymentMethodId?.let { id ->
-            viewModel.onEvent(PaymentMethodEvent.PaymentMethodIdChange(id))
-            viewModel.onEvent(PaymentMethodEvent.GetPaymentMethods)
+        if (paymentMethodId != null && paymentMethodId != 0) {
+            viewModel.loadPaymentMethod(paymentMethodId)
+        } else {
+            viewModel.onEvent(PaymentMethodEvent.New)
         }
     }
 
@@ -108,7 +113,7 @@ fun PaymentMethodBodyScreen(
             onValueChange = {
                 viewModel.onEvent(PaymentMethodEvent.NameChange(it))
             },
-            label = { Text("Nombre de la técnica") },
+            label = { Text("Name PaymentMethod ") },
             isError = uiState.errorMessage != null,
             modifier = Modifier.fillMaxWidth()
         )
@@ -160,10 +165,16 @@ fun PaymentMethodBodyScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Save")
             }
+            val context = LocalContext.current
 
             LaunchedEffect(uiState.isSuccess) {
                 if (uiState.isSuccess) {
-                    goBack
+                    val message = if (paymentMethodId == null || paymentMethodId == 0)
+                        "Create Payment Method" else "Update Payment Method"
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    delay(1000)
+                    viewModel.onEvent(PaymentMethodEvent.ResetSuccessMessage)
+                    goBack()
                 }
             }
         }

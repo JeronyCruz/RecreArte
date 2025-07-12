@@ -65,8 +65,7 @@ fun TechniqueListScreen(
     scope: CoroutineScope,
     viewModel: TechniqueViewModel = hiltViewModel(),
     goToTechnique: (Int) -> Unit,
-    createTechnique: () -> Unit,
-    editTechnique: (TechniquesDto) -> Unit
+    createTechnique: () -> Unit
 ) {
     val uiState by viewModel.uiSate.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -117,7 +116,6 @@ fun TechniqueListScreen(
         goToTechnique = goToTechnique,
         createTechnique = createTechnique,
         deleteTechnique = handleDelete,
-        editTechnique = editTechnique,
         query = viewModel.searchQuery.collectAsStateWithLifecycle().value,
         searchResults = viewModel.searchResults.collectAsStateWithLifecycle().value,
         onSearchQueryChanged = viewModel::onSearchQueryChanged
@@ -134,7 +132,6 @@ fun TechniqueListBodyScreen(
     goToTechnique: (Int) -> Unit,
     createTechnique: () -> Unit,
     deleteTechnique: (TechniquesDto) -> Unit,
-    editTechnique: (TechniquesDto) -> Unit,
     query: String,
     searchResults: List<TechniquesDto>,
     onSearchQueryChanged: (String) -> Unit
@@ -231,9 +228,8 @@ fun TechniqueListBodyScreen(
                         items(techniquesToShow) { technique ->
                             TechniqueCard(
                                 technique = technique,
-                                goToTechnique = { goToTechnique(technique.techniqueId!!) },
-                                deleteTechnique = deleteTechnique,
-                                editTechnique = editTechnique
+                                goToTechnique = { goToTechnique(technique.techniqueId ?: 0) },
+                                deleteTechnique = deleteTechnique
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -285,14 +281,14 @@ fun SearchBar(
 fun TechniqueCard(
     technique: TechniquesDto,
     goToTechnique: () -> Unit,
-    deleteTechnique: (TechniquesDto) -> Unit,
-    editTechnique: (TechniquesDto) -> Unit
+    deleteTechnique: (TechniquesDto) -> Unit
 ) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .clickable{goToTechnique},
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -327,19 +323,6 @@ fun TechniqueCard(
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Botón de editar
-            IconButton(
-                onClick = { editTechnique(technique) },
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "Update",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
                 )
             }
 
