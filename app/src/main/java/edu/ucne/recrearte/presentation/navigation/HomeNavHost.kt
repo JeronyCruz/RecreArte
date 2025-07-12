@@ -7,8 +7,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import edu.ucne.recrearte.presentation.Home.HomeScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
+import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
+import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
+import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
 
 @Composable
 fun HomeNavHost(
@@ -36,11 +40,45 @@ fun HomeNavHost(
                     navHostController.navigate(Screen.PaymentMethodScreen(0))
                 },
                 editPaymentMethod = { pay ->
-                    val id = pay.paymentMethodId ?: 0 // O maneja como prefieras el null
+                    val id = pay.paymentMethodId ?: 0
                     navHostController.navigate(Screen.PaymentMethodScreen(id))
                 },
                 drawerState = drawerState,
                 scope = scope
+            )
+        }
+
+        composable<Screen.PaymentMethodScreen> { backStack ->
+            val id = backStack.toRoute<Screen.PaymentMethodScreen>().id
+            PaymentMethodScreen(
+                paymentMethodId = id,
+                goBack = {navHostController.popBackStack()}
+            )
+
+        }
+
+        composable<Screen.TechniqueList> {
+            TechniqueListScreen(
+                goToTechnique = {id ->
+                    navHostController.navigate(Screen.TechniqueScreen(id ?: 0))
+                },
+                createTechnique = {
+                    navHostController.navigate(Screen.TechniqueScreen(0))
+                },
+                editTechnique = { technique ->
+                    val id = technique.techniqueId ?: 0
+                    navHostController.navigate(Screen.TechniqueScreen(id))
+                },
+                drawerState = drawerState,
+                scope = scope
+            )
+        }
+
+        composable<Screen.TechniqueScreen> { backStack ->
+            val id =backStack.toRoute<Screen.PaymentMethodScreen>().id
+            TechniqueScreen(
+                techniqueId = id,
+                goBack = {navHostController.popBackStack()}
             )
         }
     }
