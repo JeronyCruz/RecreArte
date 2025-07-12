@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
 import edu.ucne.recrearte.data.repository.PaymentMethodRepository
+import edu.ucne.recrearte.util.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PaymentMethodViewModel @Inject constructor(
-    private val repository: PaymentMethodRepository
+    private val repository: PaymentMethodRepository,
+    private val tokenManager: TokenManager
 ): ViewModel(){
     private val _uiState = MutableStateFlow(PaymentMethodUiState())
     val uiSate = _uiState.asStateFlow()
@@ -56,6 +58,25 @@ class PaymentMethodViewModel @Inject constructor(
                 .collectLatest { filtered ->
                     _searchResults.value = filtered
                 }
+        }
+
+        verifyTokenBeforeLoading()
+    }
+
+
+    private fun verifyTokenBeforeLoading() {
+        viewModelScope.launch {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                _uiState.update {
+                    it.copy(
+                        errorMessage = "No autenticado. Por favor inicia sesión",
+                        isLoading = false
+                    )
+                }
+            } else {
+                getPaymentMethods()
+            }
         }
     }
 
