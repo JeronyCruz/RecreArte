@@ -44,6 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import edu.ucne.recrearte.presentation.navigation.Screen
+//imagen
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import edu.ucne.recrearte.R
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun LoginScreen(
@@ -96,6 +102,16 @@ fun LoginBodyScreen(
                 color = MaterialTheme.colorScheme.primary
             ),
             modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.logorecrearte),
+            contentDescription = "Logo de la app",
+            modifier = Modifier
+                .size(300.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onBackground)
+                .padding(bottom = 32.dp)
         )
 
         // Subtítulo
