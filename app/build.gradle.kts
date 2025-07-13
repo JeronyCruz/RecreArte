@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -51,6 +53,8 @@ dependencies {
 
     // Iconos
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
+    implementation ("androidx.compose.material:material-icons-extended")
+
 
     //room
     implementation("androidx.room:room-runtime:2.6.1")
