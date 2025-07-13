@@ -108,7 +108,7 @@ fun LoginBodyScreen(
             painter = painterResource(id = R.drawable.logorecrearte),
             contentDescription = "Logo de la app",
             modifier = Modifier
-                .size(300.dp)
+                .size(260.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.onBackground)
                 .padding(bottom = 32.dp)
