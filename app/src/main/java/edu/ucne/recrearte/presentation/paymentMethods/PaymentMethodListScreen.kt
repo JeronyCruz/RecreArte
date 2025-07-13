@@ -65,8 +65,7 @@ fun PaymentMethodListScreen(
     scope: CoroutineScope,
     viewModel: PaymentMethodViewModel = hiltViewModel(),
     goToPaymentMethod: (Int) -> Unit,
-    createPaymentMethod: () -> Unit,
-    editPaymentMethod: (PaymentMethodsDto) -> Unit
+    createPaymentMethod: () -> Unit
 ) {
     val uiState by viewModel.uiSate.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -117,7 +116,6 @@ fun PaymentMethodListScreen(
         goToPaymentMethod = goToPaymentMethod,
         createPaymentMethod = createPaymentMethod,
         deletePaymentMethod = handleDelete,
-        editPaymentMethod = editPaymentMethod,
         query = viewModel.searchQuery.collectAsStateWithLifecycle().value,
         searchResults = viewModel.searchResults.collectAsStateWithLifecycle().value,
         onSearchQueryChanged = viewModel::onSearchQueryChanged
@@ -134,7 +132,6 @@ fun PaymentMethodListBodyScreen(
     goToPaymentMethod: (Int) -> Unit,
     createPaymentMethod: () -> Unit,
     deletePaymentMethod: (PaymentMethodsDto) -> Unit,
-    editPaymentMethod: (PaymentMethodsDto) -> Unit,
     query: String,
     searchResults: List<PaymentMethodsDto>,
     onSearchQueryChanged: (String) -> Unit
@@ -162,19 +159,7 @@ fun PaymentMethodListBodyScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     actionIconContentColor = MaterialTheme.colorScheme.surface
-                ),
-                actions = {
-                    IconButton(
-                        onClick = reloadPaymentMethods,
-                        enabled = !uiState.isLoading
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Refresh",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
+                )
             )
         },
         floatingActionButton = {
@@ -231,9 +216,8 @@ fun PaymentMethodListBodyScreen(
                         items(methodsToShow) { paymentMethod ->
                             PaymentMethodCard(
                                 paymentMethod = paymentMethod,
-                                goToPaymentMethod = { goToPaymentMethod(paymentMethod.paymentMethodId!!) },
-                                deletePaymentMethod = deletePaymentMethod,
-                                editPaymentMethod = editPaymentMethod
+                                goToPaymentMethod = { goToPaymentMethod(paymentMethod.paymentMethodId ?: 0) },
+                                deletePaymentMethod = deletePaymentMethod
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -285,14 +269,14 @@ fun SearchBar(
 fun PaymentMethodCard(
     paymentMethod: PaymentMethodsDto,
     goToPaymentMethod: () -> Unit,
-    deletePaymentMethod: (PaymentMethodsDto) -> Unit,
-    editPaymentMethod: (PaymentMethodsDto) -> Unit
+    deletePaymentMethod: (PaymentMethodsDto) -> Unit
 ) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .clickable{goToPaymentMethod},
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.background
         ),
@@ -326,19 +310,6 @@ fun PaymentMethodCard(
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.surfaceDim
-                )
-            }
-
-            // Botón de editar
-            IconButton(
-                onClick = { editPaymentMethod(paymentMethod) },
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "Update",
-                    tint = MaterialTheme.colorScheme.onTertiary,
-                    modifier = Modifier.size(24.dp)
                 )
             }
 

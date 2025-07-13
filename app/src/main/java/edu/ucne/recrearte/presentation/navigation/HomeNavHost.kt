@@ -42,14 +42,10 @@ fun HomeNavHost(
         composable<Screen.PaymentMethodList> {
             PaymentMethodListScreen(
                 goToPaymentMethod = {id ->
-                    navHostController.navigate(Screen.PaymentMethodScreen(id ?: 0))
+                    navHostController.navigate(Screen.PaymentMethodScreen(id))
                 },
                 createPaymentMethod = {
                     navHostController.navigate(Screen.PaymentMethodScreen(0))
-                },
-                editPaymentMethod = { pay ->
-                    val id = pay.paymentMethodId ?: 0
-                    navHostController.navigate(Screen.PaymentMethodScreen(id))
                 },
                 drawerState = drawerState,
                 scope = scope
@@ -68,14 +64,10 @@ fun HomeNavHost(
         composable<Screen.TechniqueList> {
             TechniqueListScreen(
                 goToTechnique = {id ->
-                    navHostController.navigate(Screen.TechniqueScreen(id ?: 0))
+                    navHostController.navigate(Screen.TechniqueScreen(id))
                 },
                 createTechnique = {
                     navHostController.navigate(Screen.TechniqueScreen(0))
-                },
-                editTechnique = { technique ->
-                    val id = technique.techniqueId ?: 0
-                    navHostController.navigate(Screen.TechniqueScreen(id))
                 },
                 drawerState = drawerState,
                 scope = scope
@@ -83,7 +75,7 @@ fun HomeNavHost(
         }
 
         composable<Screen.TechniqueScreen> { backStack ->
-            val id =backStack.toRoute<Screen.PaymentMethodScreen>().id
+            val id =backStack.toRoute<Screen.TechniqueScreen>().id
             TechniqueScreen(
                 techniqueId = id,
                 goBack = {navHostController.popBackStack()}

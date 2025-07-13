@@ -2,7 +2,7 @@ package edu.ucne.recrearte.data.remote
 
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import retrofit2.Response
 import retrofit2.http.Body
@@ -21,16 +21,15 @@ interface RecreArteingApi {
     //PaymentMethod
     @GET("api/PaymentMethods")
     suspend fun getAllPaymentMethod(): List<PaymentMethodsDto>
-
     @GET("api/PaymentMethods/{id}")
-    suspend fun getByIdPaymentMethod(@Path("id") id: Int): PaymentMethodsDto
+    suspend fun getByIdPaymentMethod(@Path("id") id: Int): Response<PaymentMethodsDto>
     @POST("api/PaymentMethods")
     suspend fun createPaymentMethod(@Body paymentMethodsDto:  PaymentMethodsDto): PaymentMethodsDto
     @PUT("api/PaymentMethods/{id}")
     suspend fun updatePaymentMethod(
         @Path("id") id: Int,
         @Body paymentMethodsDto: PaymentMethodsDto
-    ): PaymentMethodsDto
+    ): Response<Unit>
     @DELETE("api/PaymentMethods/{id}")
     suspend fun deletePaymentMethod(@Path("id") id: Int): Response<Unit>
 
@@ -38,13 +37,15 @@ interface RecreArteingApi {
     // Techniques
     @GET("api/Techniques")
     suspend fun getAllTechniques(): List<TechniquesDto>
+    @GET("api/Techniques/{id}")
+    suspend fun getByIdTecnique(@Path("id") id: Int): Response<TechniquesDto>
     @POST("api/Techniques")
     suspend fun createTechnique(@Body techniqueDto:  TechniquesDto): TechniquesDto
     @PUT("api/Techniques/{id}")
     suspend fun updateTechnique(
         @Path("id") id: Int,
         @Body techniqueDto: TechniquesDto
-    ): TechniquesDto
+    ):  Response<Unit>
     @DELETE("api/Techniques/{id}")
     suspend fun deleteTechnique(@Path("id") id: Int): Response<Unit>
 }

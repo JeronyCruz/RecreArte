@@ -22,6 +22,16 @@ class TechniqueRepository @Inject constructor(
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
     }
+    suspend fun getTechniqueById(id: Int): Resource<TechniquesDto> {
+        return try {
+            val technique = remoteDataSource.getTechniqueById(id)
+            Resource.Success(technique)
+        } catch (e: HttpException) {
+            Resource.Error("Internet error: ${e.message()}")
+        } catch (e: Exception) {
+            Resource.Error("Unknown error: ${e.message}")
+        }
+    }
 
     suspend fun createTechnique(techniqueDto: TechniquesDto) = remoteDataSource.createTechnique(techniqueDto)
 

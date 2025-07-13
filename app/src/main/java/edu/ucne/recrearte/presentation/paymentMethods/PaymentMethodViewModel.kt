@@ -237,4 +237,28 @@ class PaymentMethodViewModel @Inject constructor(
 
         return null
     }
+
+    fun loadPaymentMethod(id: Int) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            when (val result = repository.getPaymentMethodById(id)) {
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        paymentMethodId = result.data?.paymentMethodId,
+                        paymentMethodName = result.data?.paymentMethodName ?: "",
+                        isLoading = false
+                    )
+                }
+                is Resource.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = result.message,
+                        isLoading = false
+                    )
+                }
+                else -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+            }
+        }
+    }
 }
