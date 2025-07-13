@@ -159,19 +159,7 @@ fun TechniqueListBodyScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     actionIconContentColor = MaterialTheme.colorScheme.surface
-                ),
-                actions = {
-                    IconButton(
-                        onClick = reloadTechniques,
-                        enabled = !uiState.isLoading
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Update",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
+                )
             )
         },
         floatingActionButton = {

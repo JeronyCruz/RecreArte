@@ -159,19 +159,7 @@ fun PaymentMethodListBodyScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     actionIconContentColor = MaterialTheme.colorScheme.surface
-                ),
-                actions = {
-                    IconButton(
-                        onClick = reloadPaymentMethods,
-                        enabled = !uiState.isLoading
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Refresh",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
+                )
             )
         },
         floatingActionButton = {
