@@ -1,9 +1,12 @@
 package edu.ucne.recrearte.data.remote
 
+import edu.ucne.recrearte.data.remote.dto.ArtistsDto
+import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
+import edu.ucne.recrearte.data.remote.dto.UsersDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -48,4 +51,41 @@ interface RecreArteingApi {
     ):  Response<Unit>
     @DELETE("api/Techniques/{id}")
     suspend fun deleteTechnique(@Path("id") id: Int): Response<Unit>
+
+    //Artists
+    @GET("api/Artists")
+    suspend fun getAllArtists(): List<ArtistsDto>
+    @GET("api/Artists/{id}")
+    suspend fun getByIdArtists(@Path("id") id: Int): Response<ArtistsDto>
+    @POST("api/Artists")
+    suspend fun createArtists(@Body artistDto: ArtistsDto): ArtistsDto
+    @PUT("api/Artists/{id}")
+    suspend fun updateArtists(
+        @Path("id") id: Int,
+        @Body artistDto: ArtistsDto
+    ): Response<Unit>
+    @DELETE("api/Artists/{id}")
+    suspend fun deleteArtists(@Path("id") id: Int): Response<Unit>
+
+
+    //Customers
+    @GET("api/Customers")
+    suspend fun getAllCustomers(): List<CustomersDto>
+    @GET("api/Customers/{id}")
+    suspend fun getByIdCustomers(@Path("id") id: Int): Response<CustomersDto>
+    @POST("api/Customers")
+    suspend fun createCustomers(@Body customersDto: CustomersDto): CustomersDto
+    @PUT("api/Customers/{id}")
+    suspend fun updateCustomers(
+        @Path("id") id: Int,
+        @Body customersDto: CustomersDto
+    ): Response<Unit>
+    @DELETE("api/Customers/{id}")
+    suspend fun deleteCustomers(@Path("id") id: Int): Response<Unit>
+
+    //Users
+    @GET("api/Users")
+    suspend fun getAllUsers(): List<UsersDto>
+    @GET("api/Users/{id}")
+    suspend fun getByIdUsers(@Path("id") id: Int): Response<UsersDto>
 }

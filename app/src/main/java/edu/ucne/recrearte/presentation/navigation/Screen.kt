@@ -17,4 +17,7 @@ sealed class Screen {
     data object TechniqueList: Screen()
     @Serializable
     data class TechniqueScreen(val id: Int): Screen()
+
+    @Serializable
+    data object SignUpScreen: Screen()
 }

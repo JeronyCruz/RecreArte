@@ -46,6 +46,8 @@ import androidx.navigation.NavHostController
 import edu.ucne.recrearte.presentation.navigation.Screen
 //imagen
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import edu.ucne.recrearte.R
@@ -70,7 +72,7 @@ fun LoginScreen(
     LoginBodyScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        goToRegister = { navController.navigate(Screen.RegisterScreen) },
+        goToRegister = { navController.navigate(Screen.SignUpScreen) },
         goToSocialLogin = { /* Lógica para login social */ }
     )
 }
@@ -85,6 +87,7 @@ fun LoginBodyScreen(
     goToSocialLogin: () -> Unit
 ) {
     var showPassword by remember { mutableStateOf(false) }
+    var roundedShape = RoundedCornerShape(16.dp)
 
     Column(
         modifier = Modifier
@@ -94,6 +97,8 @@ fun LoginBodyScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
+        Spacer(modifier = Modifier.height(24.dp))
         // Título
         Text(
             text = "RecreArte",
@@ -108,11 +113,13 @@ fun LoginBodyScreen(
             painter = painterResource(id = R.drawable.logorecrearte),
             contentDescription = "Logo de la app",
             modifier = Modifier
-                .size(260.dp)
+                .size(230.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.onBackground)
                 .padding(bottom = 32.dp)
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Subtítulo
         Text(
@@ -136,6 +143,7 @@ fun LoginBodyScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                shape = roundedShape,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -161,6 +169,7 @@ fun LoginBodyScreen(
                 singleLine = true,
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                shape = roundedShape,
                 trailingIcon = {
                     IconButton(onClick = { showPassword = !showPassword }) {
                         Icon(
@@ -198,7 +207,7 @@ fun LoginBodyScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ),
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(24.dp),
             enabled = !uiState.isLoading
         ) {
             if (uiState.isLoading) {
@@ -231,7 +240,7 @@ fun LoginBodyScreen(
                 .fillMaxWidth()
                 .padding(top = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // División con líneas
             Row(
@@ -260,23 +269,20 @@ fun LoginBodyScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Sign Up",
+                    text = "Do you haven't account?, Sign Up",
                     color = MaterialTheme.colorScheme.tertiary,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
-            // Botón de redes sociales como texto
-            TextButton(
-                onClick = goToSocialLogin,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Continue with Social",
-                    color = MaterialTheme.colorScheme.tertiary,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.generated),
+                contentDescription = "Social Media Links",
+                modifier = Modifier
+                    .size(230.dp)
+                    .clip(CircleShape)
+                    .padding(bottom = 64.dp)
+            )
         }
     }
 }
