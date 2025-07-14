@@ -1,9 +1,12 @@
 package edu.ucne.recrearte.data.remote
 
+import edu.ucne.recrearte.data.remote.dto.ArtistsDto
+import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
+import edu.ucne.recrearte.data.remote.dto.UsersDto
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -53,4 +56,57 @@ class RemoteDataSource @Inject constructor(
     }
     suspend fun createTechnique(techniqueDto: TechniquesDto) = recreArteingApi.createTechnique(techniqueDto)
     suspend fun deleteTechnique(id: Int) = recreArteingApi.deleteTechnique(id)
+
+    //Artists
+    suspend fun getArtists() = recreArteingApi.getAllArtists()
+    suspend fun getArtistById(id: Int): ArtistsDto {
+        val response = recreArteingApi.getByIdArtists(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Artist not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
+    suspend fun updateArtist(id: Int, artistsDto: ArtistsDto) {
+        val response = recreArteingApi.updateArtists(id, artistsDto)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+    suspend fun createArtist(artistsDto: ArtistsDto): ArtistsDto {
+        return recreArteingApi.createArtists(artistsDto) // Devuelve el DTO completo
+    }
+    suspend fun deleteArtist(id: Int) = recreArteingApi.deleteArtists(id)
+
+    //Customers
+    suspend fun getCustomers() = recreArteingApi.getAllCustomers()
+    suspend fun getCustomerById(id: Int): CustomersDto {
+        val response = recreArteingApi.getByIdCustomers(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Customer not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
+    suspend fun updateCustomer(id: Int, customersDto: CustomersDto) {
+        val response = recreArteingApi.updateCustomers(id, customersDto)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+    suspend fun createCustomer(customersDto: CustomersDto): CustomersDto {
+        return recreArteingApi.createCustomers(customersDto) // Devuelve el DTO completo
+    }
+    suspend fun deleteCustomer(id: Int) = recreArteingApi.deleteCustomers(id)
+
+    //Users
+    suspend fun getUsers() = recreArteingApi.getAllUsers()
+    suspend fun getUserById(id: Int): UsersDto {
+        val response = recreArteingApi.getByIdUsers(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Users not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
 }
