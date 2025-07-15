@@ -101,6 +101,29 @@ fun HomeScreen(
                         color = Color.Black
                     )
                 }
+                //Works
+                OutlinedButton(
+                    onClick = { navController.navigate(Screen.WorkListScreen) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .border(
+                            width = 2.dp,
+                            color = Color.Blue,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        backgroundColor = Color.Transparent,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text(
+                        text = "create Work",
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                }
             }
         }
     }
