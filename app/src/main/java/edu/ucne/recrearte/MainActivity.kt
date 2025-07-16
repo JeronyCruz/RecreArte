@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import edu.ucne.recrearte.presentation.navigation.HomeNavHost
+import edu.ucne.recrearte.presentation.navigation.MainAppScreen
 import edu.ucne.recrearte.presentation.navigation.Screen
 import edu.ucne.recrearte.ui.theme.RecreArteTheme
 import edu.ucne.recrearte.util.TokenManager
@@ -50,14 +51,16 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { padding ->
-                    HomeNavHost(
-                        navHostController = navController,
-                        modifier = Modifier.padding(padding)
-                    )
-                }
+                MainAppScreen(navController = navController)
+
+//                Scaffold(
+//                    modifier = Modifier.fillMaxSize()
+//                ) { padding ->
+//                    HomeNavHost(
+//                        navHostController = navController,
+//                        modifier = Modifier.padding(padding)
+//                    )
+//                }
             }
         }
     }
