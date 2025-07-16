@@ -23,4 +23,13 @@ sealed class Screen {
     data object WorkListScreen: Screen()
     @Serializable
     data class WorkScreen(val id: Int): Screen()
+
+    @Serializable
+    object FavoritesScreen : Screen()
+
+    @Serializable
+    object CartScreen : Screen()
+
+    @Serializable
+    object ProfileScreen : Screen()
 }
