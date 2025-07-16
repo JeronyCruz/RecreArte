@@ -109,5 +109,18 @@ fun HomeNavHost(
                 createWork = { navHostController.navigate(Screen.WorkScreen(0)) }
             )
         }
+
+        composable<Screen.FavoritesScreen> {
+           PruebaComposable(navController = navHostController)
+        }
+
+        composable<Screen.CartScreen> {
+            // Tu pantalla de carrito aquí
+        }
+
+        composable<Screen.ProfileScreen> {
+            // Tu pantalla de perfil aquí
+        }
+
     }
 }
