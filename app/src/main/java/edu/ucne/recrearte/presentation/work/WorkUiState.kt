@@ -4,6 +4,7 @@ import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.data.remote.dto.WorksListDto
 
 data class WorkUiState(
     val workId: Int? = null,
@@ -17,13 +18,14 @@ data class WorkUiState(
     val errorMessage: String? = null,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val successMessage: String? = null,
-    val errorTitle: String? = null,
-    val errorDimension: String? = null,
-    val errorPrice: String? = null,
-    val errorDescription: String? = null,
-    val works: List<WorksDto> = emptyList(),
+    val successMessage: String? = "",
+    val errorTitle: String? = "",
+    val errorDimension: String? = "",
+    val errorPrice: String? = "",
+    val errorDescription: String? = "",
+    val works: List<WorksListDto> = emptyList(),
     val techniquesL: List<TechniquesDto> = emptyList(),
     val artists: List<ArtistListDto> = emptyList(),
-    val image: ImagesDto? = null
+    val image: ImagesDto? = null,
+    val images: Map<Int, String> = emptyMap() // Para cachear imágenes por workId
 )
