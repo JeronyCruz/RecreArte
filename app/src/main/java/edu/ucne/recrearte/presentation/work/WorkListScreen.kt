@@ -56,7 +56,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.data.remote.dto.WorksListDto
 import kotlinx.coroutines.CoroutineScope
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import android.util.Base64
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,7 +144,7 @@ fun WorkListBodyScreen(
     createWork: () -> Unit,
     deleteWork: (WorksDto) -> Unit,
     query: String,
-    searchResults: List<WorksDto>,
+    searchResults: List<WorksListDto>,
     onSearchQueryChanged: (String) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(
@@ -283,9 +294,9 @@ fun SearchBar(
 
 @Composable
 fun WorkCard(
-    work: WorksDto,
+    work: WorksListDto,
     goToWork: () -> Unit,
-    deleteWork: (WorksDto) -> Unit
+    deleteWork: (WorksDto) -> Unit // Puedes mapear a WorksDto aquí si lo necesitas
 ) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
@@ -304,6 +315,30 @@ fun WorkCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Mostrar imagen si está disponible
+            if (work.base64.isNotBlank()) {
+                val imageBytes = Base64.decode(work.base64, Base64.DEFAULT)
+                val bitmap = remember(work.base64) {
+                    try {
+                        android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            ?.asImageBitmap()
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                bitmap?.let {
+                    Image(
+                        bitmap = it,
+                        contentDescription = "Imagen de la obra",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(end = 12.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -344,9 +379,22 @@ fun WorkCard(
                 )
             }
 
-            // Botón de eliminar
             IconButton(
-                onClick = { deleteWork(work) },
+                onClick = {
+                    // Puedes mapear aquí a WorksDto si lo necesitas
+                    deleteWork(
+                        WorksDto(
+                            workId = work.workId,
+                            title = work.title,
+                            dimension = work.dimension,
+                            techniqueId = work.techniqueId,
+                            artistId = work.artistId,
+                            price = work.price,
+                            description = work.description,
+                            imageId = work.imageId
+                        )
+                    )
+                },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
