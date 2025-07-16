@@ -15,4 +15,5 @@ sealed class SignUpEvent {
     object NextStep : SignUpEvent()
     object SignUp : SignUpEvent()
     data object PreviousStep : SignUpEvent()
+//    object NavigateToLogin : SignUpEvent()
 }
