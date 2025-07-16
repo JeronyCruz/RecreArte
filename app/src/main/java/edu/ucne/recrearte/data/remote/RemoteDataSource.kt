@@ -9,6 +9,7 @@ import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.data.remote.dto.WorksListDto
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -113,7 +114,7 @@ class RemoteDataSource @Inject constructor(
 
     //Works
     suspend fun getWorks() = recreArteingApi.getWorks()
-    suspend fun getByIdWork(id: Int): WorksDto{
+    suspend fun getByIdWork(id: Int): WorksListDto{
         val response = recreArteingApi.getByIdWork(id)
         if (response.isSuccessful) {
             return response.body() ?: throw Exception("Work not found")
