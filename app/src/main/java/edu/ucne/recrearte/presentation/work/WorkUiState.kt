@@ -13,16 +13,17 @@ data class WorkUiState(
     val artistId: Int = 0,
     val price: Double = 0.0,
     val description: String = "",
-    val Images: List<ImagesDto> = emptyList(),
+    val imageId: Int = 0,
     val errorMessage: String? = null,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
     val successMessage: String? = null,
-    val errorTitle: String? = "",
-    val errorDimension: String? = "",
-    val errorPrice: String? = "",
-    val errorDescription: String? = "",
+    val errorTitle: String? = null,
+    val errorDimension: String? = null,
+    val errorPrice: String? = null,
+    val errorDescription: String? = null,
     val works: List<WorksDto> = emptyList(),
     val techniquesL: List<TechniquesDto> = emptyList(),
-    val artists: List<ArtistListDto> = emptyList()
+    val artists: List<ArtistListDto> = emptyList(),
+    val image: ImagesDto? = null
 )

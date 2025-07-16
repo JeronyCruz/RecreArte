@@ -6,11 +6,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
+import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
+import edu.ucne.recrearte.data.repository.ImageRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
+import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +33,8 @@ import kotlin.collections.emptyList
 class WorkViewModel @Inject constructor(
     private val workRepository: WorkRepository,
     private val techniqueRepository: TechniqueRepository,
-    private val artistRepository: ArtistRepository
+    private val artistRepository: ArtistRepository,
+    private val imageRepository: ImageRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(WorkUiState())
     val uiSate = _uiState.asStateFlow()
@@ -57,6 +61,8 @@ class WorkViewModel @Inject constructor(
             is WorkEvent.TitleChange -> titleOnChange(event.title)
             is WorkEvent.UpdateWork -> updateWork(event.id)
             is WorkEvent.WorkdIdChange -> workIdOnchange(event.workId)
+            is WorkEvent.ImageCreate -> createImage(event.image)
+            is WorkEvent.ImageIdChange -> imageOnChange(event.imageId)
         }
     }
     init {
@@ -133,6 +139,13 @@ class WorkViewModel @Inject constructor(
             .copy(
                 title = title
             )
+    }
+
+    private fun imageOnChange(imageId: Int){
+        _uiState.value = _uiState.value
+            .copy(
+            imageId = imageId
+        )
     }
 
     private fun dimensionOnChange(dimension: String){
@@ -278,60 +291,38 @@ class WorkViewModel @Inject constructor(
             techniqueError != null
         ) return
 
-//        viewModelScope.launch {
-//            try {
-//                val work = WorksDto(
-//                    workId = 0,
-//                    title = _uiState.value.title,
-//                    dimension = _uiState.value.dimension,
-//                    description = _uiState.value.description,
-//                    price = _uiState.value.price,
-//                    techniqueId = _uiState.value.techniqueId,
-//                    artistId = _uiState.value.artistId,
-//                    date = Date(),
-//                    Images = _uiState.value.Images
-//                )
-//
-//                workRepository.createWork(work)
-//                new() // Limpiar
-//                _uiState.value = _uiState.value.copy(
-//                    isSuccess = true,
-//                    successMessage = "Work created successfully"
-//                )
-//            } catch (e: Exception) {
-//                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
-//            }
-//        }
         viewModelScope.launch {
             try {
-                val work = WorksDto(
+                val method = WorksDto(
                     workId = 0,
                     title = _uiState.value.title,
                     dimension = _uiState.value.dimension,
                     description = _uiState.value.description,
                     price = _uiState.value.price,
-                    techniqueId = _uiState.value.techniqueId,
                     artistId = _uiState.value.artistId,
-                    date = Date(),
-                    Images = _uiState.value.Images // Ahora coincide con el backend
+                    techniqueId = _uiState.value.artistId,
+                    image = _uiState.value.imageId
                 )
-
-                val response = workRepository.createWork(work)
-                if (response.isSuccessful) {
-                    new()
-                    _uiState.value = _uiState.value.copy(
-                        isSuccess = true,
-                        successMessage = "Work created successfully"
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Error creating work: ${response.message()}"
-                    )
-                }
+                workRepository.createWork(method)
+                new()
+                onEvent(WorkEvent.GetWorks)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "Error creating: ${e.message}"
-                )
+                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
+            }
+        }
+    }
+
+    private fun createImage(imageDto: ImagesDto) {
+        viewModelScope.launch {
+            try {
+                val result = imageRepository.createImage(imageDto)
+                _uiState.update {
+                    it.copy(imageId = result.imageId ?: 0)
+                }
+                // Ahora que tienes el ID, puedes crear el Work automáticamente
+                createWork()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Error creating image: ${e.message}") }
             }
         }
     }
@@ -371,47 +362,16 @@ class WorkViewModel @Inject constructor(
                     dimension = _uiState.value.dimension,
                     description = _uiState.value.description,
                     price = _uiState.value.price,
-                    techniqueId = _uiState.value.techniqueId,
                     artistId = _uiState.value.artistId,
-                    date = Date()
+                    techniqueId = _uiState.value.artistId,
+                    image = _uiState.value.imageId
                 )
-                workRepository.updateWork(id, method)
-                _uiState.value = _uiState.value.copy(
-                    isSuccess = true,
-                    successMessage = "Work updated successfully"
-                )
-                //onEvent(TechniqueEvent.GetTechniques)
+                workRepository.createWork(method)
+                new()
+                onEvent(WorkEvent.GetWorks)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error updating: ${e.message}")
+                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
             }
-        }
-    }
-
-    //para las imagenes
-//    fun addImage(image: ImagesDto) {
-//        _uiState.update { current ->
-//            current.copy(Images = current.Images + image)
-//        }
-//    }
-    fun addImage(image: ImagesDto) {
-        if (image.base64.isNullOrEmpty()) {
-            _uiState.update { current ->
-                current.copy(errorMessage = "Invalid image data")
-            }
-            return
-        }
-
-        _uiState.update { current ->
-            current.copy(Images = current.Images + image)
-        }
-    }
-
-    fun removeImage(index: Int) {
-        _uiState.update { current ->
-            val updatedImages = current.Images.toMutableList().apply {
-                if (index in indices) removeAt(index)
-            }
-            current.copy(Images = updatedImages)
         }
     }
 

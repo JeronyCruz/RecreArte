@@ -9,7 +9,6 @@ data class WorksDto(
     val techniqueId: Int,
     val artistId: Int,
     val price: Double,
-    val date: Date,
     val description: String,
-    val Images: List<ImagesDto> = emptyList()
+    val image: Int
 )
