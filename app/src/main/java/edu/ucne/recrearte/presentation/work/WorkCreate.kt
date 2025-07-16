@@ -3,6 +3,7 @@ package edu.ucne.recrearte.presentation.work
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -47,7 +48,7 @@ import edu.ucne.recrearte.data.remote.dto.ImagesDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorkScreen(
+fun WorkScreenCreate(
     workId: Int? = null,
     viewModel: WorkViewModel = hiltViewModel(),
     goBack: () -> Unit
@@ -208,23 +209,36 @@ fun WorkScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Imagen
-            Button(onClick = {
-                if (ContextCompat.checkSelfPermission(
-                        context,
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    ActivityCompat.requestPermissions(
-                        context as Activity,
-                        arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                        0
-                    )
-                } else {
+            val requestPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (isGranted) {
                     launcher.launch("image/*")
+                } else {
+                    Toast.makeText(context, "Permiso denegado", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            Button(onClick = {
+                val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    android.Manifest.permission.READ_MEDIA_IMAGES
+                } else {
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE
+                }
+
+                when {
+                    ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED -> {
+                        launcher.launch("image/*")
+                    }
+                    else -> {
+                        requestPermissionLauncher.launch(permission)
+                    }
                 }
             }) {
                 Text("Seleccionar Imagen")
             }
+
+
 
 
             // Preview de imagen seleccionada
