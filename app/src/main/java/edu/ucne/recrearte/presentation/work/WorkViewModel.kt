@@ -6,14 +6,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
-import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.data.remote.dto.WorksListDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
 import edu.ucne.recrearte.data.repository.ImageRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
-import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +24,6 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 import kotlin.collections.emptyList
 
@@ -42,8 +40,8 @@ class WorkViewModel @Inject constructor(
     val loading : StateFlow<Boolean> = _loading
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    private val _searchResults = MutableStateFlow<List<WorksDto>>(emptyList())
-    val searchResults: StateFlow<List<WorksDto>> = _searchResults.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<WorksListDto>>(emptyList())
+    val searchResults: StateFlow<List<WorksListDto>> = _searchResults.asStateFlow()
 
     fun onEvent(event: WorkEvent){
         when(event){
@@ -117,7 +115,7 @@ class WorkViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    private fun filter(query: String): List<WorksDto> {
+    private fun filter(query: String): List<WorksListDto> {
         return if (query.isBlank()) {
             _uiState.value.works
         } else {
@@ -197,28 +195,38 @@ class WorkViewModel @Inject constructor(
         }
     }
 
-    private fun getWorks(){
+    private fun getWorks() {
         viewModelScope.launch {
             workRepository.getWorks().collectLatest { getting ->
-                when (getting){
+                when (getting) {
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true) }
                     }
-
                     is Resource.Success -> {
+                        // Procesar las imágenes
+                        val worksWithImages = getting.data?.map { work ->
+                            if (work.imageId > 0) {
+                                try {
+                                    val image = imageRepository.getImageById(work.imageId)
+                                    work.copy(base64 = image.data?.base64 ?: "")
+                                } catch (e: Exception) {
+                                    work.copy(base64 = "")
+                                }
+                            } else {
+                                work
+                            }
+                        } ?: emptyList()
+
                         _uiState.update {
                             it.copy(
-                                works = getting.data ?: emptyList(),
+                                works = worksWithImages,
                                 isLoading = false
                             )
                         }
                     }
-
                     is Resource.Error -> {
                         _uiState.update {
-                            it.copy(
-                                isLoading = false
-                            )
+                            it.copy(isLoading = false)
                         }
                     }
                 }
@@ -300,8 +308,8 @@ class WorkViewModel @Inject constructor(
                     description = _uiState.value.description,
                     price = _uiState.value.price,
                     artistId = _uiState.value.artistId,
-                    techniqueId = _uiState.value.artistId,
-                    image = _uiState.value.imageId
+                    techniqueId = _uiState.value.techniqueId,
+                    imageId = _uiState.value.imageId
                 )
                 workRepository.createWork(method)
                 new()
@@ -364,7 +372,7 @@ class WorkViewModel @Inject constructor(
                     price = _uiState.value.price,
                     artistId = _uiState.value.artistId,
                     techniqueId = _uiState.value.artistId,
-                    image = _uiState.value.imageId
+                    imageId = _uiState.value.imageId
                 )
                 workRepository.createWork(method)
                 new()
