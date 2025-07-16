@@ -1,4 +1,4 @@
-package edu.ucne.recrearte.presentation.Home
+package edu.ucne.recrearte.presentation.navigation
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,10 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import edu.ucne.recrearte.presentation.navigation.Screen
 
 @Composable
-fun HomeScreen(
+fun PruebaComposable(
     navController: NavController
 ) {
     Column(
@@ -37,7 +36,7 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
     ) {
         Text(
-            text = "Home Pruebas",
+            text = "2 Page",
             style = MaterialTheme.typography.h4,
             modifier = Modifier.padding(bottom = 16.dp),
             fontWeight = FontWeight.Bold,

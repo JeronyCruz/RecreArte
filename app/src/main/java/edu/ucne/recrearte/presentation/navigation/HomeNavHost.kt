@@ -16,6 +16,8 @@ import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
 import edu.ucne.recrearte.presentation.signUp.SignUpScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
+import edu.ucne.recrearte.presentation.work.WorkListScreen
+import edu.ucne.recrearte.presentation.work.WorkScreen
 
 @Composable
 fun HomeNavHost(
@@ -87,5 +89,38 @@ fun HomeNavHost(
                 goBack = {navHostController.popBackStack()}
             )
         }
+
+        composable<Screen.WorkScreen> { backStack ->
+            val id = backStack.toRoute<Screen.WorkScreen>().id
+            WorkScreen(
+                workId = id,
+                goBack = {navHostController.popBackStack()}
+            )
+
+        }
+
+        composable<Screen.WorkListScreen> {
+            WorkListScreen(
+                drawerState = drawerState,
+                scope = scope,
+                goToWork = { id ->
+                    navHostController.navigate(Screen.WorkScreen(id))
+                },
+                createWork = { navHostController.navigate(Screen.WorkScreen(0)) }
+            )
+        }
+
+        composable<Screen.FavoritesScreen> {
+           PruebaComposable(navController = navHostController)
+        }
+
+        composable<Screen.CartScreen> {
+            // Tu pantalla de carrito aquí
+        }
+
+        composable<Screen.ProfileScreen> {
+            // Tu pantalla de perfil aquí
+        }
+
     }
 }

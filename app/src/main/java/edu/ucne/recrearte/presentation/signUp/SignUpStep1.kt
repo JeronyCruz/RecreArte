@@ -181,7 +181,7 @@ fun SignUpStep1(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+//        Spacer(modifier = Modifier.weight(1f))
 
         // Already have an account?
         Row(

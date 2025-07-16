@@ -7,6 +7,7 @@ import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
+import edu.ucne.recrearte.data.remote.dto.WorksDto
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -34,7 +35,6 @@ class RemoteDataSource @Inject constructor(
             throw HttpException(response)
         }
     }
-    suspend fun getById(id: Int) = recreArteingApi.getByIdPaymentMethod(id)
     suspend fun createPaymentMethod(paymentMethodsDto: PaymentMethodsDto) = recreArteingApi.createPaymentMethod(paymentMethodsDto)
     suspend fun deletePaymentMethod(id: Int) = recreArteingApi.deletePaymentMethod(id)
 
@@ -109,4 +109,23 @@ class RemoteDataSource @Inject constructor(
             throw HttpException(response)
         }
     }
+
+    //Works
+    suspend fun getWorks() = recreArteingApi.getWorks()
+    suspend fun getByIdWork(id: Int): WorksDto{
+        val response = recreArteingApi.getByIdWork(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Work not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
+    suspend fun updateWork(id: Int, workDto: WorksDto){
+        val response = recreArteingApi.updateWork(id, workDto)
+        if (!response.isSuccessful){
+            throw HttpException(response)
+        }
+    }
+    suspend fun createWork(workDto: WorksDto) = recreArteingApi.createWork(workDto)
+    suspend fun deleteWork(id: Int) = recreArteingApi.deleteWork(id)
 }

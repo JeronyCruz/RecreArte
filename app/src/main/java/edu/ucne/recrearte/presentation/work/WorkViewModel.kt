@@ -1,0 +1,470 @@
+package edu.ucne.recrearte.presentation.work
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.recrearte.data.remote.Resource
+import edu.ucne.recrearte.data.remote.dto.ArtistListDto
+import edu.ucne.recrearte.data.remote.dto.ImagesDto
+import edu.ucne.recrearte.data.remote.dto.TechniquesDto
+import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.data.repository.ArtistRepository
+import edu.ucne.recrearte.data.repository.TechniqueRepository
+import edu.ucne.recrearte.data.repository.WorkRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.util.Date
+import javax.inject.Inject
+import kotlin.collections.emptyList
+
+@HiltViewModel
+class WorkViewModel @Inject constructor(
+    private val workRepository: WorkRepository,
+    private val techniqueRepository: TechniqueRepository,
+    private val artistRepository: ArtistRepository
+): ViewModel() {
+    private val _uiState = MutableStateFlow(WorkUiState())
+    val uiSate = _uiState.asStateFlow()
+    private val _loading = MutableStateFlow(false)
+    val loading : StateFlow<Boolean> = _loading
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<WorksDto>>(emptyList())
+    val searchResults: StateFlow<List<WorksDto>> = _searchResults.asStateFlow()
+
+    fun onEvent(event: WorkEvent){
+        when(event){
+            is WorkEvent.ArtistChange -> artistOnChange(event.artistId)
+            WorkEvent.ClearErrorMessage -> clearErrorMessage()
+            WorkEvent.CreateWork -> createWork()
+            is WorkEvent.DeleteWork -> deleteWork(event.id)
+            is WorkEvent.DescriptionChange -> descriptionOnChange(event.description)
+            is WorkEvent.DimensionChange -> dimensionOnChange(event.dimension)
+            WorkEvent.GetWorks -> getWorks()
+            WorkEvent.New -> new()
+            is WorkEvent.PriceChange -> priceOnChange(event.price)
+            WorkEvent.ResetSuccessMessage -> resetSuccessMessage()
+            is WorkEvent.TechniqueChange -> techniqueOnChange(event.techniqueId)
+            is WorkEvent.TitleChange -> titleOnChange(event.title)
+            is WorkEvent.UpdateWork -> updateWork(event.id)
+            is WorkEvent.WorkdIdChange -> workIdOnchange(event.workId)
+        }
+    }
+    init {
+        getWorks()
+        getTechniques()
+        getArtists()
+        //Para la busqueda
+        viewModelScope.launch {
+            _searchQuery
+                .debounce(600)
+                .distinctUntilChanged()
+                .mapLatest { query ->
+                    filter(query)
+                }
+                .collectLatest { filtered ->
+                    _searchResults.value = filtered
+                }
+        }
+
+    }
+    private fun new(){
+        _uiState.value = _uiState.value.copy(
+            title = "",
+            dimension = "",
+            artistId = 0,
+            techniqueId = 0,
+            price = 0.0,
+            description = "",
+            errorTitle = "",
+            errorPrice = "",
+            errorDimension = "",
+            errorDescription = "",
+            errorMessage = "",
+            isSuccess = false,
+            successMessage = null
+        )
+    }
+
+    private fun resetSuccessMessage(){
+        _uiState.value = _uiState.value
+            .copy(
+                isSuccess = false, successMessage = null
+            )
+    }
+
+    private fun clearErrorMessage(){
+        _uiState.value = _uiState.value
+            .copy(errorMessage = null)
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+    }
+
+    private fun filter(query: String): List<WorksDto> {
+        return if (query.isBlank()) {
+            _uiState.value.works
+        } else {
+            _uiState.value.works.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                        (it.description.contains(query, ignoreCase = true) ?: false)
+            }
+        }
+    }
+
+    private fun workIdOnchange(id: Int){
+        _uiState.value = _uiState.value
+            .copy(
+            workId = id
+        )
+    }
+    private fun titleOnChange(title: String){
+        _uiState.value = _uiState.value
+            .copy(
+                title = title
+            )
+    }
+
+    private fun dimensionOnChange(dimension: String){
+        _uiState.value = _uiState.value
+            .copy(
+                dimension = dimension
+            )
+    }
+
+    private fun descriptionOnChange(description: String){
+        _uiState.value = _uiState.value
+            .copy(
+                description = description
+            )
+    }
+
+    private fun priceOnChange(price: Double){
+        _uiState.value = _uiState.value
+            .copy(
+                price= price
+            )
+    }
+
+    private fun artistOnChange(id: Int){
+        _uiState.value = _uiState.value
+            .copy(
+                artistId = id
+            )
+    }
+    private fun techniqueOnChange(id: Int){
+        _uiState.value = _uiState.value
+            .copy(
+                techniqueId = id
+            )
+    }
+
+    private fun deleteWork(id: Int){
+        viewModelScope.launch {
+            try {
+                workRepository.deleteWork(id)
+                _uiState.value = _uiState.value.copy(
+                    isSuccess = true,
+                    successMessage = "Work successfully removed"
+                )
+                //onEvent(WorkEvent.GetWorks)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+            }
+        }
+    }
+
+    private fun getWorks(){
+        viewModelScope.launch {
+            workRepository.getWorks().collectLatest { getting ->
+                when (getting){
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
+
+                    is Resource.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                works = getting.data ?: emptyList(),
+                                isLoading = false
+                            )
+                        }
+                    }
+
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private fun isValidField(field: String): String? {
+        if (field.isBlank()) {
+            return "The field cannot be empty."
+        }
+
+        val regex = Regex("^[a-zA-Z0-9\\sáéíóúÁÉÍÓÚñÑüÜ.-]*$")
+        if (!regex.matches(field)) {
+            return "The field contains illegal characters."
+        }
+
+        return null
+    }
+
+    private fun loadWork(id: Int) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            when (val result = workRepository.getWorkById(id)) {
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        workId = result.data?.workId,
+                        techniqueId = result.data?.techniqueId ?: 0,
+                        title = result.data?.title ?: "",
+                        dimension = result.data?.dimension ?: "",
+                        description = result.data?.description ?: "",
+                        price = result.data?.price ?: 0.0,
+                        isLoading = false
+                    )
+                }
+                is Resource.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = result.message,
+                        isLoading = false
+                    )
+                }
+                else -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+            }
+        }
+    }
+
+    private fun createWork() {
+        val titleError = isValidField(_uiState.value.title)
+        val dimensionError = isValidField(_uiState.value.dimension)
+        val descriptionError = isValidField(_uiState.value.description)
+        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
+        val artistError = if (_uiState.value.artistId <= 0) "Select an artist" else null
+        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
+
+        _uiState.value = _uiState.value.copy(
+            errorTitle = titleError ?: "",
+            errorDimension = dimensionError ?: "",
+            errorDescription = descriptionError ?: "",
+            errorPrice = priceError ?: "",
+            errorMessage = artistError ?: techniqueError ?: ""
+        )
+
+        if (
+            titleError != null ||
+            dimensionError != null ||
+            descriptionError != null ||
+            priceError != null ||
+            artistError != null ||
+            techniqueError != null
+        ) return
+
+//        viewModelScope.launch {
+//            try {
+//                val work = WorksDto(
+//                    workId = 0,
+//                    title = _uiState.value.title,
+//                    dimension = _uiState.value.dimension,
+//                    description = _uiState.value.description,
+//                    price = _uiState.value.price,
+//                    techniqueId = _uiState.value.techniqueId,
+//                    artistId = _uiState.value.artistId,
+//                    date = Date(),
+//                    Images = _uiState.value.Images
+//                )
+//
+//                workRepository.createWork(work)
+//                new() // Limpiar
+//                _uiState.value = _uiState.value.copy(
+//                    isSuccess = true,
+//                    successMessage = "Work created successfully"
+//                )
+//            } catch (e: Exception) {
+//                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
+//            }
+//        }
+        viewModelScope.launch {
+            try {
+                val work = WorksDto(
+                    workId = 0,
+                    title = _uiState.value.title,
+                    dimension = _uiState.value.dimension,
+                    description = _uiState.value.description,
+                    price = _uiState.value.price,
+                    techniqueId = _uiState.value.techniqueId,
+                    artistId = _uiState.value.artistId,
+                    date = Date(),
+                    Images = _uiState.value.Images // Ahora coincide con el backend
+                )
+
+                val response = workRepository.createWork(work)
+                if (response.isSuccessful) {
+                    new()
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Work created successfully"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Error creating work: ${response.message()}"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error creating: ${e.message}"
+                )
+            }
+        }
+    }
+
+
+    private fun updateWork(id: Int){
+
+        val titleError = isValidField(_uiState.value.title)
+        val dimensionError = isValidField(_uiState.value.dimension)
+        val descriptionError = isValidField(_uiState.value.description)
+        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
+        val artistError = if (_uiState.value.artistId <= 0) "Select an artist" else null
+        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
+
+        _uiState.value = _uiState.value.copy(
+            errorTitle = titleError ?: "",
+            errorDimension = dimensionError ?: "",
+            errorDescription = descriptionError ?: "",
+            errorPrice = priceError ?: "",
+            errorMessage = artistError ?: techniqueError ?: ""
+        )
+
+        if (
+            titleError != null ||
+            dimensionError != null ||
+            descriptionError != null ||
+            priceError != null ||
+            artistError != null ||
+            techniqueError != null
+        ) return
+
+        viewModelScope.launch {
+            try {
+                val method = WorksDto(
+                    workId = id,
+                    title = _uiState.value.title,
+                    dimension = _uiState.value.dimension,
+                    description = _uiState.value.description,
+                    price = _uiState.value.price,
+                    techniqueId = _uiState.value.techniqueId,
+                    artistId = _uiState.value.artistId,
+                    date = Date()
+                )
+                workRepository.updateWork(id, method)
+                _uiState.value = _uiState.value.copy(
+                    isSuccess = true,
+                    successMessage = "Work updated successfully"
+                )
+                //onEvent(TechniqueEvent.GetTechniques)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Error updating: ${e.message}")
+            }
+        }
+    }
+
+    //para las imagenes
+//    fun addImage(image: ImagesDto) {
+//        _uiState.update { current ->
+//            current.copy(Images = current.Images + image)
+//        }
+//    }
+    fun addImage(image: ImagesDto) {
+        if (image.base64.isNullOrEmpty()) {
+            _uiState.update { current ->
+                current.copy(errorMessage = "Invalid image data")
+            }
+            return
+        }
+
+        _uiState.update { current ->
+            current.copy(Images = current.Images + image)
+        }
+    }
+
+    fun removeImage(index: Int) {
+        _uiState.update { current ->
+            val updatedImages = current.Images.toMutableList().apply {
+                if (index in indices) removeAt(index)
+            }
+            current.copy(Images = updatedImages)
+        }
+    }
+
+    //Para los select
+    val techniques: StateFlow<Resource<List<TechniquesDto>>> = techniqueRepository.getTechniques()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = Resource.Loading()
+        )
+
+    val artists: StateFlow<Resource<List<ArtistListDto>>> = artistRepository.getArtists()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = Resource.Loading()
+        )
+    private fun getTechniques() {
+        viewModelScope.launch {
+            techniqueRepository.getTechniques().collectLatest { result ->
+                if (result is Resource.Success) {
+                    _uiState.update {
+                        it.copy(techniquesL = result.data ?: emptyList())
+                    }
+                }
+            }
+        }
+    }
+
+private fun getArtists() {
+    viewModelScope.launch {
+        artistRepository.getArtists().collectLatest { result ->
+            when (result) {
+                is Resource.Success -> {
+                    val artists = result.data ?: emptyList()
+                    println("Artists fetched: $artists") // Debug log
+                    _uiState.update {
+                        it.copy(artists = artists)
+                    }
+                }
+                is Resource.Error -> {
+                    println("Error fetching artists: ${result.message}") // Debug log
+                    _uiState.update {
+                        it.copy(errorMessage = result.message ?: "Error fetching artists")
+                    }
+                }
+                is Resource.Loading -> {
+                    println("Loading artists...") // Debug log
+                    _uiState.update { it.copy(isLoading = true) }
+                }
+            }
+        }
+    }
+}
+
+}

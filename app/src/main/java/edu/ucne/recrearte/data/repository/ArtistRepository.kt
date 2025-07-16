@@ -2,6 +2,7 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
+import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +14,7 @@ import javax.inject.Inject
 class ArtistRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource
 ){
-    fun getArtists(): Flow<Resource<List<ArtistsDto>>> = flow {
+    fun getArtists(): Flow<Resource<List<ArtistListDto>>> = flow {
         try {
             println("[DEBUG] Intentando obtener Artists...")
             emit(Resource.Loading())
