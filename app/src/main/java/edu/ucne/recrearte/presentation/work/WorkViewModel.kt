@@ -8,7 +8,6 @@ import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
-import edu.ucne.recrearte.data.remote.dto.WorksListDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
 import edu.ucne.recrearte.data.repository.ImageRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
@@ -26,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.collections.emptyList
+import kotlin.collections.filter
 
 @HiltViewModel
 class WorkViewModel @Inject constructor(
@@ -40,8 +40,8 @@ class WorkViewModel @Inject constructor(
     val loading : StateFlow<Boolean> = _loading
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    private val _searchResults = MutableStateFlow<List<WorksListDto>>(emptyList())
-    val searchResults: StateFlow<List<WorksListDto>> = _searchResults.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<WorksDto>>(emptyList())
+    val searchResults: StateFlow<List<WorksDto>> = _searchResults.asStateFlow()
 
     fun onEvent(event: WorkEvent){
         when(event){
@@ -115,7 +115,7 @@ class WorkViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    private fun filter(query: String): List<WorksListDto> {
+    private fun filter(query: String): List<WorksDto> {
         return if (query.isBlank()) {
             _uiState.value.works
         } else {
@@ -180,20 +180,40 @@ class WorkViewModel @Inject constructor(
             )
     }
 
-    private fun deleteWork(id: Int){
-        viewModelScope.launch {
-            try {
+//    private fun deleteWork(id: Int){
+//        viewModelScope.launch {
+//            try {
+//                workRepository.deleteWork(id)
+//                _uiState.value = _uiState.value.copy(
+//                    isSuccess = true,
+//                    successMessage = "Work successfully removed"
+//                )
+//                onEvent(WorkEvent.GetWorks)
+//            } catch (e: Exception) {
+//                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+//            }
+//        }
+//    }
+private fun deleteWork(id: Int) {
+    viewModelScope.launch {
+        try {
+            // Primero obtenemos el work para saber el imageId
+            val work = workRepository.getWorkById(id)
+            if (work is Resource.Success) {
+                work.data?.imageId?.let { imageId ->
+                    if (imageId > 0) {
+                        // Eliminar la imagen asociada
+                        imageRepository.deleteImage(imageId)
+                    }
+                }
                 workRepository.deleteWork(id)
-                _uiState.value = _uiState.value.copy(
-                    isSuccess = true,
-                    successMessage = "Work successfully removed"
-                )
-                //onEvent(WorkEvent.GetWorks)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+                onEvent(WorkEvent.GetWorks)
             }
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
         }
     }
+}
 
     private fun getWorks() {
         viewModelScope.launch {
@@ -246,7 +266,7 @@ class WorkViewModel @Inject constructor(
         return null
     }
 
-    private fun loadWork(id: Int) {
+    fun loadWork(id: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             when (val result = workRepository.getWorkById(id)) {
@@ -327,8 +347,6 @@ class WorkViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(imageId = result.imageId ?: 0)
                 }
-                // Ahora que tienes el ID, puedes crear el Work automáticamente
-                createWork()
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Error creating image: ${e.message}") }
             }
@@ -374,7 +392,7 @@ class WorkViewModel @Inject constructor(
                     techniqueId = _uiState.value.artistId,
                     imageId = _uiState.value.imageId
                 )
-                workRepository.createWork(method)
+                workRepository.updateWork(id,method)
                 new()
                 onEvent(WorkEvent.GetWorks)
             } catch (e: Exception) {
