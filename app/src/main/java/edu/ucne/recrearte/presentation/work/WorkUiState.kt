@@ -4,7 +4,6 @@ import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
-import edu.ucne.recrearte.data.remote.dto.WorksListDto
 
 data class WorkUiState(
     val workId: Int? = null,
@@ -23,7 +22,7 @@ data class WorkUiState(
     val errorDimension: String? = "",
     val errorPrice: String? = "",
     val errorDescription: String? = "",
-    val works: List<WorksListDto> = emptyList(),
+    val works: List<WorksDto> = emptyList(),
     val techniquesL: List<TechniquesDto> = emptyList(),
     val artists: List<ArtistListDto> = emptyList(),
     val image: ImagesDto? = null,

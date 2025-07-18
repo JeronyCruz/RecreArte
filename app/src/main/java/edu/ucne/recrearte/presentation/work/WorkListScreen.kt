@@ -1,5 +1,7 @@
 package edu.ucne.recrearte.presentation.work
 
+import android.util.Base64
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,8 +20,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -46,6 +46,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -56,17 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.recrearte.data.remote.dto.WorksDto
-import edu.ucne.recrearte.data.remote.dto.WorksListDto
 import kotlinx.coroutines.CoroutineScope
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import android.util.Base64
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.Painter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -144,7 +136,7 @@ fun WorkListBodyScreen(
     createWork: () -> Unit,
     deleteWork: (WorksDto) -> Unit,
     query: String,
-    searchResults: List<WorksListDto>,
+    searchResults: List<WorksDto>,
     onSearchQueryChanged: (String) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(
@@ -294,7 +286,7 @@ fun SearchBar(
 
 @Composable
 fun WorkCard(
-    work: WorksListDto,
+    work: WorksDto,
     goToWork: () -> Unit,
     deleteWork: (WorksDto) -> Unit // Puedes mapear a WorksDto aquí si lo necesitas
 ) {
@@ -316,7 +308,7 @@ fun WorkCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Mostrar imagen si está disponible
-            if (work.base64.isNotBlank()) {
+            if (work.base64!!.isNotBlank()) {
                 val imageBytes = Base64.decode(work.base64, Base64.DEFAULT)
                 val bitmap = remember(work.base64) {
                     try {

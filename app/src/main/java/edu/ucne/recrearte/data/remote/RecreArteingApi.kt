@@ -10,7 +10,6 @@ import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
-import edu.ucne.recrearte.data.remote.dto.WorksListDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -95,11 +94,11 @@ interface RecreArteingApi {
 
     //Works
     @GET("api/Works")
-    suspend fun getWorks(): List<WorksListDto>
+    suspend fun getWorks(): List<WorksDto>
     @GET("api/Works/{id}")
-    suspend fun getByIdWork(@Path("id") id: Int): Response<WorksListDto>
+    suspend fun getByIdWork(@Path("id") id: Int): Response<WorksDto>
     @POST("api/Works")
-    suspend fun createWork(@Body work: WorksDto): WorksDto
+    suspend fun createWork(@Body work: WorksDto):  Response<WorksDto>
     @PUT("api/Works/{id}")
     suspend fun updateWork(@Path("id") id: Int, @Body work: WorksDto): Response<Unit>
     @DELETE("api/Works/{id}")

@@ -4,7 +4,6 @@ import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
-import edu.ucne.recrearte.data.remote.dto.WorksListDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
@@ -13,7 +12,7 @@ import javax.inject.Inject
 class WorkRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource
 ) {
-    fun getWorks(): Flow<Resource<List<WorksListDto>>> = flow {
+    fun getWorks(): Flow<Resource<List<WorksDto>>> = flow {
         try {
             emit(Resource.Loading())
             val work = remoteDataSource.getWorks()
@@ -25,7 +24,7 @@ class WorkRepository @Inject constructor(
         }
     }
 
-    suspend fun getWorkById(id: Int): Resource<WorksListDto> {
+    suspend fun getWorkById(id: Int): Resource<WorksDto> {
         return try {
             val work = remoteDataSource.getByIdWork(id)
             Resource.Success(work)

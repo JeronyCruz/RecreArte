@@ -8,17 +8,6 @@ data class WorksDto(
     val artistId: Int,
     val price: Double,
     val description: String,
-    val imageId: Int
-)
-
-data class WorksListDto(
-    val workId: Int?,
-    val title: String,
-    val dimension: String,
-    val techniqueId: Int,
-    val artistId: Int,
-    val price: Double,
-    val description: String,
     val imageId: Int,
-    val base64: String
+    val base64: String? = null
 )

@@ -45,6 +45,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
+import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +62,14 @@ fun WorkScreenCreate(
     var expandedArtist by remember { mutableStateOf(false) }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(workId) {
+        if (workId != null && workId != 0) {
+            viewModel.loadWork(workId)
+        } else {
+            viewModel.onEvent(WorkEvent.New)
+        }
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -258,8 +267,10 @@ fun WorkScreenCreate(
                 onClick = {
                     if (workId != null && workId != 0) {
                         viewModel.onEvent(WorkEvent.UpdateWork(workId))
+                        goBack()
                     } else {
                         viewModel.onEvent(WorkEvent.CreateWork)
+                        goBack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
