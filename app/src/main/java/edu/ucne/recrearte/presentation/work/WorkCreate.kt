@@ -46,7 +46,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkScreenCreate(
@@ -60,7 +59,6 @@ fun WorkScreenCreate(
 
     var expandedTechnique by remember { mutableStateOf(false) }
     var expandedArtist by remember { mutableStateOf(false) }
-
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     LaunchedEffect(workId) {
@@ -79,14 +77,20 @@ fun WorkScreenCreate(
                 val imageBytes = context.contentResolver.openInputStream(uri)?.readBytes()
                 imageBytes?.let { bytes ->
                     val base64 = Base64.encodeToString(bytes, Base64.DEFAULT)
-                    // 👇 Usa el nombre correcto según tu clase ImagesDto
-                    viewModel.onEvent(WorkEvent.ImageCreate(ImagesDto(imageId = 0, base64 = base64)))
+                    viewModel.onEvent(
+                        WorkEvent.ImageUpdate(
+                            ImagesDto(
+                                imageId = uiState.imageId,
+                                base64 = base64
+                            )
+                        )
+                    )
                 }
             }
         }
     )
 
-    // Mostrar Toast si se guarda correctamente
+    // Mostrar mensaje de éxito
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             Toast.makeText(context, uiState.successMessage ?: "Guardado con éxito", Toast.LENGTH_SHORT).show()
@@ -160,7 +164,7 @@ fun WorkScreenCreate(
                 OutlinedButton(onClick = { expandedTechnique = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(
                         uiState.techniquesL.find { it.techniqueId == uiState.techniqueId }?.techniqueName
-                            ?: "Seleccione técnico",
+                            ?: "Seleccione técnica",
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Start
                     )
@@ -189,7 +193,7 @@ fun WorkScreenCreate(
                 OutlinedButton(onClick = { expandedArtist = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(
                         uiState.artists.find { it.artistId == uiState.artistId }?.userName
-                            ?: if (uiState.artists.isEmpty()) "No artists available" else "Seleccione artista",
+                            ?: if (uiState.artists.isEmpty()) "No hay artistas" else "Seleccione artista",
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Start
                     )
@@ -200,11 +204,11 @@ fun WorkScreenCreate(
                     onDismissRequest = { expandedArtist = false }
                 ) {
                     if (uiState.artists.isEmpty()) {
-                        DropdownMenuItem(text = { Text("No artists available") }, onClick = { expandedArtist = false })
+                        DropdownMenuItem(text = { Text("No hay artistas disponibles") }, onClick = { expandedArtist = false })
                     } else {
                         uiState.artists.forEach { artist ->
                             DropdownMenuItem(
-                                text = { Text(artist.userName ?: "Unknown") },
+                                text = { Text(artist.userName ?: "Desconocido") },
                                 onClick = {
                                     viewModel.onEvent(WorkEvent.ArtistChange(artist.artistId ?: 0))
                                     expandedArtist = false
@@ -244,17 +248,26 @@ fun WorkScreenCreate(
                     }
                 }
             }) {
-                Text("Seleccionar Imagen")
+                Text(if (uiState.imageId > 0) "Cambiar Imagen" else "Seleccionar Imagen")
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
 
-
-
-            // Preview de imagen seleccionada
+            // Imagen seleccionada nueva
             selectedImageUri?.let {
-                Spacer(modifier = Modifier.height(8.dp))
                 AsyncImage(
                     model = it,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }
+
+            // Imagen cargada desde base64 si no hay nueva
+            if (selectedImageUri == null && !uiState.base64.isNullOrBlank()) {
+                AsyncImage(
+                    model = "data:image/*;base64,${uiState.base64}",
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()

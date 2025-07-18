@@ -61,6 +61,8 @@ class WorkViewModel @Inject constructor(
             is WorkEvent.WorkdIdChange -> workIdOnchange(event.workId)
             is WorkEvent.ImageCreate -> createImage(event.image)
             is WorkEvent.ImageIdChange -> imageOnChange(event.imageId)
+            WorkEvent.RemoveImage -> removeImage()
+            is WorkEvent.ImageUpdate -> updateImage(event.image)
         }
     }
     init {
@@ -180,40 +182,26 @@ class WorkViewModel @Inject constructor(
             )
     }
 
-//    private fun deleteWork(id: Int){
-//        viewModelScope.launch {
-//            try {
-//                workRepository.deleteWork(id)
-//                _uiState.value = _uiState.value.copy(
-//                    isSuccess = true,
-//                    successMessage = "Work successfully removed"
-//                )
-//                onEvent(WorkEvent.GetWorks)
-//            } catch (e: Exception) {
-//                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
-//            }
-//        }
-//    }
-private fun deleteWork(id: Int) {
-    viewModelScope.launch {
-        try {
-            // Primero obtenemos el work para saber el imageId
-            val work = workRepository.getWorkById(id)
-            if (work is Resource.Success) {
-                work.data?.imageId?.let { imageId ->
-                    if (imageId > 0) {
-                        // Eliminar la imagen asociada
-                        imageRepository.deleteImage(imageId)
+    private fun deleteWork(id: Int) {
+        viewModelScope.launch {
+            try {
+                // Primero obtenemos el work para saber el imageId
+                val work = workRepository.getWorkById(id)
+                if (work is Resource.Success) {
+                    work.data?.imageId?.let { imageId ->
+                        if (imageId > 0) {
+                            // Eliminar la imagen asociada
+                            imageRepository.deleteImage(imageId)
+                        }
                     }
+                    workRepository.deleteWork(id)
+                    onEvent(WorkEvent.GetWorks)
                 }
-                workRepository.deleteWork(id)
-                onEvent(WorkEvent.GetWorks)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
             }
-        } catch (e: Exception) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
         }
     }
-}
 
     private fun getWorks() {
         viewModelScope.launch {
@@ -278,7 +266,10 @@ private fun deleteWork(id: Int) {
                         dimension = result.data?.dimension ?: "",
                         description = result.data?.description ?: "",
                         price = result.data?.price ?: 0.0,
-                        isLoading = false
+                        isLoading = false,
+                        imageId = result.data?.imageId ?: 0,
+                        base64 = result.data?.base64,
+                        imageRemoved = false
                     )
                 }
                 is Resource.Error -> {
@@ -343,12 +334,15 @@ private fun deleteWork(id: Int) {
     private fun createImage(imageDto: ImagesDto) {
         viewModelScope.launch {
             try {
-                val result = imageRepository.createImage(imageDto)
                 _uiState.update {
-                    it.copy(imageId = result.imageId ?: 0)
+                    it.copy(
+                        imageId = imageDto.imageId ?: 0,
+                        base64 = imageDto.base64,
+                        imageRemoved = false
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Error creating image: ${e.message}") }
+                _uiState.update { it.copy(errorMessage = "Error al crear imagen: ${e.message}") }
             }
         }
     }
@@ -382,6 +376,7 @@ private fun deleteWork(id: Int) {
 
         viewModelScope.launch {
             try {
+
                 val method = WorksDto(
                     workId = id,
                     title = _uiState.value.title,
@@ -427,30 +422,67 @@ private fun deleteWork(id: Int) {
         }
     }
 
-private fun getArtists() {
-    viewModelScope.launch {
-        artistRepository.getArtists().collectLatest { result ->
-            when (result) {
-                is Resource.Success -> {
-                    val artists = result.data ?: emptyList()
-                    println("Artists fetched: $artists") // Debug log
-                    _uiState.update {
-                        it.copy(artists = artists)
+    private fun getArtists() {
+        viewModelScope.launch {
+            artistRepository.getArtists().collectLatest { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        val artists = result.data ?: emptyList()
+                        println("Artists fetched: $artists") // Debug log
+                        _uiState.update {
+                            it.copy(artists = artists)
+                        }
                     }
-                }
-                is Resource.Error -> {
-                    println("Error fetching artists: ${result.message}") // Debug log
-                    _uiState.update {
-                        it.copy(errorMessage = result.message ?: "Error fetching artists")
+                    is Resource.Error -> {
+                        println("Error fetching artists: ${result.message}") // Debug log
+                        _uiState.update {
+                            it.copy(errorMessage = result.message ?: "Error fetching artists")
+                        }
                     }
-                }
-                is Resource.Loading -> {
-                    println("Loading artists...") // Debug log
-                    _uiState.update { it.copy(isLoading = true) }
+                    is Resource.Loading -> {
+                        println("Loading artists...") // Debug log
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
                 }
             }
         }
     }
-}
+
+    private fun removeImage() {
+        _uiState.update {
+            it.copy(
+                base64 = null,
+                imageRemoved = true
+            )
+        }
+    }
+    private fun updateImage(imageDto: ImagesDto) {
+        viewModelScope.launch {
+            try {
+                val imageId = _uiState.value.imageId
+                if (imageId > 0) {
+                    imageRepository.updateImage(imageId, imageDto)
+                    _uiState.update {
+                        it.copy(
+                            base64 = imageDto.base64,
+                            imageRemoved = false
+                        )
+                    }
+                } else {
+                    // Si no hay una imagen existente, se puede crear una nueva si deseas
+                    val result = imageRepository.createImage(imageDto)
+                    _uiState.update {
+                        it.copy(
+                            imageId = result.imageId ?: 0,
+                            base64 = result.base64,
+                            imageRemoved = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Error actualizando imagen: ${e.message}") }
+            }
+        }
+    }
 
 }

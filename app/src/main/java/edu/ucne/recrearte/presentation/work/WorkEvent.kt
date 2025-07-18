@@ -23,4 +23,6 @@ sealed interface WorkEvent {
     data class DeleteWork(val id: Int): WorkEvent
     data object ResetSuccessMessage: WorkEvent
     data object ClearErrorMessage: WorkEvent
+    data object RemoveImage : WorkEvent
+    data class ImageUpdate(val image: ImagesDto): WorkEvent
 }
