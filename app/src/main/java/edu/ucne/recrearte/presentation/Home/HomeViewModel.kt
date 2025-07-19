@@ -68,21 +68,33 @@ class HomeViewModel @Inject constructor(
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
     }
-    private fun filter(query: String): List<WorksDto> {
+
+    private suspend fun filter(query: String): List<WorksDto> {
         val currentList = when {
-            // Aquí necesitas lógica para determinar qué lista usar
-            // Esto depende de cómo manejes el estado actual en tu UI
             _uiState.value.worksByTechnique.isNotEmpty() -> _uiState.value.worksByTechnique
             _uiState.value.worksByArtistsDto.isNotEmpty() -> _uiState.value.worksByArtistsDto
             else -> _uiState.value.works
         }
 
-        return if (query.isBlank()) {
+        val filtered = if (query.isBlank()) {
             currentList
         } else {
             currentList.filter {
                 it.title.contains(query, ignoreCase = true) ||
                         (it.description?.contains(query, ignoreCase = true) ?: false)
+            }
+        }
+
+        return filtered.map { work ->
+            if (work.imageId > 0 && work.base64.isNullOrEmpty()) {
+                try {
+                    val image = imageRepository.getImageById(work.imageId)
+                    work.copy(base64 = image.data?.base64 ?: "")
+                } catch (e: Exception) {
+                    work.copy(base64 = "")
+                }
+            } else {
+                work
             }
         }
     }

@@ -1,5 +1,6 @@
 package edu.ucne.recrearte.presentation.Home
 
+import android.R.attr.query
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -71,9 +72,13 @@ import edu.ucne.recrearte.presentation.navigation.Screen
 import edu.ucne.recrearte.presentation.techniques.SearchBar
 import edu.ucne.recrearte.presentation.techniques.TechniqueCard
 import edu.ucne.recrearte.presentation.techniques.TechniqueUiState
+import edu.ucne.recrearte.presentation.work.WorkCard
 import kotlinx.coroutines.CoroutineScope
 import java.util.Date
-
+import android.util.Base64
+import android.graphics.BitmapFactory
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.runtime.remember
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun RecreArteHomeScreen(
@@ -134,9 +139,10 @@ fun RecreArteHomeScreen(
                     .background(MaterialTheme.colorScheme.background)
             ) {
                 // Barra de búsqueda estilo Techniques
-                SearchBar(
+                SearchBarHome(
                     query = searchQuery,
-                    onQueryChanged = viewModel::onSearchQueryChanged
+                    onQueryChanged = viewModel::onSearchQueryChanged,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
 
                 // División visual
@@ -148,21 +154,26 @@ fun RecreArteHomeScreen(
                 )
 
                 // Sección de Obras Destacadas
-                SectionTitle("Obras destacadas")
+                SectionTitle(
+                    if (searchQuery.isNotBlank()) "Resultados de búsqueda" else "Obras destacadas"
+                )
 
-                if (uiState.listTopTen.isEmpty() && !uiState.isLoading) {
-                    EmptySectionMessage("No hay obras destacadas")
+                val worksToShow = if (searchQuery.isNotBlank()) searchResults else uiState.listTopTen
+
+                if (worksToShow.isEmpty() && !uiState.isLoading) {
+                    EmptySectionMessage("No se encontraron obras")
                 } else {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(uiState.listTopTen.take(10)) { work ->
+                        items(worksToShow.take(10)) { work ->
                             FeaturedWorkCard(work = work, onClick = { onWorkClick(work.workId ?: 0) })
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
+
 
                 // División visual
                 Box(
@@ -246,17 +257,34 @@ fun RecreArteHomeScreen(
 }
 
 @Composable
-fun SearchBar(
+fun SearchBarHome(
     query: String,
-    onQueryChanged: (String) -> Unit
+    onQueryChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
+    androidx.compose.material3.TextField(
         value = query,
         onValueChange = onQueryChanged,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        label = { Text("Find technique...") },
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        placeholder = { Text("Buscar obras, artistas, técnicas...") },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Buscar",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        shape = RoundedCornerShape(16.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        ),
         singleLine = true
     )
 }
@@ -292,11 +320,9 @@ fun EmptySectionMessage(message: String) {
 fun ArtistCard(artist: ArtistListDto, onClick: () -> Unit) {
     val initial = artist.firstName.firstOrNull()?.toString() ?: "A"
     val colors = listOf(
-        Color(0xFFE57373), // Red
-        Color(0xFF81C784), // Green
-        Color(0xFF64B5F6), // Blue
-        Color(0xFFBA68C8), // Purple
-        Color(0xFFFFB74D),  // Orange
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary
     )
     val color = colors[initial.hashCode() % colors.size]
 
@@ -309,8 +335,11 @@ fun ArtistCard(artist: ArtistListDto, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
@@ -321,7 +350,7 @@ fun ArtistCard(artist: ArtistListDto, onClick: () -> Unit) {
             ) {
                 Text(
                     text = initial,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.surface,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -329,18 +358,24 @@ fun ArtistCard(artist: ArtistListDto, onClick: () -> Unit) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
                     text = "${artist.firstName} ${artist.lastName}",
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
-                    maxLines = 1
+                    maxLines = 1,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Text(
                     text = artist.artStyle,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    maxLines = 1
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -365,7 +400,7 @@ fun TechniqueCard(technique: TechniquesDto, onClick: () -> Unit) {
         ) {
             Text(
                 text = technique.techniqueName,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(8.dp)
@@ -373,7 +408,6 @@ fun TechniqueCard(technique: TechniquesDto, onClick: () -> Unit) {
         }
     }
 }
-
 @Composable
 fun FeaturedWorkCard(work: WorksDto, onClick: () -> Unit) {
     Card(
@@ -390,13 +424,24 @@ fun FeaturedWorkCard(work: WorksDto, onClick: () -> Unit) {
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                if (!work.base64.isNullOrEmpty()) {
+                val base64 = work.base64?.replace("data:image/png;base64,", "")
+                    ?.replace("data:image/jpeg;base64,", "")
+                    ?.replace("data:image/jpg;base64,", "")
+                    ?.replace("data:image/gif;base64,", "")
+                    ?.trim()
+
+                val bitmap = remember(base64) {
+                    try {
+                        val imageBytes = Base64.decode(base64, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)?.asImageBitmap()
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                if (bitmap != null) {
                     Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(LocalContext.current)
-                                .data(work.base64)
-                                .build()
-                        ),
+                        bitmap = bitmap,
                         contentDescription = work.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
