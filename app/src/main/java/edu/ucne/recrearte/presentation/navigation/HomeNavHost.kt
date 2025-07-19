@@ -17,7 +17,7 @@ import edu.ucne.recrearte.presentation.signUp.SignUpScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
 import edu.ucne.recrearte.presentation.work.WorkListScreen
-import edu.ucne.recrearte.presentation.work.WorkScreen
+import edu.ucne.recrearte.presentation.work.WorkScreenCreate
 
 @Composable
 fun HomeNavHost(
@@ -92,7 +92,7 @@ fun HomeNavHost(
 
         composable<Screen.WorkScreen> { backStack ->
             val id = backStack.toRoute<Screen.WorkScreen>().id
-            WorkScreen(
+            WorkScreenCreate(
                 workId = id,
                 goBack = {navHostController.popBackStack()}
             )

@@ -2,6 +2,7 @@ package edu.ucne.recrearte.data.remote
 
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
+import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
@@ -128,4 +129,24 @@ class RemoteDataSource @Inject constructor(
     }
     suspend fun createWork(workDto: WorksDto) = recreArteingApi.createWork(workDto)
     suspend fun deleteWork(id: Int) = recreArteingApi.deleteWork(id)
+
+    //Images
+    suspend fun getImages() = recreArteingApi.getImages()
+    suspend fun getByIdImage(id: Int): ImagesDto{
+        val response = recreArteingApi.getByIdImage(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Image not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
+    suspend fun updateImage(id: Int, imageDto: ImagesDto){
+        val response = recreArteingApi.updateImage(id, imageDto)
+        if (!response.isSuccessful){
+            throw HttpException(response)
+        }
+    }
+    suspend fun createImage(imageDto: ImagesDto) = recreArteingApi.createImage(imageDto)
+    suspend fun deleteImage(id: Int) = recreArteingApi.deleteImage(id)
+
 }

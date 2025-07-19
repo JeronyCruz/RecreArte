@@ -3,6 +3,7 @@ package edu.ucne.recrearte.data.remote
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
+import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
@@ -97,10 +98,22 @@ interface RecreArteingApi {
     @GET("api/Works/{id}")
     suspend fun getByIdWork(@Path("id") id: Int): Response<WorksDto>
     @POST("api/Works")
-    suspend fun createWork(@Body work: WorksDto): Response<Unit>
+    suspend fun createWork(@Body work: WorksDto):  Response<WorksDto>
     @PUT("api/Works/{id}")
     suspend fun updateWork(@Path("id") id: Int, @Body work: WorksDto): Response<Unit>
     @DELETE("api/Works/{id}")
     suspend fun deleteWork(@Path("id") id: Int): Response<Unit>
+
+    //Images
+    @GET("api/Images")
+    suspend fun getImages(): List<ImagesDto>
+    @GET("api/Images/{id}")
+    suspend fun getByIdImage(@Path("id") id: Int): Response<ImagesDto>
+    @POST("api/Images")
+    suspend fun createImage(@Body image: ImagesDto): ImagesDto
+    @PUT("api/Images/{id}")
+    suspend fun updateImage(@Path("id") id: Int, @Body work: ImagesDto): Response<Unit>
+    @DELETE("api/Images/{id}")
+    suspend fun deleteImage(@Path("id") id: Int): Response<Unit>
 
 }
