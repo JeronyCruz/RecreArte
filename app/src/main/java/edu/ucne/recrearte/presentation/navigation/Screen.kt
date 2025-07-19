@@ -32,4 +32,11 @@ sealed class Screen {
 
     @Serializable
     object ProfileScreen : Screen()
+
+    @Serializable
+    object RecreArteScren : Screen()
+    @Serializable
+    data class WorkByTechnique(val techniqueId: Int): Screen()
+    @Serializable
+    data class WorkByArtist(val artistId: Int): Screen()
 }

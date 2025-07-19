@@ -10,12 +10,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import edu.ucne.recrearte.presentation.Home.HomeScreen
+import edu.ucne.recrearte.presentation.Home.RecreArteHomeScreen
 import edu.ucne.recrearte.presentation.login.LoginScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
 import edu.ucne.recrearte.presentation.signUp.SignUpScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
+import edu.ucne.recrearte.presentation.work.WorkListByArtistScreen
+import edu.ucne.recrearte.presentation.work.WorkListByTechniqueScreen
 import edu.ucne.recrearte.presentation.work.WorkListScreen
 import edu.ucne.recrearte.presentation.work.WorkScreenCreate
 
@@ -46,6 +49,40 @@ fun HomeNavHost(
                navController = navHostController
            )
        }
+
+        composable<Screen.RecreArteScren> {
+            RecreArteHomeScreen(
+                onWorkClick = {id ->
+                    navHostController.navigate("")
+                },
+                onArtistClick = {id ->
+                    navHostController.navigate(Screen.WorkByArtist(id))
+                },
+                onCategoryClick = {id ->
+                    navHostController.navigate(Screen.WorkByTechnique(id))
+                }
+            )
+        }
+
+        composable<Screen.WorkByArtist> { backStackEntry ->
+            val artistId = backStackEntry.arguments?.getString("artistId")?.toIntOrNull() ?: 0
+            WorkListByArtistScreen(
+                artistId = artistId,
+                onWorkClick = { workId ->
+                    navHostController.navigate("")
+                }
+            )
+        }
+
+        composable<Screen.WorkByTechnique> {backStack ->
+            val id = backStack.toRoute<Screen.WorkByTechnique>().techniqueId
+            WorkListByTechniqueScreen(
+                techniqueId = id,
+                onWorkClick = { workId ->
+                    navHostController.navigate("")
+                }
+            )
+        }
 
         composable<Screen.PaymentMethodList> {
             PaymentMethodListScreen(
