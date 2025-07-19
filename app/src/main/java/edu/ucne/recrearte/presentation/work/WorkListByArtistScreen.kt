@@ -1,6 +1,7 @@
 package edu.ucne.recrearte.presentation.work
 
 import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -96,6 +97,7 @@ fun WorkListByArtistScreen(
                 .fillMaxSize()
                 .pullRefresh(pullRefreshState)
         ) {
+            Log.d("WorkListByArtist", "Obras por artista: ${uiState.worksByArtistsDto.size}")
             when {
                 uiState.isLoading && uiState.worksByArtistsDto.isEmpty() -> {
                     CircularProgressIndicator(

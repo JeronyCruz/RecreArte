@@ -64,10 +64,10 @@ fun HomeNavHost(
             )
         }
 
-        composable<Screen.WorkByArtist> { backStackEntry ->
-            val artistId = backStackEntry.arguments?.getString("artistId")?.toIntOrNull() ?: 0
+        composable<Screen.WorkByArtist> { backStack ->
+            val id = backStack.toRoute<Screen.WorkByArtist>().artistId
             WorkListByArtistScreen(
-                artistId = artistId,
+                artistId = id,
                 onWorkClick = { workId ->
                     navHostController.navigate("")
                 }

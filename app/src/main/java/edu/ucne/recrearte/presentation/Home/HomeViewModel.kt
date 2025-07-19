@@ -158,10 +158,24 @@ class HomeViewModel @Inject constructor(
             workRepository.getWorksByArtist(artistId).collect { result ->
                 when (result) {
                     is Resource.Loading -> _uiState.update { it.copy(isLoading = true) }
+
                     is Resource.Success -> {
+                        val worksWithImages = result.data?.map { work ->
+                            if (work.imageId > 0) {
+                                try {
+                                    val image = imageRepository.getImageById(work.imageId)
+                                    work.copy(base64 = image.data?.base64 ?: "")
+                                } catch (e: Exception) {
+                                    work.copy(base64 = "")
+                                }
+                            } else {
+                                work
+                            }
+                        } ?: emptyList()
+
                         _uiState.update {
                             it.copy(
-                                worksByArtistsDto = result.data ?: emptyList(),
+                                worksByArtistsDto = worksWithImages,
                                 isLoading = false
                             )
                         }
@@ -179,6 +193,7 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
 
     private fun getWorksByTechnique(techniqueId: Int) {
         viewModelScope.launch {
