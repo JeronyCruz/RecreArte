@@ -40,4 +40,28 @@ class WorkRepository @Inject constructor(
     suspend fun updateWork(id: Int, workDto: WorksDto) = remoteDataSource.updateWork(id, workDto)
 
     suspend fun deleteWork(id: Int) = remoteDataSource.deleteWork(id)
+
+    fun getWorksByTechnique(techniqueId: Int): Flow<Resource<List<WorksDto>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val work = remoteDataSource.getWorksByTechnique(techniqueId)
+            emit(Resource.Success(work))
+        }catch (e: HttpException){
+            emit(Resource.Error("Internet error: ${e.message()}"))
+        } catch (e: Exception) {
+            emit(Resource.Error("Unknown error: ${e.message}"))
+        }
+    }
+
+    fun getWorksByArtist(artistId: Int): Flow<Resource<List<WorksDto>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val work = remoteDataSource.getWorksByArtist(artistId)
+            emit(Resource.Success(work))
+        }catch (e: HttpException){
+            emit(Resource.Error("Internet error: ${e.message()}"))
+        } catch (e: Exception) {
+            emit(Resource.Error("Unknown error: ${e.message}"))
+        }
+    }
 }
