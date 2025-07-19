@@ -17,6 +17,7 @@ import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
 import edu.ucne.recrearte.presentation.signUp.SignUpScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
+import edu.ucne.recrearte.presentation.work.WorkDetailScreen
 import edu.ucne.recrearte.presentation.work.WorkListByArtistScreen
 import edu.ucne.recrearte.presentation.work.WorkListByTechniqueScreen
 import edu.ucne.recrearte.presentation.work.WorkListScreen
@@ -69,8 +70,16 @@ fun HomeNavHost(
             WorkListByArtistScreen(
                 artistId = id,
                 onWorkClick = { workId ->
-                    navHostController.navigate("")
+                    navHostController.navigate(Screen.WorkDetails(workId))
                 }
+            )
+        }
+
+        composable<Screen.WorkDetails> { backStack ->
+            val id = backStack.toRoute<Screen.WorkDetails>().workId
+            WorkDetailScreen(
+                navController = navHostController,
+                workId = id
             )
         }
 
@@ -79,7 +88,7 @@ fun HomeNavHost(
             WorkListByTechniqueScreen(
                 techniqueId = id,
                 onWorkClick = { workId ->
-                    navHostController.navigate("")
+                    navHostController.navigate(Screen.WorkDetails(workId))
                 }
             )
         }

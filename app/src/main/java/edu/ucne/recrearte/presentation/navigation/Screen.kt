@@ -39,4 +39,6 @@ sealed class Screen {
     data class WorkByTechnique(val techniqueId: Int): Screen()
     @Serializable
     data class WorkByArtist(val artistId: Int): Screen()
+    @Serializable
+    data class WorkDetails(val workId: Int): Screen()
 }
