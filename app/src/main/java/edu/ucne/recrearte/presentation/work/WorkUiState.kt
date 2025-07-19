@@ -28,5 +28,7 @@ data class WorkUiState(
     val image: ImagesDto? = null,
     val images: Map<Int, String> = emptyMap(), // Para cachear imágenes por workId
     val base64: String? = null,  // Para manejar la imagen actual o nueva
-    val imageRemoved: Boolean = false  // Para saber si el usuario removió la imagen
+    val imageRemoved: Boolean = false,
+    //para los artistas
+    val nameArtist: String = ""
 )
