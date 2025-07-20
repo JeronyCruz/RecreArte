@@ -69,6 +69,7 @@ fun HomeNavHost(
             val id = backStack.toRoute<Screen.WorkByArtist>().artistId
             WorkListByArtistScreen(
                 artistId = id,
+                navController = navHostController,
                 onWorkClick = { workId ->
                     navHostController.navigate(Screen.WorkDetails(workId))
                 }
@@ -87,6 +88,7 @@ fun HomeNavHost(
             val id = backStack.toRoute<Screen.WorkByTechnique>().techniqueId
             WorkListByTechniqueScreen(
                 techniqueId = id,
+                navController = navHostController,
                 onWorkClick = { workId ->
                     navHostController.navigate(Screen.WorkDetails(workId))
                 }
