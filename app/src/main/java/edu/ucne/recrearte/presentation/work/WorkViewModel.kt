@@ -285,6 +285,32 @@ class WorkViewModel @Inject constructor(
         }
     }
 
+    //para los artistas
+    fun findArtist(id: Int) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            when (val result = artistRepository.getArtistById(id)) {
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        artistId = result.data?.artistId ?: 0,
+                        nameArtist = result.data?.userName ?: "A",
+                        errorMessage = null
+                    )
+                }
+                is Resource.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = result.message,
+                        isLoading = false
+                    )
+                }
+                else -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+            }
+        }
+    }
+
     private fun createWork() {
         val titleError = isValidField(_uiState.value.title)
         val dimensionError = isValidField(_uiState.value.dimension)

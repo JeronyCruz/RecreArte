@@ -3,6 +3,7 @@ package edu.ucne.recrearte.data.remote
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
+import edu.ucne.recrearte.data.remote.dto.LikesDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
@@ -129,6 +130,13 @@ class RemoteDataSource @Inject constructor(
     }
     suspend fun createWork(workDto: WorksDto) = recreArteingApi.createWork(workDto)
     suspend fun deleteWork(id: Int) = recreArteingApi.deleteWork(id)
+    suspend fun getWorksByTechnique(techniqueId: Int): List<WorksDto> {
+        return recreArteingApi.getWorksByTechnique(techniqueId)
+    }
+    suspend fun getWorksByArtist(artistId: Int): List<WorksDto> {
+        return recreArteingApi.getWorksByArtist(artistId)
+    }
+
 
     //Images
     suspend fun getImages() = recreArteingApi.getImages()
@@ -148,5 +156,53 @@ class RemoteDataSource @Inject constructor(
     }
     suspend fun createImage(imageDto: ImagesDto) = recreArteingApi.createImage(imageDto)
     suspend fun deleteImage(id: Int) = recreArteingApi.deleteImage(id)
+
+    // Likes
+    suspend fun getLikes(): List<LikesDto> {
+        return recreArteingApi.getLikes()
+    }
+    suspend fun getLikeById(id: Int): LikesDto {
+        val response = recreArteingApi.getLikeById(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Like not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
+    suspend fun createLike(like: LikesDto): LikesDto {
+        val response = recreArteingApi.createLike(like)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Failed to create like")
+        } else {
+            throw HttpException(response)
+        }
+    }
+    suspend fun updateLike(id: Int, like: LikesDto) {
+        val response = recreArteingApi.updateLike(id, like)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+    suspend fun deleteLike(id: Int) {
+        val response = recreArteingApi.deleteLike(id)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+    suspend fun getWorksLikedByCustomer(customerId: Int): List<WorksDto> {
+        return recreArteingApi.getWorksLikedByCustomer(customerId)
+    }
+    suspend fun toggleLike(customerId: Int, workId: Int): Boolean {
+        return recreArteingApi.toggleLike(customerId, workId)
+    }
+    suspend fun hasCustomerLikedWork(customerId: Int, workId: Int): Boolean {
+        return recreArteingApi.hasCustomerLikedWork(customerId, workId)
+    }
+    suspend fun getLikeCountForWork(workId: Int): Int {
+        return recreArteingApi.getLikeCountForWork(workId)
+    }
+    suspend fun getTop10MostLikedWorks(): List<WorksDto> {
+        return recreArteingApi.getTop10MostLikedWorks()
+    }
 
 }

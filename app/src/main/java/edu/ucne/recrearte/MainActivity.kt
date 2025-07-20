@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                 // Efecto para manejar la navegación inicial
                 LaunchedEffect(token) {
                     val startDestination = if (token != null) {
-                        Screen.Home // Si hay token, ir al home
+                        Screen.RecreArteScren // Si hay token, ir al home
                     } else {
                         Screen.LoginScreen // Si no hay token, ir a login
                     }

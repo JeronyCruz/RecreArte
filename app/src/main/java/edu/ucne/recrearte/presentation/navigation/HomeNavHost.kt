@@ -10,12 +10,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import edu.ucne.recrearte.presentation.Home.HomeScreen
+import edu.ucne.recrearte.presentation.Home.RecreArteHomeScreen
 import edu.ucne.recrearte.presentation.login.LoginScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
 import edu.ucne.recrearte.presentation.signUp.SignUpScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
+import edu.ucne.recrearte.presentation.work.WorkDetailScreen
+import edu.ucne.recrearte.presentation.work.WorkListByArtistScreen
+import edu.ucne.recrearte.presentation.work.WorkListByTechniqueScreen
 import edu.ucne.recrearte.presentation.work.WorkListScreen
 import edu.ucne.recrearte.presentation.work.WorkScreenCreate
 
@@ -46,6 +50,50 @@ fun HomeNavHost(
                navController = navHostController
            )
        }
+
+        composable<Screen.RecreArteScren> {
+            RecreArteHomeScreen(
+                onWorkClick = {id ->
+                    navHostController.navigate("")
+                },
+                onArtistClick = {id ->
+                    navHostController.navigate(Screen.WorkByArtist(id))
+                },
+                onCategoryClick = {id ->
+                    navHostController.navigate(Screen.WorkByTechnique(id))
+                }
+            )
+        }
+
+        composable<Screen.WorkByArtist> { backStack ->
+            val id = backStack.toRoute<Screen.WorkByArtist>().artistId
+            WorkListByArtistScreen(
+                artistId = id,
+                navController = navHostController,
+                onWorkClick = { workId ->
+                    navHostController.navigate(Screen.WorkDetails(workId))
+                }
+            )
+        }
+
+        composable<Screen.WorkDetails> { backStack ->
+            val id = backStack.toRoute<Screen.WorkDetails>().workId
+            WorkDetailScreen(
+                navController = navHostController,
+                workId = id
+            )
+        }
+
+        composable<Screen.WorkByTechnique> {backStack ->
+            val id = backStack.toRoute<Screen.WorkByTechnique>().techniqueId
+            WorkListByTechniqueScreen(
+                techniqueId = id,
+                navController = navHostController,
+                onWorkClick = { workId ->
+                    navHostController.navigate(Screen.WorkDetails(workId))
+                }
+            )
+        }
 
         composable<Screen.PaymentMethodList> {
             PaymentMethodListScreen(
