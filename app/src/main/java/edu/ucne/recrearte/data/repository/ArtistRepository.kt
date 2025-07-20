@@ -66,7 +66,19 @@ class ArtistRepository @Inject constructor(
         }
     }
 
-    suspend fun updateArtist(id: Int, artistsDto: ArtistsDto) = remoteDataSource.updateArtist(id, artistsDto)
+    suspend fun updateArtist(id: Int, artistsDto: ArtistsDto): Resource<Unit> {
+        return try {
+            remoteDataSource.updateArtist(id, artistsDto)
+            Resource.Success(Unit) // Indicamos éxito sin datos
+        } catch (e: HttpException) {
+            Resource.Error("HTTP error: ${e.message()}")
+        } catch (e: Exception) {
+            Resource.Error("Update failed: ${e.message}")
+        }
+    }
+    suspend fun changePassword(userId: Int, currentPassword: String, newPassword: String, confirmPassword: String): Boolean {
+        return remoteDataSource.changePassword(userId, currentPassword, newPassword, confirmPassword)
+    }
 
     suspend fun deleteArtist(id: Int) = remoteDataSource.deleteArtist(id)
 }
