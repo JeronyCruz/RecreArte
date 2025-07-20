@@ -25,12 +25,12 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ChangesPasswordDialog(
     onDismiss: () -> Unit,
-    onChangePassword: (currentPassword: String, newPassword: String, confirmPassword: String) -> Unit
+    onChangePassword: (currentPassword: String, newPassword: String, confirmPassword: String) -> Unit,
+    errorMessage: String? = null
 ) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -39,9 +39,12 @@ fun ChangesPasswordDialog(
             Column {
                 if (errorMessage != null) {
                     Text(
-                        text = errorMessage!!,
+                        text = errorMessage,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
                     )
                 }
 
@@ -51,10 +54,11 @@ fun ChangesPasswordDialog(
                     label = { Text("Contraseña Actual") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = errorMessage != null
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
                     value = newPassword,
@@ -62,10 +66,11 @@ fun ChangesPasswordDialog(
                     label = { Text("Nueva Contraseña") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = errorMessage != null
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
                     value = confirmPassword,
@@ -73,29 +78,26 @@ fun ChangesPasswordDialog(
                     label = { Text("Confirmar Nueva Contraseña") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = errorMessage != null
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (newPassword != confirmPassword) {
-                        errorMessage = "Las contraseñas no coinciden"
-                    } else if (newPassword.length < 6) {
-                        errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                    } else {
-                        errorMessage = null
-                        onChangePassword(currentPassword, newPassword, confirmPassword)
-                        onDismiss()
-                    }
-                }
+                    onChangePassword(currentPassword, newPassword, confirmPassword)
+                },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Cambiar")
+                Text("Cambiar Contraseña")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Cancelar")
             }
         }
