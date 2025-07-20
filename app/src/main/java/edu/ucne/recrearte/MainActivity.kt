@@ -4,17 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import edu.ucne.recrearte.presentation.navigation.HomeNavHost
 import edu.ucne.recrearte.presentation.navigation.MainAppScreen
 import edu.ucne.recrearte.presentation.navigation.Screen
 import edu.ucne.recrearte.ui.theme.RecreArteTheme
@@ -41,7 +33,7 @@ class MainActivity : ComponentActivity() {
                 // Efecto para manejar la navegación inicial
                 LaunchedEffect(token) {
                     val startDestination = if (token != null) {
-                        Screen.RecreArteScren // Si hay token, ir al home
+                        Screen.RecreArteScreen // Si hay token, ir al home
                     } else {
                         Screen.LoginScreen // Si no hay token, ir a login
                     }
