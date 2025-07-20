@@ -225,8 +225,8 @@ class SignUpViewModel @Inject constructor(
                             else -> throw IllegalStateException("Tipo de dato no esperado")
                         }
 
-                        tokenManager.saveToken(token)
-                        println("🔑 [DEBUG] Token almacenado: ${token.take(10)}...")
+                        tokenManager.saveToken(token ?: "")
+                        println("🔑 [DEBUG] Token almacenado: ${token?.take(10)}...")
 
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -291,7 +291,7 @@ class SignUpViewModel @Inject constructor(
             phoneNumber = state.phoneNumber,
             documentNumber = state.documentNumber,
             updateAt = Date(),
-            roleId = 1,
+            roleId = 3,
             address = state.address,
             description = null,
             token = "" // El backend lo completará
