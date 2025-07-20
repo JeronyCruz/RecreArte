@@ -57,7 +57,7 @@ fun HomeNavHost(
            )
        }
 
-        composable<Screen.RecreArteScren> {
+        composable<Screen.RecreArteScreen> {
             RecreArteHomeScreen(
                 onWorkClick = {id ->
                     navHostController.navigate("")
@@ -160,7 +160,7 @@ fun HomeNavHost(
                 goToWork = { id ->
                     navHostController.navigate(Screen.WorkScreen(id))
                 },
-                createWork = { navHostController.navigate(Screen.WorkScreen(0)) }
+                createWork = { navHostController.navigate(Screen.WorkScreen(0)) },
             )
         }
 
@@ -178,16 +178,6 @@ fun HomeNavHost(
                 navController = navHostController,
                 viewModel = hiltViewModel(),
                 loginViewModel = hiltViewModel(),
-                onPasswordChangeSuccess = {
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Contraseña cambiada con éxito")
-                    }
-                },
-                onPasswordChangeError = { error ->
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Error: $error")
-                    }
-                }
             )
         }
 
