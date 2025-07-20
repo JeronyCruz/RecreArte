@@ -2,6 +2,7 @@ package edu.ucne.recrearte.data.remote
 
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
+import edu.ucne.recrearte.data.remote.dto.ChangePasswordDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.LikesDto
@@ -24,6 +25,8 @@ interface RecreArteingApi {
     // Login
     @POST("api/Login")
     suspend fun loginUser(@Body LoginRequest: LoginRequestDto): LoginResponseDto
+    @POST("api/Login/logout")
+    suspend fun logoutUser(): Response<Unit>
 
     //PaymentMethod
     @GET("api/PaymentMethods")
@@ -92,6 +95,8 @@ interface RecreArteingApi {
     suspend fun getAllUsers(): List<UsersDto>
     @GET("api/Users/{id}")
     suspend fun getByIdUsers(@Path("id") id: Int): Response<UsersDto>
+    @PUT("api/Users/change-password")
+    suspend fun changePassword(@Body changePasswordDto: ChangePasswordDto): Response<Unit>
 
     //Works
     @GET("api/Works")

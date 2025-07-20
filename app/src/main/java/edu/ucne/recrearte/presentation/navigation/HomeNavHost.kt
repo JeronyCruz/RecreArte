@@ -1,10 +1,13 @@
 package edu.ucne.recrearte.presentation.navigation
 
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +17,7 @@ import edu.ucne.recrearte.presentation.Home.RecreArteHomeScreen
 import edu.ucne.recrearte.presentation.login.LoginScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
+import edu.ucne.recrearte.presentation.profile.ProfileScreen
 import edu.ucne.recrearte.presentation.signUp.SignUpScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
@@ -22,6 +26,7 @@ import edu.ucne.recrearte.presentation.work.WorkListByArtistScreen
 import edu.ucne.recrearte.presentation.work.WorkListByTechniqueScreen
 import edu.ucne.recrearte.presentation.work.WorkListScreen
 import edu.ucne.recrearte.presentation.work.WorkScreenCreate
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeNavHost(
@@ -30,6 +35,7 @@ fun HomeNavHost(
 ){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     NavHost(
         navController = navHostController,
@@ -167,7 +173,22 @@ fun HomeNavHost(
         }
 
         composable<Screen.ProfileScreen> {
-            // Tu pantalla de perfil aquí
+            ProfileScreen(
+                onBackClick = { navHostController.popBackStack() },
+                navController = navHostController,
+                viewModel = hiltViewModel(),
+                loginViewModel = hiltViewModel(),
+                onPasswordChangeSuccess = {
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Contraseña cambiada con éxito")
+                    }
+                },
+                onPasswordChangeError = { error ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Error: $error")
+                    }
+                }
+            )
         }
 
     }

@@ -76,4 +76,19 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
+
+    fun logout() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            repository.logout()
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isSuccess = false,
+                    email = "",
+                    password = ""
+                )
+            }
+        }
+    }
 }

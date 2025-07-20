@@ -18,10 +18,30 @@ class AuthInterceptor @Inject constructor(
         val token = tokenManager.getToken()
         println("🔑 [DEBUG] Token disponible: ${token?.take(10)}...")
 
-        // Si no hay token o es la ruta de login, continuar sin modificar
-        if (token == null || request.url.encodedPath.contains("/api/Login")) {
-            println("⚠️ [DEBUG] No se añade header Authorization")
-            return chain.proceed(request)
+        // Rutas que no requieren token o manejo especial
+        when {
+            // Rutas públicas que no necesitan token
+            request.url.encodedPath.contains("/api/Login") -> {
+                println("⚠️ [DEBUG] Ruta pública, no se añade header Authorization")
+                return chain.proceed(request)
+            }
+            // Ruta de cambio de contraseña - necesita token pero no debe borrarlo si falla
+            request.url.encodedPath.contains("/api/Users/change-password") -> {
+                println("🔄 [DEBUG] Ruta de cambio de contraseña - manejo especial")
+                if (token != null) {
+                    val authRequest = request.newBuilder()
+                        .addHeader("Authorization", "Bearer $token")
+                        .build()
+                    return chain.proceed(authRequest)
+                }
+                return chain.proceed(request)
+            }
+        }
+
+        // Para todas las demás rutas que requieren autenticación
+        if (token == null) {
+            println("🔴 [DEBUG] Token nulo para ruta protegida")
+            return chain.proceed(request) // Esto fallará con 401 en el backend
         }
 
         // Añadir header de autorización
@@ -33,9 +53,9 @@ class AuthInterceptor @Inject constructor(
 
         val response = chain.proceed(authenticatedRequest)
 
-        // Manejar respuesta no autorizada
-        if (response.code == 401) {
-            println("🔴 [DEBUG] Error 401 - Token inválido/expirado")
+        // Manejar respuesta no autorizada (excepto para cambio de contraseña)
+        if (response.code == 401 && !request.url.encodedPath.contains("/api/Users/change-password")) {
+            println("🔴 [DEBUG] Error 401 - Token inválido/expirado (limpiando token)")
             tokenManager.clearToken()
         }
 

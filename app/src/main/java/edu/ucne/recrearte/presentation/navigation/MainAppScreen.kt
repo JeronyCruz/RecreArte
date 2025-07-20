@@ -38,12 +38,24 @@ fun MainAppScreen(
     modifier: Modifier = Modifier
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val currentRoute = navBackStackEntry?.destination?.route
 
+    // Lista de pantallas que SÍ deben mostrar la barra
+    val bottomBarRoutes = listOf(
+        Screen.Home::class.qualifiedName,
+        Screen.FavoritesScreen::class.qualifiedName,
+        Screen.CartScreen::class.qualifiedName,
+        Screen.ProfileScreen::class.qualifiedName
+    )
+
+    // ¿La ruta actual está en la lista?
+    val showBottomBar = bottomBarRoutes.contains(currentRoute)
+
+    // Estado seleccionado
     var selectedDestination by rememberSaveable {
         mutableIntStateOf(
             BottomNavDestination.entries.indexOfFirst { dest ->
-                currentDestination?.route == dest.screen::class.simpleName
+                currentRoute == dest.screen::class.qualifiedName
             }.takeIf { it != -1 } ?: 0
         )
     }
@@ -51,28 +63,32 @@ fun MainAppScreen(
     Scaffold(
         modifier = modifier,
         bottomBar = {
-            NavigationBar {
-                BottomNavDestination.entries.forEachIndexed { index, destination ->
-                    NavigationBarItem(
-                        selected = selectedDestination == index,
-                        onClick = {
-                            navController.navigate(destination.screen) {
-                                launchSingleTop = true
-                                restoreState = true
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
+            if (showBottomBar) {   // 👈 SOLO si está en las rutas principales
+                NavigationBar {
+                    BottomNavDestination.entries.forEachIndexed { index, destination ->
+                        NavigationBarItem(
+                            selected = selectedDestination == index,
+                            onClick = {
+                                navController.navigate(destination.screen) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
                                 }
-                            }
-                            selectedDestination = index
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (selectedDestination == index) destination.filledIcon else destination.outlinedIcon,
-                                contentDescription = destination.title
-                            )
-                        },
-                        label = { Text(destination.title) }
-                    )
+                                selectedDestination = index
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selectedDestination == index)
+                                        destination.filledIcon
+                                    else destination.outlinedIcon,
+                                    contentDescription = destination.title
+                                )
+                            },
+                            label = { Text(destination.title) }
+                        )
+                    }
                 }
             }
         }
@@ -83,6 +99,7 @@ fun MainAppScreen(
         )
     }
 }
+
 
 enum class BottomNavDestination(
     val title: String,

@@ -64,7 +64,19 @@ class CustomerRepository @Inject constructor(
         }
     }
 
-    suspend fun updateCustomer(id: Int, customersDto: CustomersDto) = remoteDataSource.updateCustomer(id, customersDto)
+    suspend fun changePassword(userId: Int, currentPassword: String, newPassword: String, confirmPassword: String): Boolean {
+        return remoteDataSource.changePassword(userId, currentPassword, newPassword, confirmPassword)
+    }
 
+    suspend fun updateCustomer(id: Int, customersDto: CustomersDto): Resource<Unit> {
+        return try {
+            remoteDataSource.updateCustomer(id, customersDto)
+            Resource.Success(Unit) // Indicamos éxito sin datos
+        } catch (e: HttpException) {
+            Resource.Error("HTTP error: ${e.message()}")
+        } catch (e: Exception) {
+            Resource.Error("Update failed: ${e.message}")
+        }
+    }
     suspend fun deleteCustomer(id: Int) = remoteDataSource.deleteCustomer(id)
 }

@@ -1,6 +1,7 @@
 package edu.ucne.recrearte.data.remote
 
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
+import edu.ucne.recrearte.data.remote.dto.ChangePasswordDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.LikesDto
@@ -19,6 +20,14 @@ class RemoteDataSource @Inject constructor(
     // Login
     suspend fun loginUser(loginRequest: LoginRequestDto): LoginResponseDto {
         return recreArteingApi.loginUser(loginRequest)
+    }
+
+    suspend fun logoutUser(): Boolean {
+        return try {
+            recreArteingApi.logoutUser().isSuccessful
+        } catch (e: Exception) {
+            false
+        }
     }
 
     //PaymentMethod
@@ -109,6 +118,28 @@ class RemoteDataSource @Inject constructor(
             return response.body() ?: throw Exception("Users not found")
         } else {
             throw HttpException(response)
+        }
+    }
+
+    // Users
+    suspend fun changePassword(
+        userId: Int,
+        currentPassword: String,
+        newPassword: String,
+        confirmPassword: String
+    ): Boolean {
+        return try {
+            val response = recreArteingApi.changePassword(
+                ChangePasswordDto(
+                    userId = userId,
+                    currentPassword = currentPassword,
+                    newPassword = newPassword,
+                    confirmPassword = confirmPassword
+                )
+            )
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
         }
     }
 
