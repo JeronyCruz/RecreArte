@@ -3,11 +3,9 @@ package edu.ucne.recrearte.presentation.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
@@ -20,17 +18,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import edu.ucne.recrearte.presentation.navigation.Screen.Home
-import edu.ucne.recrearte.presentation.navigation.Screen.FavoritesScreen
-import edu.ucne.recrearte.presentation.navigation.Screen.CartScreen
-import edu.ucne.recrearte.presentation.navigation.Screen.ProfileScreen
 
 @Composable
 fun MainAppScreen(
@@ -42,7 +36,7 @@ fun MainAppScreen(
 
     // Lista de pantallas que SÍ deben mostrar la barra
     val bottomBarRoutes = listOf(
-        Screen.Home::class.qualifiedName,
+        Screen.RecreArteScreen::class.qualifiedName,
         Screen.FavoritesScreen::class.qualifiedName,
         Screen.CartScreen::class.qualifiedName,
         Screen.ProfileScreen::class.qualifiedName
@@ -51,19 +45,17 @@ fun MainAppScreen(
     // ¿La ruta actual está en la lista?
     val showBottomBar = bottomBarRoutes.contains(currentRoute)
 
-    // Estado seleccionado
-    var selectedDestination by rememberSaveable {
-        mutableIntStateOf(
-            BottomNavDestination.entries.indexOfFirst { dest ->
-                currentRoute == dest.screen::class.qualifiedName
-            }.takeIf { it != -1 } ?: 0
-        )
+    // Determinar el índice seleccionado basado en la ruta actual
+    val selectedDestination = remember(currentRoute) {
+        BottomNavDestination.entries.indexOfFirst { dest ->
+            currentRoute == dest.screen::class.qualifiedName
+        }.takeIf { it != -1 } ?: 0
     }
 
     Scaffold(
         modifier = modifier,
         bottomBar = {
-            if (showBottomBar) {   // 👈 SOLO si está en las rutas principales
+            if (showBottomBar) {
                 NavigationBar {
                     BottomNavDestination.entries.forEachIndexed { index, destination ->
                         NavigationBarItem(
@@ -76,7 +68,6 @@ fun MainAppScreen(
                                         saveState = true
                                     }
                                 }
-                                selectedDestination = index
                             },
                             icon = {
                                 Icon(
@@ -107,11 +98,11 @@ enum class BottomNavDestination(
     val outlinedIcon: ImageVector, // Icono de contorno
     val screen: Screen
 ) {
-    Home(
+    RecreArteScreen(
         title = "Inicio",
         filledIcon = Icons.Filled.Home,
         outlinedIcon = Icons.Outlined.Home,
-        screen = Screen.Home
+        screen = Screen.RecreArteScreen
     ),
     Favorites(
         title = "Favoritos",
