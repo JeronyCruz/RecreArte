@@ -1,6 +1,5 @@
 package edu.ucne.recrearte.presentation.profile
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,18 +28,96 @@ class ProfileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    // Estado para manejar contraseñas temporalmente
-    private var currentPasswordHash: String? = null
-
     private val _passwordVisible = MutableStateFlow(false)
     val passwordVisible: StateFlow<Boolean> = _passwordVisible.asStateFlow()
+
+    private val _showChangePasswordDialog = MutableStateFlow(false)
+    val showChangePasswordDialog: StateFlow<Boolean> = _showChangePasswordDialog.asStateFlow()
+
+    private val _isEditing = MutableStateFlow(false)
+    val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
+
+    // Estados editables
+    private val _editableArtist = MutableStateFlow<ArtistsDto?>(null)
+    private val _editableCustomer = MutableStateFlow<CustomersDto?>(null)
+    val editableArtist: StateFlow<ArtistsDto?> = _editableArtist.asStateFlow()
+    val editableCustomer: StateFlow<CustomersDto?> = _editableCustomer.asStateFlow()
+
+    private val _passwordChangeError = MutableStateFlow<String?>(null)
+    val passwordChangeError: StateFlow<String?> = _passwordChangeError.asStateFlow()
+
+    private var currentPasswordHash: String? = null
+
+    init {
+        loadUserProfile()
+    }
 
     fun togglePasswordVisibility() {
         _passwordVisible.value = !_passwordVisible.value
     }
 
-    init {
-        loadUserProfile()
+    fun showChangePasswordDialog(show: Boolean) {
+        _showChangePasswordDialog.value = show
+    }
+
+    fun startEditing() {
+        when (val currentData = (_uiState.value as? ProfileUiState.Success)?.userData) {
+            is ArtistsDto -> _editableArtist.value = currentData.copy()
+            is CustomersDto -> _editableCustomer.value = currentData.copy()
+        }
+        _isEditing.value = true
+    }
+
+    fun cancelEdit() {
+        _editableArtist.value = null
+        _editableCustomer.value = null
+        _isEditing.value = false
+    }
+
+    fun saveChanges() {
+        _editableArtist.value?.let { updateProfile(it) }
+        _editableCustomer.value?.let { updateProfile(it) }
+        _isEditing.value = false
+    }
+
+    // Función para actualizar campos - más eficiente
+    fun updateField(event: ProfileEvent) {
+        when (event) {
+            is ProfileEvent.UserNameChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(userName = event.userName)
+                _editableCustomer.value = _editableCustomer.value?.copy(userName = event.userName)
+            }
+            is ProfileEvent.FirstNameChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(firstName = event.firstName)
+                _editableCustomer.value = _editableCustomer.value?.copy(firstName = event.firstName)
+            }
+            is ProfileEvent.LastNameChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(lastName = event.lastName)
+                _editableCustomer.value = _editableCustomer.value?.copy(lastName = event.lastName)
+            }
+            is ProfileEvent.EmailChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(email = event.email)
+                _editableCustomer.value = _editableCustomer.value?.copy(email = event.email)
+            }
+            is ProfileEvent.PhoneNumberChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(phoneNumber = event.phoneNumber)
+                _editableCustomer.value = _editableCustomer.value?.copy(phoneNumber = event.phoneNumber)
+            }
+            is ProfileEvent.DocumentNumberChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(documentNumber = event.documentNumber)
+                _editableCustomer.value = _editableCustomer.value?.copy(documentNumber = event.documentNumber)
+            }
+            is ProfileEvent.ArtStyleChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(artStyle = event.artStyle)
+            }
+            is ProfileEvent.SocialMediaLinksChange -> {
+                _editableArtist.value = _editableArtist.value?.copy(socialMediaLinks = event.socialMediaLinks)
+            }
+            is ProfileEvent.AddressChange -> {
+                _editableCustomer.value = _editableCustomer.value?.copy(address = event.address)
+            }
+            else -> {}
+        }
     }
 
     private fun loadUserProfile() {
@@ -49,27 +126,25 @@ class ProfileViewModel @Inject constructor(
             try {
                 val userId = tokenManager.getUserId() ?: throw Exception("Usuario no autenticado")
 
-                // Intenta obtener como artista primero
                 when (val artistResult = artistRepository.getArtistById(userId)) {
                     is Resource.Success -> {
                         artistResult.data?.let { artist ->
                             if (artist.firstName != null) {
-                                currentPasswordHash = artist.password // Guarda el hash actual
+                                currentPasswordHash = artist.password
                                 _uiState.value = ProfileUiState.Success(artist)
                                 return@launch
                             }
                         }
                     }
-                    is Resource.Error -> Unit // Continuar con cliente
+                    is Resource.Error -> Unit
                     is Resource.Loading<*> -> Unit
                 }
 
-                // Intenta como cliente si no es artista
                 when (val customerResult = customerRepository.getCustomerById(userId)) {
                     is Resource.Success -> {
                         customerResult.data?.let { customer ->
                             if (customer.firstName != null) {
-                                currentPasswordHash = customer.password // Guarda el hash actual
+                                currentPasswordHash = customer.password
                                 _uiState.value = ProfileUiState.Success(customer)
                                 return@launch
                             }
@@ -82,14 +157,13 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 _uiState.value = ProfileUiState.Error("Perfil no encontrado")
-
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error(e.message ?: "Error al cargar perfil")
             }
         }
     }
 
-    fun updateProfile(updatedData: Any, newPassword: String? = null) {
+    private fun updateProfile(updatedData: Any) {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
             try {
@@ -97,24 +171,11 @@ class ProfileViewModel @Inject constructor(
 
                 when (updatedData) {
                     is ArtistsDto -> {
-                        // Prepara el DTO para actualización
-                        val artistToUpdate = if (!newPassword.isNullOrBlank()) {
-                            updatedData.copy(password = newPassword) // Envía contraseña en texto plano
-                        } else {
-                            updatedData.copy(password = currentPasswordHash ?: "") // Mantiene la actual
-                        }
-
-                        val result = artistRepository.updateArtist(userId, artistToUpdate)
+                        val result = artistRepository.updateArtist(userId, updatedData)
                         handleUpdateResult(result)
                     }
                     is CustomersDto -> {
-                        val customerToUpdate = if (!newPassword.isNullOrBlank()) {
-                            updatedData.copy(password = newPassword)
-                        } else {
-                            updatedData.copy(password = currentPasswordHash ?: "")
-                        }
-
-                        val result = customerRepository.updateCustomer(userId, customerToUpdate)
+                        val result = customerRepository.updateCustomer(userId, updatedData)
                         handleUpdateResult(result)
                     }
                 }
@@ -126,10 +187,7 @@ class ProfileViewModel @Inject constructor(
 
     private fun handleUpdateResult(result: Resource<*>) {
         when (result) {
-            is Resource.Success -> {
-                // Recargar el perfil después de actualizar
-                loadUserProfile()
-            }
+            is Resource.Success -> loadUserProfile()
             is Resource.Error -> {
                 _uiState.value = ProfileUiState.Error(result.message ?: "Update failed")
             }
@@ -139,33 +197,32 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // Agrega esta función al ViewModel
     fun changePassword(
         currentPassword: String,
         newPassword: String,
         confirmPassword: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
             try {
-                // Validaciones básicas
+                // Resetear el error previo
+                _passwordChangeError.value = null
+
                 if (newPassword != confirmPassword) {
-                    onError("Las contraseñas no coinciden")
+                    _passwordChangeError.value = "Las contraseñas no coinciden"
                     return@launch
                 }
 
                 if (newPassword.length < 6) {
-                    onError("La contraseña debe tener al menos 6 caracteres")
+                    _passwordChangeError.value = "La contraseña debe tener al menos 6 caracteres"
                     return@launch
                 }
 
                 val userId = tokenManager.getUserId() ?: run {
-                    onError("Usuario no autenticado")
+                    _passwordChangeError.value = "Usuario no autenticado"
                     return@launch
                 }
 
-                // Llamada al repositorio
                 when (val result = userRepository.changePassword(
                     userId = userId,
                     currentPassword = currentPassword,
@@ -173,22 +230,25 @@ class ProfileViewModel @Inject constructor(
                     confirmPassword = confirmPassword
                 )) {
                     is Resource.Success -> {
-                        if (result.data == true) { // Asumiendo que el repositorio devuelve Resource<Boolean>
+                        if (result.data == true) {
                             onSuccess()
+                            _showChangePasswordDialog.value = false
                         } else {
-                            onError("La contraseña introducida no es la actual")
+                            _passwordChangeError.value = "La contraseña actual es incorrecta"
                         }
                     }
                     is Resource.Error -> {
-                        onError(result.message ?: "Error al cambiar contraseña")
+                        _passwordChangeError.value = result.message ?: "Error al cambiar contraseña"
                     }
-                    is Resource.Loading -> {
-                        // Puedes manejar el estado de carga si es necesario
-                    }
+                    is Resource.Loading -> Unit
                 }
             } catch (e: Exception) {
-                onError("Error: ${e.message ?: "Error desconocido"}")
+                _passwordChangeError.value = "Error: ${e.message ?: "Error desconocido"}"
             }
         }
+    }
+
+    fun clearPasswordError() {
+        _passwordChangeError.value = null
     }
 }
