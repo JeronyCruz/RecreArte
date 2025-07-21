@@ -27,6 +27,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +54,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartEvent
+import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartViewModel
+import kotlinx.coroutines.launch
 import java.util.Base64
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,8 +64,12 @@ import java.util.Base64
 fun WorkDetailScreen(
     navController: NavController,
     workId: Int,
-    viewModel: WorkViewModel = hiltViewModel()
+    viewModel: WorkViewModel = hiltViewModel(),
+    shoppingCartViewModel: ShoppingCartViewModel = hiltViewModel()
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     // Cargar los datos de la obra
     LaunchedEffect(workId) {
         viewModel.loadWork(workId)
@@ -97,6 +108,32 @@ fun WorkDetailScreen(
     } else {
         null
     }
+
+    val cartState by shoppingCartViewModel.uiSate.collectAsState()
+
+    // Mostrar mensajes de éxito/error
+    LaunchedEffect(cartState.isSuccess, cartState.errorMessage) {
+        if (cartState.isSuccess) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = cartState.successMessage ?: "Agregado al carrito",
+                    duration = SnackbarDuration.Short
+                )
+                shoppingCartViewModel.onEvent(ShoppingCartEvent.ResetSuccessMessage)
+            }
+        }
+        if (cartState.errorMessage != null) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = cartState.errorMessage ?: "Error al agregar al carrito",
+                    duration = SnackbarDuration.Short
+                )
+                shoppingCartViewModel.onEvent(ShoppingCartEvent.ClearErrorMessage)
+            }
+        }
+    }
+
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -243,7 +280,12 @@ fun WorkDetailScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* Agregar al carrito */ },
+                onClick = {
+                     //Agregar al carrito
+                    shoppingCartViewModel.onEvent(
+                        ShoppingCartEvent.AddToCart( workId)
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
