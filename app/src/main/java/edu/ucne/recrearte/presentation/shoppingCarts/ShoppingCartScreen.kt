@@ -56,7 +56,6 @@ fun ShoppingCartScreen(
 ) {
     val uiState by viewModel.uiSate.collectAsState()
 
-    // Cargar el carrito al iniciar
     LaunchedEffect(Unit) {
         viewModel.onEvent(ShoppingCartEvent.GetCart)
     }
@@ -138,7 +137,7 @@ fun ShoppingCartScreen(
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
-                        // Lista de items del carrito
+
                         LazyColumn(
                             modifier = Modifier.weight(1f)
                         ) {
@@ -158,9 +157,8 @@ fun ShoppingCartScreen(
                             }
                         }
 
-                        // Divider y total
                         Divider(
-                            modifier = Modifier.padding(vertical = 8.dp),
+                            modifier = Modifier.padding(vertical = 16.dp),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                         )
 
@@ -186,7 +184,7 @@ fun ShoppingCartScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Botón de checkout
                         Button(
@@ -209,6 +207,8 @@ fun ShoppingCartScreen(
                                 )
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(80.dp))
                     }
                 }
             }
@@ -247,50 +247,47 @@ fun ShoppingCartItem(
     onRemove: () -> Unit,
     onClick: () -> Unit
 ) {
-    Card(
-        elevation = CardDefaults.cardElevation(4.dp),
+    Row(
         modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .weight(1f)
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(onClick = onClick)
-            ) {
-                Text(
-                    text = item.workTitle,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "$${"%.2f".format(item.price)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = item.workTitle,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "$${"%.2f".format(item.price)}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
-            IconButton(
-                onClick = onRemove,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
+        IconButton(
+            onClick = onRemove,
+            modifier = Modifier.size(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete",
+                tint = MaterialTheme.colorScheme.error
+            )
         }
     }
+
+    // Línea divisoria opcional
+    Divider(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+        thickness = 1.dp
+    )
 }
