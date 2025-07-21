@@ -60,8 +60,8 @@ fun HomeNavHost(
 
         composable<Screen.RecreArteScreen> {
             RecreArteHomeScreen(
-                onWorkClick = {id ->
-                    navHostController.navigate("")
+                onWorkClick = { workId ->
+                    navHostController.navigate(Screen.WorkDetails(workId))
                 },
                 onArtistClick = {id ->
                     navHostController.navigate(Screen.WorkByArtist(id))
