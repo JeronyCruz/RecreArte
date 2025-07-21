@@ -46,7 +46,6 @@ import androidx.navigation.NavHostController
 import edu.ucne.recrearte.presentation.navigation.Screen
 //imagen
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
@@ -62,7 +61,7 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            navController.navigate(Screen.RecreArteScren) {
+            navController.navigate(Screen.RecreArteScreen) {
                 popUpTo<Screen.LoginScreen>() { inclusive = true }
             }
         }

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -40,16 +39,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -67,29 +62,20 @@ fun ProfileScreen(
     onBackClick: () -> Unit,
     navController: NavHostController,
     viewModel: ProfileViewModel = hiltViewModel(),
-    loginViewModel: LoginViewModel = hiltViewModel(),
-    onPasswordChangeSuccess: () -> Unit = {},
-    onPasswordChangeError: (String) -> Unit = {}
+    loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var isEditing by remember { mutableStateOf(false) }
-    var tempArtist by remember { mutableStateOf<ArtistsDto?>(null) }
-    var tempCustomer by remember { mutableStateOf<CustomersDto?>(null) }
-    var showChangePasswordDialog by remember { mutableStateOf(false) }
+    val isEditing by viewModel.isEditing.collectAsState()
+    val showChangePasswordDialog by viewModel.showChangePasswordDialog.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(uiState) {
-        when (uiState) {
-            is ProfileUiState.Success -> {
-                val data = (uiState as ProfileUiState.Success).userData
-                when (data) {
-                    is ArtistsDto -> tempArtist = data
-                    is CustomersDto -> tempCustomer = data
-                }
-            }
-            else -> {}
+    fun handleBackClick() {
+        if (isEditing) {
+            viewModel.cancelEdit()
+        } else {
+            onBackClick()
         }
     }
 
@@ -99,7 +85,7 @@ fun ProfileScreen(
             TopAppBar(
                 title = { Text("Perfil") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { handleBackClick()} ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -107,12 +93,12 @@ fun ProfileScreen(
                     if (!isEditing && uiState is ProfileUiState.Success) {
                         Row {
                             IconButton(
-                                onClick = { showChangePasswordDialog = true },
+                                onClick = { viewModel.showChangePasswordDialog(true) },
                                 modifier = Modifier.padding(end = 8.dp)
                             ) {
                                 Icon(Icons.Default.Lock, contentDescription = "Change Password")
                             }
-                            IconButton(onClick = { isEditing = true }) {
+                            IconButton(onClick = { viewModel.startEditing() }) {
                                 Icon(Icons.Default.Edit, contentDescription = "Edit")
                             }
                         }
@@ -154,93 +140,22 @@ fun ProfileScreen(
                     ) {
                         when (data) {
                             is ArtistsDto -> ArtistProfileContent(
-                                artist = if (isEditing) tempArtist ?: data else data,
+                                artist = data,
                                 isEditing = isEditing,
-                                onEvent = { event ->
-                                    when (event) {
-                                        is ProfileEvent.UserNameChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(userName = event.userName)
-                                        }
-                                        is ProfileEvent.FirstNameChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(firstName = event.firstName)
-                                        }
-                                        is ProfileEvent.LastNameChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(lastName = event.lastName)
-                                        }
-                                        is ProfileEvent.EmailChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(email = event.email)
-                                        }
-                                        is ProfileEvent.PhoneNumberChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(phoneNumber = event.phoneNumber)
-                                        }
-                                        is ProfileEvent.DocumentNumberChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(documentNumber = event.documentNumber)
-                                        }
-                                        is ProfileEvent.ArtStyleChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(artStyle = event.artStyle)
-                                        }
-                                        is ProfileEvent.SocialMediaLinksChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(socialMediaLinks = event.socialMediaLinks)
-                                        }
-                                        is ProfileEvent.PasswordChange -> {
-                                            tempArtist = (tempArtist ?: data).copy(password = event.password)
-                                        }
-                                        ProfileEvent.SaveChanges -> {
-                                            tempArtist?.let { viewModel.updateProfile(it) }
-                                            isEditing = false
-                                        }
-                                        ProfileEvent.CancelEdit -> {
-                                            isEditing = false
-                                            tempArtist = null
-                                        }
-                                        else -> {}
-                                    }
-                                },
+                                onEvent = viewModel::updateField,
+                                onSave = viewModel::saveChanges,
+                                onCancel = viewModel::cancelEdit,
                                 onLogout = {
                                     loginViewModel.logout()
                                     navController.navigate(Screen.LoginScreen) { popUpTo(0) }
                                 }
                             )
                             is CustomersDto -> CustomerProfileContent(
-                                customer = if (isEditing) tempCustomer ?: data else data,
+                                customer = data,
                                 isEditing = isEditing,
-                                onEvent = { event ->
-                                    when (event) {
-                                        is ProfileEvent.UserNameChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(userName = event.userName)
-                                        }
-                                        is ProfileEvent.FirstNameChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(firstName = event.firstName)
-                                        }
-                                        is ProfileEvent.LastNameChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(lastName = event.lastName)
-                                        }
-                                        is ProfileEvent.EmailChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(email = event.email)
-                                        }
-                                        is ProfileEvent.PhoneNumberChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(phoneNumber = event.phoneNumber)
-                                        }
-                                        is ProfileEvent.DocumentNumberChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(documentNumber = event.documentNumber)
-                                        }
-                                        is ProfileEvent.AddressChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(address = event.address)
-                                        }
-                                        is ProfileEvent.PasswordChange -> {
-                                            tempCustomer = (tempCustomer ?: data).copy(password = event.password)
-                                        }
-                                        ProfileEvent.SaveChanges -> {
-                                            tempCustomer?.let { viewModel.updateProfile(it) }
-                                            isEditing = false
-                                        }
-                                        ProfileEvent.CancelEdit -> {
-                                            isEditing = false
-                                            tempCustomer = null
-                                        }
-                                        else -> {}
-                                    }
-                                },
+                                onEvent = viewModel::updateField,
+                                onSave = viewModel::saveChanges,
+                                onCancel = viewModel::cancelEdit,
                                 onLogout = {
                                     loginViewModel.logout()
                                     navController.navigate(Screen.LoginScreen) { popUpTo(0) }
@@ -252,8 +167,13 @@ fun ProfileScreen(
             }
 
             if (showChangePasswordDialog) {
+                val errorMessage by viewModel.passwordChangeError.collectAsState()
+
                 ChangesPasswordDialog(
-                    onDismiss = { showChangePasswordDialog = false },
+                    onDismiss = {
+                        viewModel.showChangePasswordDialog(false)
+                        viewModel.clearPasswordError() // Añade esta función en el ViewModel
+                    },
                     onChangePassword = { currentPass, newPass, confirmPass ->
                         viewModel.changePassword(
                             currentPass,
@@ -263,14 +183,10 @@ fun ProfileScreen(
                                 scope.launch {
                                     snackbarHostState.showSnackbar("Contraseña cambiada con éxito")
                                 }
-                            },
-                            onError = { error ->
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Error: $error")
-                                }
                             }
                         )
-                    }
+                    },
+                    errorMessage = errorMessage
                 )
             }
         }
@@ -282,10 +198,10 @@ private fun ArtistProfileContent(
     artist: ArtistsDto,
     isEditing: Boolean,
     onEvent: (ProfileEvent) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
     onLogout: () -> Unit
 ) {
-    var newPassword by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -330,15 +246,15 @@ private fun ArtistProfileContent(
 
         if (isEditing) {
             EditableProfileFields(
-                artist,
-                onEvent,
+                userData = artist,
+                onEvent = onEvent,
                 isArtist = true,
-                newPassword = newPassword,
-                onPasswordChange = { newPassword = it }
+                onSave = onSave,
+                onCancel = onCancel
             )
         } else {
             NonEditableProfileFields(
-                artist,
+                userData = artist,
                 isArtist = true,
                 onLogout = onLogout
             )
@@ -351,10 +267,10 @@ private fun CustomerProfileContent(
     customer: CustomersDto,
     isEditing: Boolean,
     onEvent: (ProfileEvent) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
     onLogout: () -> Unit
 ) {
-    var newPassword by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -399,15 +315,15 @@ private fun CustomerProfileContent(
 
         if (isEditing) {
             EditableProfileFields(
-                customer,
-                onEvent,
+                userData = customer,
+                onEvent = onEvent,
                 isArtist = false,
-                newPassword = newPassword,
-                onPasswordChange = { newPassword = it }
+                onSave = onSave,
+                onCancel = onCancel
             )
         } else {
             NonEditableProfileFields(
-                customer,
+                userData = customer,
                 isArtist = false,
                 onLogout = onLogout
             )
@@ -443,7 +359,6 @@ private fun NonEditableProfileFields(
                         ProfileField(label = "Nombre de usuario", value = "@${userData.userName ?: "usuario"}")
                         ProfileField(label = "Correo electrónico", value = userData.email)
                         ProfileField(label = "Teléfono", value = userData.phoneNumber)
-                        ProfileField(label = "Edad", value = "28")
                         ProfileField(label = "Número de documento", value = userData.documentNumber)
                         ProfileField(label = "Estilo artístico", value = userData.artStyle)
                         ProfileField(label = "Redes sociales", value = userData.socialMediaLinks)
@@ -452,7 +367,6 @@ private fun NonEditableProfileFields(
                         ProfileField(label = "Nombre de usuario", value = "${userData.userName ?: "usuario"}")
                         ProfileField(label = "Correo electrónico", value = userData.email)
                         ProfileField(label = "Teléfono", value = userData.phoneNumber)
-                        ProfileField(label = "Edad", value = "28")
                         ProfileField(label = "Dirección", value = userData.address ?: "455 Oak Ave, Airytown, USA")
                         ProfileField(label = "Número de documento", value = userData.documentNumber)
                     }
@@ -480,9 +394,23 @@ private fun EditableProfileFields(
     userData: Any,
     onEvent: (ProfileEvent) -> Unit,
     isArtist: Boolean,
-    newPassword: String,
-    onPasswordChange: (String) -> Unit
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    // Obtenemos los estados editables del ViewModel
+    val editableArtist by viewModel.editableArtist.collectAsState()
+    val editableCustomer by viewModel.editableCustomer.collectAsState()
+
+    // Determinamos qué datos mostrar
+    val currentData = remember(isArtist, editableArtist, editableCustomer) {
+        if (isArtist) {
+            editableArtist ?: (userData as ArtistsDto)
+        } else {
+            editableCustomer ?: (userData as CustomersDto)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -500,10 +428,10 @@ private fun EditableProfileFields(
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                when (userData) {
+                when (currentData) {
                     is ArtistsDto -> {
                         OutlinedTextField(
-                            value = userData.firstName ?: "",
+                            value = currentData.userName ?: "",
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
                             label = { Text("Nombre de Usuario") },
                             modifier = Modifier.fillMaxWidth()
@@ -511,7 +439,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.firstName ?: "",
+                            value = currentData.firstName ?: "",
                             onValueChange = { onEvent(ProfileEvent.FirstNameChange(it)) },
                             label = { Text("Nombre") },
                             modifier = Modifier.fillMaxWidth()
@@ -519,7 +447,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.lastName ?: "",
+                            value = currentData.lastName ?: "",
                             onValueChange = { onEvent(ProfileEvent.LastNameChange(it)) },
                             label = { Text("Apellido") },
                             modifier = Modifier.fillMaxWidth()
@@ -527,7 +455,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.email ?: "",
+                            value = currentData.email ?: "",
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
                             label = { Text("Correo electrónico") },
                             modifier = Modifier.fillMaxWidth()
@@ -535,7 +463,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.phoneNumber ?: "",
+                            value = currentData.phoneNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
                             label = { Text("Teléfono") },
                             modifier = Modifier.fillMaxWidth()
@@ -543,7 +471,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.documentNumber ?: "",
+                            value = currentData.documentNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
                             label = { Text("Número de documento") },
                             modifier = Modifier.fillMaxWidth()
@@ -551,7 +479,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.artStyle ?: "",
+                            value = currentData.artStyle ?: "",
                             onValueChange = { onEvent(ProfileEvent.ArtStyleChange(it)) },
                             label = { Text("Estilo artístico") },
                             modifier = Modifier.fillMaxWidth()
@@ -559,24 +487,22 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.socialMediaLinks ?: "",
+                            value = currentData.socialMediaLinks ?: "",
                             onValueChange = { onEvent(ProfileEvent.SocialMediaLinksChange(it)) },
                             label = { Text("Redes sociales") },
                             modifier = Modifier.fillMaxWidth()
                         )
-
                     }
-
                     is CustomersDto -> {
                         OutlinedTextField(
-                            value = userData.userName ?: "",
+                            value = currentData.userName ?: "",
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
                             label = { Text("Nombre de Usuario") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
-                            value = userData.firstName ?: "",
+                            value = currentData.firstName ?: "",
                             onValueChange = { onEvent(ProfileEvent.FirstNameChange(it)) },
                             label = { Text("Nombre") },
                             modifier = Modifier.fillMaxWidth()
@@ -584,7 +510,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.lastName ?: "",
+                            value = currentData.lastName ?: "",
                             onValueChange = { onEvent(ProfileEvent.LastNameChange(it)) },
                             label = { Text("Apellido") },
                             modifier = Modifier.fillMaxWidth()
@@ -592,7 +518,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.email ?: "",
+                            value = currentData.email ?: "",
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
                             label = { Text("Correo electrónico") },
                             modifier = Modifier.fillMaxWidth()
@@ -600,7 +526,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.phoneNumber ?: "",
+                            value = currentData.phoneNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
                             label = { Text("Teléfono") },
                             modifier = Modifier.fillMaxWidth()
@@ -608,7 +534,7 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.documentNumber ?: "",
+                            value = currentData.documentNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
                             label = { Text("Número de documento") },
                             modifier = Modifier.fillMaxWidth()
@@ -616,12 +542,11 @@ private fun EditableProfileFields(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = userData.address ?: "455 Oak Ave, Airytown, USA",
+                            value = currentData.address ?: "455 Oak Ave, Airytown, USA",
                             onValueChange = { onEvent(ProfileEvent.AddressChange(it)) },
                             label = { Text("Dirección") },
                             modifier = Modifier.fillMaxWidth()
                         )
-
                     }
                 }
 
@@ -632,13 +557,13 @@ private fun EditableProfileFields(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Button(
-                        onClick = { onEvent(ProfileEvent.CancelEdit) }
+                        onClick = onCancel
                     ) {
                         Text("Cancelar")
                     }
 
                     Button(
-                        onClick = { onEvent(ProfileEvent.SaveChanges) }
+                        onClick = onSave
                     ) {
                         Text("Guardar cambios")
                     }
@@ -667,3 +592,4 @@ private fun ProfileField(label: String, value: String?) {
         )
     }
 }
+

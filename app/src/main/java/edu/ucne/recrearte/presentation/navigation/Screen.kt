@@ -34,7 +34,7 @@ sealed class Screen {
     object ProfileScreen : Screen()
 
     @Serializable
-    object RecreArteScren : Screen()
+    object RecreArteScreen : Screen()
     @Serializable
     data class WorkByTechnique(val techniqueId: Int): Screen()
     @Serializable

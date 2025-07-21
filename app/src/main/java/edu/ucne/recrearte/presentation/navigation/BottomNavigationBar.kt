@@ -1,7 +1,5 @@
 package edu.ucne.recrearte.presentation.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,7 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -43,7 +40,7 @@ fun BottomNavigationBar(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val items = listOf(
-        BottomNavItem.Home,
+        BottomNavItem.RecreArteScreen,
         BottomNavItem.Favorites,
         BottomNavItem.Cart,
         BottomNavItem.Profile
@@ -115,11 +112,11 @@ sealed class BottomNavItem(
     val outlinedIcon: ImageVector,
     val screen: Screen
 ) {
-    object Home : BottomNavItem(
+    object RecreArteScreen : BottomNavItem(
         title = "Inicio",
         filledIcon = Icons.Filled.Home,
         outlinedIcon = Icons.Outlined.Home,
-        screen = Screen.Home
+        screen = Screen.RecreArteScreen
     )
 
     object Favorites : BottomNavItem(
