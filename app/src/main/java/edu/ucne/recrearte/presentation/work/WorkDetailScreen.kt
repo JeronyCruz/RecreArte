@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -116,7 +117,7 @@ fun WorkDetailScreen(
         if (cartState.isSuccess) {
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    message = cartState.successMessage ?: "Agregado al carrito",
+                    message = cartState.successMessage ?: "Added to cart",
                     duration = SnackbarDuration.Short
                 )
                 shoppingCartViewModel.onEvent(ShoppingCartEvent.ResetSuccessMessage)
@@ -125,7 +126,7 @@ fun WorkDetailScreen(
         if (cartState.errorMessage != null) {
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    message = cartState.errorMessage ?: "Error al agregar al carrito",
+                    message = cartState.errorMessage ?: "Error adding to cart",
                     duration = SnackbarDuration.Short
                 )
                 shoppingCartViewModel.onEvent(ShoppingCartEvent.ClearErrorMessage)
@@ -141,7 +142,7 @@ fun WorkDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text(
-                    "Detalle de Obra",
+                    "Work Detail",
                         style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -151,14 +152,15 @@ fun WorkDetailScreen(
                 ) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Go back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -189,7 +191,7 @@ fun WorkDetailScreen(
                             .background(Color.LightGray),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Imagen no disponible", color = Color.Gray)
+                        Text("Image not available", color = Color.Gray)
                     }
                 }
             }
@@ -198,7 +200,7 @@ fun WorkDetailScreen(
 
             // Título
             Text(
-                text = work.title ?: "Sin título",
+                text = work.title ?: "Untitled",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
@@ -209,7 +211,7 @@ fun WorkDetailScreen(
 
             // Descripción
             Text(
-                text = work.description ?: "Sin descripción",
+                text = work.description ?: "No description",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -229,7 +231,7 @@ fun WorkDetailScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Artista",
+                text = "Artist",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -248,7 +250,7 @@ fun WorkDetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = uiState.nameArtist?.firstOrNull()?.toString() ?: "L",
+                        text = uiState.nameArtist?.firstOrNull()?.toString() ?: "A",
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
@@ -259,7 +261,7 @@ fun WorkDetailScreen(
 
                 // Texto del nombre del artista alineado al centro vertical del ícono
                 Text(
-                    text = uiState.nameArtist ?: "Artista desconocido",
+                    text = uiState.nameArtist ?: "Unknown artist",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -292,7 +294,7 @@ fun WorkDetailScreen(
                     .padding(bottom = 8.dp), // Da un poco de espacio por si hay navbar
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Agregar al carrito", fontSize = 16.sp)
+                Text("Add to cart", fontSize = 16.sp)
             }
         }
     }
