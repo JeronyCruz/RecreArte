@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import edu.ucne.recrearte.presentation.Home.HomeScreen
 import edu.ucne.recrearte.presentation.Home.RecreArteHomeScreen
+import edu.ucne.recrearte.presentation.Like_WishList.FavoritesScreen
 import edu.ucne.recrearte.presentation.login.LoginScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
@@ -59,8 +60,8 @@ fun HomeNavHost(
 
         composable<Screen.RecreArteScreen> {
             RecreArteHomeScreen(
-                onWorkClick = {id ->
-                    navHostController.navigate("")
+                onWorkClick = { id ->
+                    navHostController.navigate(Screen.WorkDetails(id))
                 },
                 onArtistClick = {id ->
                     navHostController.navigate(Screen.WorkByArtist(id))
@@ -165,7 +166,7 @@ fun HomeNavHost(
         }
 
         composable<Screen.FavoritesScreen> {
-           PruebaComposable(navController = navHostController)
+           FavoritesScreen(navController = navHostController)
         }
 
         composable<Screen.CartScreen> {
