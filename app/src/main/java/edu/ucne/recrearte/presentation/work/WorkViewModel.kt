@@ -10,7 +10,9 @@ import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
 import edu.ucne.recrearte.data.repository.ImageRepository
+import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
+import edu.ucne.recrearte.data.repository.WishListRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +32,8 @@ import kotlin.collections.filter
 @HiltViewModel
 class WorkViewModel @Inject constructor(
     private val workRepository: WorkRepository,
+    private val likeRepository: LikeRepository,
+    private val wishListRepository: WishListRepository,
     private val techniqueRepository: TechniqueRepository,
     private val artistRepository: ArtistRepository,
     private val imageRepository: ImageRepository
@@ -42,6 +46,15 @@ class WorkViewModel @Inject constructor(
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     private val _searchResults = MutableStateFlow<List<WorksDto>>(emptyList())
     val searchResults: StateFlow<List<WorksDto>> = _searchResults.asStateFlow()
+
+    private val _isLiked = MutableStateFlow(false)
+    val isLiked: StateFlow<Boolean> = _isLiked.asStateFlow()
+
+    private val _isInWishlist = MutableStateFlow(false)
+    val isInWishlist: StateFlow<Boolean> = _isInWishlist.asStateFlow()
+
+    private val _likeCount = MutableStateFlow(0)
+    val likeCount: StateFlow<Int> = _likeCount.asStateFlow()
 
     fun onEvent(event: WorkEvent){
         when(event){
@@ -63,6 +76,8 @@ class WorkViewModel @Inject constructor(
             is WorkEvent.ImageIdChange -> imageOnChange(event.imageId)
             WorkEvent.RemoveImage -> removeImage()
             is WorkEvent.ImageUpdate -> updateImage(event.image)
+            WorkEvent.ToggleLike -> toggleLike()
+            WorkEvent.ToggleWishlist -> toggleWishlist()
         }
     }
     init {
@@ -507,6 +522,78 @@ class WorkViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Error actualizando imagen: ${e.message}") }
+            }
+        }
+    }
+
+    private fun toggleLike() {
+        viewModelScope.launch {
+            val currentWorkId = _uiState.value.workId ?: return@launch
+            val customerId = 1 // Aquí deberías obtener el ID del cliente logueado
+
+            when (val result = likeRepository.toggleLike(customerId, currentWorkId)) {
+                is Resource.Success -> {
+                    _isLiked.value = result.data ?: false
+                    loadLikeStatus(currentWorkId, customerId)
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun toggleWishlist() {
+        viewModelScope.launch {
+            val currentWorkId = _uiState.value.workId ?: return@launch
+            val customerId = 1 // Aquí deberías obtener el ID del cliente logueado
+
+            when (val result = wishListRepository.toggleWorkInWishlist(customerId, currentWorkId)) {
+                is Resource.Success -> {
+                    _isInWishlist.value = result.data ?: false
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    fun loadLikeStatus(workId: Int, customerId: Int) {
+        viewModelScope.launch {
+            // Cargar estado de like
+            when (val result = likeRepository.hasCustomerLikedWork(customerId, workId)) {
+                is Resource.Success -> {
+                    _isLiked.value = result.data ?: false
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
+            }
+
+            // Cargar contador de likes - CORRECCIÓN AQUÍ
+            when (val result = likeRepository.getLikeCountForWork(workId)) {
+                is Resource.Success -> {
+                    _likeCount.value = result.data ?: 0 // Usamos result.data en lugar de result
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
+            }
+
+            // Cargar estado de wishlist
+            when (val result = wishListRepository.isWorkInWishlist(customerId, workId)) {
+                is Resource.Success -> {
+                    _isInWishlist.value = result.data ?: false
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
             }
         }
     }

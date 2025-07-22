@@ -19,6 +19,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -63,6 +67,10 @@ fun WorkDetailScreen(
     LaunchedEffect(workId) {
         viewModel.loadWork(workId)
     }
+
+    val isLiked by viewModel.isLiked.collectAsState()
+    val isInWishlist by viewModel.isInWishlist.collectAsState()
+    val likeCount by viewModel.likeCount.collectAsState()
 
     // Obtener los datos actuales del ViewModel
     val uiState by viewModel.uiSate.collectAsState()
@@ -239,6 +247,48 @@ fun WorkDetailScreen(
             ) {
                 // Icono de corazón y contador de likes irán aquí
             } */
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Botón de Like
+                IconButton(
+                    onClick = { viewModel.onEvent(WorkEvent.ToggleLike) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                // Contador de likes
+                Text(
+                    text = "$likeCount",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Botón de Favoritos
+                IconButton(
+                    onClick = { viewModel.onEvent(WorkEvent.ToggleWishlist) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isInWishlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = "Favoritos",
+                        tint = if (isInWishlist) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
