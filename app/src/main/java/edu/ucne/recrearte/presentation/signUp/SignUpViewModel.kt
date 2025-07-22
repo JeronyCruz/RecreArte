@@ -49,11 +49,24 @@ class SignUpViewModel @Inject constructor(
 
     // === Actualizaciones de estado ===
     private fun updateEmail(email: String) {
+        val emailRegex = Regex(
+            "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$",
+            RegexOption.IGNORE_CASE
+        )
+
         _uiState.value = _uiState.value.copy(
             email = email,
-            errorEmail = if (email.isBlank()) "Email es requerido"
-            else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Formato inválido"
-            else null
+            errorEmail = when {
+                email.isBlank() -> "El correo electrónico es requerido"
+                !email.matches(emailRegex) -> "Formato de correo inválido (ej: usuario@ucne.edu.do)"
+                !email.contains("@") -> "Falta el símbolo @"
+                email.count { it == '@' } > 1 -> "Solo puede tener un @"
+                email.substringAfterLast('@').isEmpty() -> "Falta el dominio después del @"
+                email.substringBefore('@').isEmpty() -> "Falta el nombre antes del @"
+                !email.substringAfterLast('@').contains(".") -> "El dominio debe contener un punto (.)"
+                email.substringAfterLast('.').length < 2 -> "La extensión del dominio es muy corta (ej: .com)"
+                else -> null
+            }
         )
     }
 
@@ -85,27 +98,47 @@ class SignUpViewModel @Inject constructor(
     private fun updateUserName(userName: String) {
         _uiState.value = _uiState.value.copy(
             userName = userName,
-            errorUserName = if (userName.isBlank()) "Usuario es requerido"
-            else if (!userName.matches(Regex("^[a-zA-Z\\s]+\$"))) "Solo letras"
-            else null
+            errorUserName = when {
+                userName.isBlank() -> "Usuario es requerido"
+                !userName.matches(Regex("^[a-zA-Z0-9]+\$")) -> "Solo letras y números"
+                userName.length < 4 -> "Mínimo 4 caracteres"
+                userName.length > 20 -> "Máximo 20 caracteres"
+                else -> null
+            }
         )
     }
 
     private fun updatePhoneNumber(phoneNumber: String) {
+        // Validación para República Dominicana:
+        // - Debe empezar con 809, 829, 849 (o permitir otros formatos)
+        // - Exactamente 10 dígitos
+        val phoneRegex = Regex("^(809|829|849)[0-9]{7}\$")
+
         _uiState.value = _uiState.value.copy(
             phoneNumber = phoneNumber,
-            errorPhoneNumber = if (phoneNumber.isBlank()) "Teléfono es requerido"
-            else if (!phoneNumber.matches(Regex("^[0-9]+\$"))) "Solo números"
-            else null
+            errorPhoneNumber = when {
+                phoneNumber.isBlank() -> "Teléfono es requerido"
+                !phoneNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
+                phoneNumber.length != 10 -> "Debe tener 10 dígitos"
+                !phoneNumber.matches(phoneRegex) -> "Formato inválido (ej: 8091234567)"
+                else -> null
+            }
         )
     }
 
     private fun updateDocumentNumber(documentNumber: String) {
+        // Validación para cédula dominicana:
+        // - 11 dígitos exactos
+        // - Puedes añadir validación del dígito verificador si lo deseas
+
         _uiState.value = _uiState.value.copy(
             documentNumber = documentNumber,
-            errorDocumentNumber = if (documentNumber.isBlank()) "Documento es requerido"
-            else if (!documentNumber.matches(Regex("^[0-9]+\$"))) "Solo números"
-            else null
+            errorDocumentNumber = when {
+                documentNumber.isBlank() -> "Cédula es requerida"
+                !documentNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
+                documentNumber.length != 11 -> "La cédula debe tener 11 dígitos"
+                else -> null
+            }
         )
     }
 
