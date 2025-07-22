@@ -28,7 +28,7 @@ sealed class Screen {
     object FavoritesScreen : Screen()
 
     @Serializable
-    object CartScreen : Screen()
+    object CartScreen: Screen()
 
     @Serializable
     object ProfileScreen : Screen()

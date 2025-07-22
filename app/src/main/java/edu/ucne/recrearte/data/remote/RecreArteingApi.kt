@@ -9,6 +9,7 @@ import edu.ucne.recrearte.data.remote.dto.LikesDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
+import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
@@ -159,4 +160,18 @@ interface RecreArteingApi {
     @GET("api/Likes/top-10")
     suspend fun getTop10MostLikedWorks(): List<WorksDto>
 
+    //Shopping Carts
+    @GET("api/ShoppingCarts/{customerId}")
+    suspend fun getCart(@Path("customerId") customerId: Int): ShoppingCartsDto
+    @POST("api/ShoppingCarts/{customerId}/add/{workId}")
+    suspend fun addToCart(
+        @Path("customerId") customerId: Int,
+        @Path("workId") workId: Int
+    )
+    @DELETE("api/ShoppingCarts/remove/{itemId}")
+    suspend fun removeFromCart(@Path("itemId") itemId: Int)
+    @DELETE("api/ShoppingCarts/{customerId}/clear")
+    suspend fun clearCart(@Path("customerId") customerId: Int)
+//    @POST("api/ShoppingCarts/{customerId}/checkout")
+//    suspend fun checkout(@Path("customerId") customerId: Int): Response<BillResponse>
 }

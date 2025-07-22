@@ -8,6 +8,7 @@ import edu.ucne.recrearte.data.remote.dto.LikesDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
+import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
@@ -236,4 +237,11 @@ class RemoteDataSource @Inject constructor(
         return recreArteingApi.getTop10MostLikedWorks()
     }
 
+    //Shopping Carts
+    suspend fun getCart(customerId: Int): ShoppingCartsDto{
+        return recreArteingApi.getCart(customerId)
+    }
+    suspend fun addToCart(customerId: Int, workId: Int) = recreArteingApi.addToCart(customerId, workId)
+    suspend fun removeFromCart(itemId: Int) = recreArteingApi.removeFromCart(itemId)
+    suspend fun clearCart(customerId: Int) = recreArteingApi.clearCart(customerId)
 }
