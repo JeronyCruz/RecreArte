@@ -12,6 +12,8 @@ import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
+import edu.ucne.recrearte.data.remote.dto.WishListDetailsDto
+import edu.ucne.recrearte.data.remote.dto.WishListsDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import retrofit2.Response
 import retrofit2.http.Body
@@ -159,6 +161,44 @@ interface RecreArteingApi {
     suspend fun getLikeCountForWork(@Path("workId") workId: Int): Int
     @GET("api/Likes/top-10")
     suspend fun getTop10MostLikedWorks(): List<WorksDto>
+
+    // WishList
+    @GET("api/WishLists")
+    suspend fun getWishLists(): List<WishListsDto>
+
+    @GET("api/WishLists/{id}")
+    suspend fun getWishListById(@Path("id") id: Int): Response<WishListsDto>
+
+    @POST("api/WishLists")
+    suspend fun createWishList(@Body wishList: WishListsDto): Response<WishListsDto>
+
+    @PUT("api/WishLists/{id}")
+    suspend fun updateWishList(
+        @Path("id") id: Int,
+        @Body wishList: WishListsDto
+    ): Response<Unit>
+
+    @DELETE("api/WishLists/{id}")
+    suspend fun deleteWishList(@Path("id") id: Int): Response<Unit>
+
+    @GET("api/WishLists/customer/{customerId}/works")
+    suspend fun getWorksInWishlistByCustomer(@Path("customerId") customerId: Int): List<WorksDto>
+
+    @POST("api/WishLists/customer/{customerId}/work/{workId}/toggle")
+    suspend fun toggleWorkInWishlist(
+        @Path("customerId") customerId: Int,
+        @Path("workId") workId: Int
+    ): Boolean
+
+    @GET("api/WishLists/customer/{customerId}/work/{workId}/status")
+    suspend fun isWorkInWishlist(
+        @Path("customerId") customerId: Int,
+        @Path("workId") workId: Int
+    ): Boolean
+
+    // WishListDetails endpoints
+    @GET("api/WishListsDetails")
+    suspend fun getWishListDetails(): List<WishListDetailsDto>
 
     //Shopping Carts
     @GET("api/ShoppingCarts/{customerId}")

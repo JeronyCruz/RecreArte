@@ -19,6 +19,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -68,6 +72,9 @@ fun WorkDetailScreen(
     viewModel: WorkViewModel = hiltViewModel(),
     shoppingCartViewModel: ShoppingCartViewModel = hiltViewModel()
 ) {
+    val isLiked by viewModel.isLiked.collectAsState()
+    val isInWishlist by viewModel.isInWishlist.collectAsState()
+    val likeCount by viewModel.likeCount.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -78,23 +85,31 @@ fun WorkDetailScreen(
 
     // Obtener los datos actuales del ViewModel
     val uiState by viewModel.uiSate.collectAsState()
-    val work = uiState.works.find { it.workId == workId } ?: WorksDto(
-        workId = 0,
-        title = "Obra no encontrada",
-        description = "No se pudo cargar la información",
-        dimension = "N/A",
-        price = 0.0,
-        artistId = 0,
-        techniqueId = 0,
-        imageId = 0,
-        base64 = null
-    )
+    val work = remember(uiState.works, workId) {
+        uiState.works.find { it.workId == workId } ?: WorksDto(
+            workId = 0,
+            title = "Obra no encontrada",
+            description = "No se pudo cargar la información",
+            dimension = "N/A",
+            price = 0.0,
+            artistId = 0,
+            techniqueId = 0,
+            imageId = 0,
+            base64 = null
+        )
+    }
 
     val currentArtistId = remember { work.artistId }
 
     LaunchedEffect(currentArtistId) {
         if (currentArtistId > 0 && uiState.nameArtist.isNullOrBlank()) {
             viewModel.findArtist(currentArtistId)
+        }
+    }
+
+    LaunchedEffect(work.artistId) {
+        if (work.artistId > 0 && uiState.nameArtist.isNullOrBlank()) {
+            viewModel.findArtist(work.artistId)
         }
     }
 
@@ -271,13 +286,47 @@ fun WorkDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Espacio reservado para los likes (a implementar después)
-            /* Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 8.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Icono de corazón y contador de likes irán aquí
-            } */
+                // Botón de Like
+                IconButton(
+                    onClick = { viewModel.onEvent(WorkEvent.ToggleLike) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                // Contador de likes
+                Text(
+                    text = "$likeCount",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Botón de Favoritos
+                IconButton(
+                    onClick = { viewModel.onEvent(WorkEvent.ToggleWishlist) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isInWishlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = "Favoritos",
+                        tint = if (isInWishlist) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -291,7 +340,7 @@ fun WorkDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .padding(bottom = 8.dp), // Da un poco de espacio por si hay navbar
+                    .padding(bottom = 8.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Add to cart", fontSize = 16.sp)

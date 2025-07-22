@@ -37,12 +37,59 @@ class LikeRepository @Inject constructor(
     }
     suspend fun createLike(likeDto: LikesDto) = remoteDataSource.createLike(likeDto)
 
+
+    fun getWorksLikedByCustomer(customerId: Int): Flow<Resource<List<WorksDto>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val works = remoteDataSource.getWorksLikedByCustomer(customerId)
+            emit(Resource.Success(works))
+        } catch (e: HttpException) {
+            emit(Resource.Error("Internet error: ${e.message()}"))
+        } catch (e: Exception) {
+            emit(Resource.Error("Unknown error: ${e.message}"))
+        }
+    }
+
+    suspend fun toggleLike(customerId: Int, workId: Int): Resource<Boolean> {
+        return try {
+            val result = remoteDataSource.toggleLike(customerId, workId)
+            Resource.Success(result)
+        } catch (e: HttpException) {
+            Resource.Error("Internet error: ${e.message()}")
+        } catch (e: Exception) {
+            Resource.Error("Unknown error: ${e.message}")
+        }
+    }
+
+    suspend fun hasCustomerLikedWork(customerId: Int, workId: Int): Resource<Boolean> {
+        return try {
+            val result = remoteDataSource.hasCustomerLikedWork(customerId, workId)
+            Resource.Success(result)
+        } catch (e: HttpException) {
+            Resource.Error("Internet error: ${e.message()}")
+        } catch (e: Exception) {
+            Resource.Error("Unknown error: ${e.message}")
+        }
+    }
+
+    suspend fun getLikeCountForWork(workId: Int): Resource<Int> {
+        return try {
+            val count = remoteDataSource.getLikeCountForWork(workId)
+            Resource.Success(count)
+        } catch (e: HttpException) {
+            Resource.Error("Internet error: ${e.message()}")
+        } catch (e: Exception) {
+            Resource.Error("Unknown error: ${e.message}")
+        }
+    }
+
     fun getTop10MostLikedWorks(): Flow<Resource<List<WorksDto>>> = flow {
         try {
             emit(Resource.Loading())
             val works = remoteDataSource.getTop10MostLikedWorks()
             emit(Resource.Success(works))
         }catch (e: HttpException){
+        } catch (e: HttpException) {
             emit(Resource.Error("Internet error: ${e.message()}"))
         } catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))

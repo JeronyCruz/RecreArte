@@ -11,6 +11,8 @@ import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
+import edu.ucne.recrearte.data.remote.dto.WishListDetailsDto
+import edu.ucne.recrearte.data.remote.dto.WishListsDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -237,6 +239,60 @@ class RemoteDataSource @Inject constructor(
         return recreArteingApi.getTop10MostLikedWorks()
     }
 
+    // WishLists
+    suspend fun getWishLists(): List<WishListsDto> {
+        return recreArteingApi.getWishLists()
+    }
+
+    suspend fun getWishListById(id: Int): WishListsDto {
+        val response = recreArteingApi.getWishListById(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("WishList not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
+
+    suspend fun createWishList(wishListDto: WishListsDto): WishListsDto {
+        val response = recreArteingApi.createWishList(wishListDto)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Failed to create wishlist")
+        } else {
+            throw HttpException(response)
+        }
+    }
+
+    suspend fun updateWishList(id: Int, wishListDto: WishListsDto) {
+        val response = recreArteingApi.updateWishList(id, wishListDto)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+
+    suspend fun deleteWishList(id: Int) {
+        val response = recreArteingApi.deleteWishList(id)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+
+    suspend fun getWorksInWishlistByCustomer(customerId: Int): List<WorksDto> {
+        return recreArteingApi.getWorksInWishlistByCustomer(customerId)
+    }
+
+    suspend fun toggleWorkInWishlist(customerId: Int, workId: Int): Boolean {
+        return recreArteingApi.toggleWorkInWishlist(customerId, workId)
+    }
+
+    suspend fun isWorkInWishlist(customerId: Int, workId: Int): Boolean {
+        return recreArteingApi.isWorkInWishlist(customerId, workId)
+    }
+
+    // WishListDetails
+    suspend fun getWishListDetails(): List<WishListDetailsDto> {
+        return recreArteingApi.getWishListDetails()
+    }
+    
     //Shopping Carts
     suspend fun getCart(customerId: Int): ShoppingCartsDto{
         return recreArteingApi.getCart(customerId)

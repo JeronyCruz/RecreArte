@@ -25,4 +25,7 @@ sealed interface WorkEvent {
     data object ClearErrorMessage: WorkEvent
     data object RemoveImage : WorkEvent
     data class ImageUpdate(val image: ImagesDto): WorkEvent
+
+    object ToggleLike : WorkEvent
+    object ToggleWishlist : WorkEvent
 }
