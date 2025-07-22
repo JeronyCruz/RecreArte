@@ -77,6 +77,7 @@ import kotlinx.coroutines.CoroutineScope
 import java.util.Date
 import android.util.Base64
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.runtime.remember
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -126,7 +127,8 @@ fun RecreArteHomeScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = WindowInsets(bottom = 130.dp)
     ) { paddingValues ->
         Box(
             modifier = Modifier
