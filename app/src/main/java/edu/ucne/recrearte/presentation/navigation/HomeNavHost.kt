@@ -19,6 +19,7 @@ import edu.ucne.recrearte.presentation.login.LoginScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
 import edu.ucne.recrearte.presentation.profile.ProfileScreen
+import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartScreen
 import edu.ucne.recrearte.presentation.signUp.SignUpScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueListScreen
 import edu.ucne.recrearte.presentation.techniques.TechniqueScreen
@@ -60,8 +61,8 @@ fun HomeNavHost(
 
         composable<Screen.RecreArteScreen> {
             RecreArteHomeScreen(
-                onWorkClick = { id ->
-                    navHostController.navigate(Screen.WorkDetails(id))
+                onWorkClick = { workId ->
+                    navHostController.navigate(Screen.WorkDetails(workId))
                 },
                 onArtistClick = {id ->
                     navHostController.navigate(Screen.WorkByArtist(id))
@@ -170,7 +171,12 @@ fun HomeNavHost(
         }
 
         composable<Screen.CartScreen> {
-            // Tu pantalla de carrito aquí
+            ShoppingCartScreen(
+                navController = navHostController,
+                onWorkClick = { workId ->
+                    navHostController.navigate(Screen.WorkDetails(workId))
+                }
+            )
         }
 
         composable<Screen.ProfileScreen> {

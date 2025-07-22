@@ -31,6 +31,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -39,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +59,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartEvent
+import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartViewModel
+import kotlinx.coroutines.launch
 import java.util.Base64
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,11 +69,14 @@ import java.util.Base64
 fun WorkDetailScreen(
     navController: NavController,
     workId: Int,
-    viewModel: WorkViewModel = hiltViewModel()
+    viewModel: WorkViewModel = hiltViewModel(),
+    shoppingCartViewModel: ShoppingCartViewModel = hiltViewModel()
 ) {
     val isLiked by viewModel.isLiked.collectAsState()
     val isInWishlist by viewModel.isInWishlist.collectAsState()
     val likeCount by viewModel.likeCount.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     // Cargar los datos de la obra
     LaunchedEffect(workId) {
@@ -114,13 +125,39 @@ fun WorkDetailScreen(
         null
     }
 
+    val cartState by shoppingCartViewModel.uiSate.collectAsState()
+
+    // Mostrar mensajes de éxito/error
+    LaunchedEffect(cartState.isSuccess, cartState.errorMessage) {
+        if (cartState.isSuccess) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = cartState.successMessage ?: "Added to cart",
+                    duration = SnackbarDuration.Short
+                )
+                shoppingCartViewModel.onEvent(ShoppingCartEvent.ResetSuccessMessage)
+            }
+        }
+        if (cartState.errorMessage != null) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = cartState.errorMessage ?: "Error adding to cart",
+                    duration = SnackbarDuration.Short
+                )
+                shoppingCartViewModel.onEvent(ShoppingCartEvent.ClearErrorMessage)
+            }
+        }
+    }
+
+
+
     Scaffold(
         modifier = Modifier.fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
             TopAppBar(
                 title = { Text(
-                    "Detalle de Obra",
+                    "Work Detail",
                         style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -130,14 +167,15 @@ fun WorkDetailScreen(
                 ) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Go back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -168,7 +206,7 @@ fun WorkDetailScreen(
                             .background(Color.LightGray),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Imagen no disponible", color = Color.Gray)
+                        Text("Image not available", color = Color.Gray)
                     }
                 }
             }
@@ -177,7 +215,7 @@ fun WorkDetailScreen(
 
             // Título
             Text(
-                text = work.title ?: "Sin título",
+                text = work.title ?: "Untitled",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
@@ -188,7 +226,7 @@ fun WorkDetailScreen(
 
             // Descripción
             Text(
-                text = work.description ?: "Sin descripción",
+                text = work.description ?: "No description",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -208,7 +246,7 @@ fun WorkDetailScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Artista",
+                text = "Artist",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -227,7 +265,7 @@ fun WorkDetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = uiState.nameArtist?.firstOrNull()?.toString() ?: "L",
+                        text = uiState.nameArtist?.firstOrNull()?.toString() ?: "A",
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
@@ -238,7 +276,7 @@ fun WorkDetailScreen(
 
                 // Texto del nombre del artista alineado al centro vertical del ícono
                 Text(
-                    text = uiState.nameArtist ?: "Artista desconocido",
+                    text = uiState.nameArtist ?: "Unknown artist",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -247,14 +285,6 @@ fun WorkDetailScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Espacio reservado para los likes (a implementar después)
-            /* Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                // Icono de corazón y contador de likes irán aquí
-            } */
 
             Row(
                 modifier = Modifier
@@ -301,14 +331,19 @@ fun WorkDetailScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* Agregar al carrito */ },
+                onClick = {
+                     //Agregar al carrito
+                    shoppingCartViewModel.onEvent(
+                        ShoppingCartEvent.AddToCart( workId)
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .padding(bottom = 8.dp), // Da un poco de espacio por si hay navbar
+                    .padding(bottom = 8.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Agregar al carrito", fontSize = 16.sp)
+                Text("Add to cart", fontSize = 16.sp)
             }
         }
     }
