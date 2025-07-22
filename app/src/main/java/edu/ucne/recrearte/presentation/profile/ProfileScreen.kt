@@ -402,6 +402,12 @@ private fun EditableProfileFields(
     val editableArtist by viewModel.editableArtist.collectAsState()
     val editableCustomer by viewModel.editableCustomer.collectAsState()
 
+    // Obtenemos los estados de error
+    val errorUserName by viewModel.errorUserName.collectAsState()
+    val errorEmail by viewModel.errorEmail.collectAsState()
+    val errorPhoneNumber by viewModel.errorPhoneNumber.collectAsState()
+    val errorDocumentNumber by viewModel.errorDocumentNumber.collectAsState()
+
     // Determinamos qué datos mostrar
     val currentData = remember(isArtist, editableArtist, editableCustomer) {
         if (isArtist) {
@@ -434,7 +440,16 @@ private fun EditableProfileFields(
                             value = currentData.userName ?: "",
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
                             label = { Text("Nombre de Usuario") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorUserName != null,
+                            supportingText = {
+                                if (errorUserName != null) {
+                                    Text(
+                                        text = errorUserName ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -458,7 +473,16 @@ private fun EditableProfileFields(
                             value = currentData.email ?: "",
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
                             label = { Text("Correo electrónico") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorEmail != null,
+                            supportingText = {
+                                if (errorEmail != null) {
+                                    Text(
+                                        text = errorEmail ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -466,7 +490,16 @@ private fun EditableProfileFields(
                             value = currentData.phoneNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
                             label = { Text("Teléfono") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorPhoneNumber != null,
+                            supportingText = {
+                                if (errorPhoneNumber != null) {
+                                    Text(
+                                        text = errorPhoneNumber ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -474,7 +507,16 @@ private fun EditableProfileFields(
                             value = currentData.documentNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
                             label = { Text("Número de documento") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorDocumentNumber != null,
+                            supportingText = {
+                                if (errorDocumentNumber != null) {
+                                    Text(
+                                        text = errorDocumentNumber ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -498,7 +540,16 @@ private fun EditableProfileFields(
                             value = currentData.userName ?: "",
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
                             label = { Text("Nombre de Usuario") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorUserName != null,
+                            supportingText = {
+                                if (errorUserName != null) {
+                                    Text(
+                                        text = errorUserName ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
@@ -521,7 +572,16 @@ private fun EditableProfileFields(
                             value = currentData.email ?: "",
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
                             label = { Text("Correo electrónico") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorEmail != null,
+                            supportingText = {
+                                if (errorEmail != null) {
+                                    Text(
+                                        text = errorEmail ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -529,7 +589,16 @@ private fun EditableProfileFields(
                             value = currentData.phoneNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
                             label = { Text("Teléfono") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorPhoneNumber != null,
+                            supportingText = {
+                                if (errorPhoneNumber != null) {
+                                    Text(
+                                        text = errorPhoneNumber ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -537,7 +606,16 @@ private fun EditableProfileFields(
                             value = currentData.documentNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
                             label = { Text("Número de documento") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = errorDocumentNumber != null,
+                            supportingText = {
+                                if (errorDocumentNumber != null) {
+                                    Text(
+                                        text = errorDocumentNumber ?: "",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
