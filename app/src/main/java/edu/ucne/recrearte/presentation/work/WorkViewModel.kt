@@ -10,8 +10,12 @@ import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
 import edu.ucne.recrearte.data.repository.ImageRepository
+import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
+import edu.ucne.recrearte.data.repository.WishListRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
+import edu.ucne.recrearte.util.TokenManager
+import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,9 +34,12 @@ import kotlin.collections.filter
 @HiltViewModel
 class WorkViewModel @Inject constructor(
     private val workRepository: WorkRepository,
+    private val likeRepository: LikeRepository,
+    private val wishListRepository: WishListRepository,
     private val techniqueRepository: TechniqueRepository,
     private val artistRepository: ArtistRepository,
-    private val imageRepository: ImageRepository
+    private val imageRepository: ImageRepository,
+    private val tokenManager: TokenManager,
 ): ViewModel() {
     private val _uiState = MutableStateFlow(WorkUiState())
     val uiSate = _uiState.asStateFlow()
@@ -42,6 +49,16 @@ class WorkViewModel @Inject constructor(
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     private val _searchResults = MutableStateFlow<List<WorksDto>>(emptyList())
     val searchResults: StateFlow<List<WorksDto>> = _searchResults.asStateFlow()
+
+    private val _isLiked = MutableStateFlow(false)
+    val isLiked: StateFlow<Boolean> = _isLiked.asStateFlow()
+
+    private val _isInWishlist = MutableStateFlow(false)
+    val isInWishlist: StateFlow<Boolean> = _isInWishlist.asStateFlow()
+
+    private val _likeCount = MutableStateFlow(0)
+    val likeCount: StateFlow<Int> = _likeCount.asStateFlow()
+
 
     fun onEvent(event: WorkEvent){
         when(event){
@@ -63,6 +80,8 @@ class WorkViewModel @Inject constructor(
             is WorkEvent.ImageIdChange -> imageOnChange(event.imageId)
             WorkEvent.RemoveImage -> removeImage()
             is WorkEvent.ImageUpdate -> updateImage(event.image)
+            WorkEvent.ToggleLike -> toggleLike()
+            WorkEvent.ToggleWishlist -> toggleWishlist()
         }
     }
     init {
@@ -83,6 +102,20 @@ class WorkViewModel @Inject constructor(
         }
 
     }
+
+    private fun getLoggedCustomerId(): Int {
+        return tokenManager.getUserId()?.also { userId ->
+            println("ID de usuario obtenido del token: $userId")
+        } ?: run {
+            println("⚠️ No se pudo obtener el ID del usuario - Usando valor por defecto")
+            if (System.getProperty("DEBUG") != null) {  // Alternativa para desarrollo
+                1 // Valor temporal para desarrollo/debug
+            } else {
+                throw IllegalStateException("Usuario no autenticado")
+            }
+        }
+    }
+
     private fun new(){
         _uiState.value = _uiState.value.copy(
             title = "",
@@ -259,6 +292,7 @@ class WorkViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
             when (val result = workRepository.getWorkById(id)) {
                 is Resource.Success -> {
+                    val customerId = getLoggedCustomerId()
                     _uiState.value = _uiState.value.copy(
                         workId = result.data?.workId,
                         techniqueId = result.data?.techniqueId ?: 0,
@@ -271,6 +305,8 @@ class WorkViewModel @Inject constructor(
                         base64 = result.data?.base64,
                         imageRemoved = false
                     )
+
+                    loadLikeStatus(id, customerId)
                 }
                 is Resource.Error -> {
                     _uiState.value = _uiState.value.copy(
@@ -507,6 +543,101 @@ class WorkViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Error actualizando imagen: ${e.message}") }
+            }
+        }
+    }
+
+    // Cambia la definición de toggleLike en el ViewModel
+    private fun toggleLike() {
+        viewModelScope.launch {
+            try {
+                val workId = _uiState.value.workId ?: return@launch
+                val customerId = getLoggedCustomerId()
+
+                // Toggle the like
+                when (val result = likeRepository.toggleLike(customerId, workId)) {
+                    is Resource.Success -> {
+                        // Update like status
+                        _isLiked.value = result.data ?: false
+
+                        // Refresh like count
+                        when (val countResult = likeRepository.getLikeCountForWork(workId)) {
+                            is Resource.Success -> _likeCount.value = countResult.data ?: 0
+                            is Resource.Error -> _uiState.update {
+                                it.copy(errorMessage = countResult.message)
+                            }
+
+                            is Resource.Loading<*> -> TODO()
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update { it.copy(errorMessage = result.message) }
+                    }
+
+                    is Resource.Loading<*> -> TODO()
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Error: ${e.message}") }
+            }
+        }
+    }
+
+    private fun toggleWishlist() {
+        viewModelScope.launch {
+            try {
+                val workId = _uiState.value.workId ?: return@launch
+                val customerId = getLoggedCustomerId()
+
+                when (val result = wishListRepository.toggleWorkInWishlist(customerId, workId)) {
+                    is Resource.Success -> {
+                        _isInWishlist.value = result.data ?: false
+                        // You might want to show a snackbar or other feedback here
+                    }
+                    is Resource.Error -> {
+                        _uiState.update { it.copy(errorMessage = result.message) }
+                    }
+
+                    is Resource.Loading<*> -> TODO()
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Error: ${e.message}") }
+            }
+        }
+    }
+
+    fun loadLikeStatus(workId: Int, customerId: Int) {
+        viewModelScope.launch {
+            // Cargar estado de like
+            when (val result = likeRepository.hasCustomerLikedWork(customerId, workId)) {
+                is Resource.Success -> {
+                    _isLiked.value = result.data ?: false
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
+            }
+
+            // Cargar contador de likes - CORRECCIÓN AQUÍ
+            when (val result = likeRepository.getLikeCountForWork(workId)) {
+                is Resource.Success -> {
+                    _likeCount.value = result.data ?: 0 // Usamos result.data en lugar de result
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
+            }
+
+            // Cargar estado de wishlist
+            when (val result = wishListRepository.isWorkInWishlist(customerId, workId)) {
+                is Resource.Success -> {
+                    _isInWishlist.value = result.data ?: false
+                }
+                is Resource.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                else -> {}
             }
         }
     }
