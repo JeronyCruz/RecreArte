@@ -97,6 +97,7 @@ fun WorkDetailScreen(
             price = 0.0,
             artistId = 0,
             techniqueId = 0,
+            statusId = 1,
             imageId = 0,
             base64 = null
         )

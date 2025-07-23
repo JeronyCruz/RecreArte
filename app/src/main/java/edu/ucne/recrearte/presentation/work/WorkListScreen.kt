@@ -381,6 +381,7 @@ fun WorkCard(
                             dimension = work.dimension,
                             techniqueId = work.techniqueId,
                             artistId = work.artistId,
+                            statusId = work.statusId,
                             price = work.price,
                             description = work.description,
                             imageId = work.imageId
