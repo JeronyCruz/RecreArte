@@ -7,10 +7,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Icon
@@ -34,7 +36,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 @Composable
 fun BottomNavigationBar(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    userRoleId: Int? = null
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -43,8 +46,15 @@ fun BottomNavigationBar(
         BottomNavItem.RecreArteScreen,
         BottomNavItem.Favorites,
         BottomNavItem.Cart,
-        BottomNavItem.Profile
+        BottomNavItem.Profile,
+//        BottomNavItem.AdminArtistMenu
     )
+
+    val filteredItems = if (userRoleId == 1 || userRoleId == 2) {
+        items + BottomNavItem.AdminArtistMenu
+    } else {
+        items
+    }
 
     Surface(
         modifier = Modifier
@@ -64,7 +74,7 @@ fun BottomNavigationBar(
             containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp
         ) {
-            items.forEach { item ->
+            filteredItems.forEach { item ->
                 val selected = currentRoute == item.screen::class.simpleName
                 NavigationBarItem(
                     modifier = Modifier.padding(vertical = 6.dp),
@@ -138,5 +148,12 @@ sealed class BottomNavItem(
         filledIcon = Icons.Filled.Person,
         outlinedIcon = Icons.Outlined.Person,
         screen = Screen.ProfileScreen
+    )
+
+    object AdminArtistMenu : BottomNavItem(
+        title = "Menú",
+        filledIcon = Icons.Filled.Menu,
+        outlinedIcon = Icons.Outlined.Menu,
+        screen = Screen.AdminArtistMenuScreen
     )
 }
