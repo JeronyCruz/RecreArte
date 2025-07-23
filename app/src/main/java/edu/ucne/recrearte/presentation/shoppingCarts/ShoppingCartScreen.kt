@@ -53,6 +53,7 @@ fun ShoppingCartScreen(
     navController: NavController,
     viewModel: ShoppingCartViewModel = hiltViewModel(),
     onWorkClick: (Int) -> Unit = {},
+    onCheckOut: () -> Unit
 ) {
     val uiState by viewModel.uiSate.collectAsState()
 
@@ -189,7 +190,7 @@ fun ShoppingCartScreen(
                         // Botón de checkout
                         Button(
                             onClick = {
-                                viewModel.onEvent(ShoppingCartEvent.ClearCart)
+                                onCheckOut()
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
