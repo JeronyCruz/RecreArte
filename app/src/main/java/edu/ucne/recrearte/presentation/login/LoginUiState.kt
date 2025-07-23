@@ -9,4 +9,5 @@ data class LoginUiState(
     val successMessage: String? = null,
     val errorEmail: String? = null,
     val errorPassword: String? = null,
+    val roleId: Int? = null
 )
