@@ -82,6 +82,8 @@ class WorkViewModel @Inject constructor(
             is WorkEvent.ImageUpdate -> updateImage(event.image)
             WorkEvent.ToggleLike -> toggleLike()
             WorkEvent.ToggleWishlist -> toggleWishlist()
+            is WorkEvent.StatusChange -> statusOnChange(event.statusId)
+            is WorkEvent.UpdateWorksStatus -> updateWorksStatus(event.workIds, event.statusId)
         }
     }
     init {
@@ -122,6 +124,7 @@ class WorkViewModel @Inject constructor(
             dimension = "",
             artistId = 0,
             techniqueId = 0,
+            statusId = 1,
             price = 0.0,
             description = "",
             errorTitle = "",
@@ -212,6 +215,12 @@ class WorkViewModel @Inject constructor(
         _uiState.value = _uiState.value
             .copy(
                 techniqueId = id
+            )
+    }
+    private fun statusOnChange(id: Int){
+        _uiState.value = _uiState.value
+            .copy(
+                statusId = id
             )
     }
 
@@ -382,7 +391,8 @@ class WorkViewModel @Inject constructor(
                     price = _uiState.value.price,
                     artistId = _uiState.value.artistId,
                     techniqueId = _uiState.value.techniqueId,
-                    imageId = _uiState.value.imageId
+                    imageId = _uiState.value.imageId,
+                    statusId = 1
                 )
                 workRepository.createWork(method)
                 new()
@@ -447,7 +457,8 @@ class WorkViewModel @Inject constructor(
                     price = _uiState.value.price,
                     artistId = _uiState.value.artistId,
                     techniqueId = _uiState.value.artistId,
-                    imageId = _uiState.value.imageId
+                    imageId = _uiState.value.imageId,
+                    statusId = 1
                 )
                 workRepository.updateWork(id,method)
                 new()
@@ -638,6 +649,34 @@ class WorkViewModel @Inject constructor(
                     _uiState.update { it.copy(errorMessage = result.message) }
                 }
                 else -> {}
+            }
+        }
+    }
+
+    //para actualizar el status
+    private fun updateWorksStatus(workIds: List<Int>, statusId: Int) {
+        viewModelScope.launch {
+            try {
+                workIds.forEach { workId ->
+                    // Obtener la obra actual
+                    when (val result = workRepository.getWorkById(workId)) {
+                        is Resource.Success -> {
+                            result.data?.let { work ->
+                                // Actualizar solo el statusId
+                                val updatedWork = work.copy(statusId = statusId)
+                                workRepository.updateWork(workId, updatedWork)
+                            }
+                        }
+                        is Resource.Error -> {
+                            _uiState.update { it.copy(errorMessage = result.message) }
+                        }
+                        else -> {}
+                    }
+                }
+                // Refrescar la lista de obras después de actualizar
+                getWorks()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Error updating works status: ${e.message}") }
             }
         }
     }
