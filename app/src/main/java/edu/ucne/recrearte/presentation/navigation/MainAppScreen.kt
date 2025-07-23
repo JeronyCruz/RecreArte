@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Icon
@@ -16,6 +18,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -25,14 +28,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import edu.ucne.recrearte.util.TokenManager
 
 @Composable
 fun MainAppScreen(
     navController: NavHostController,
+    tokenManager: TokenManager,
     modifier: Modifier = Modifier
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val userRoleId by remember { derivedStateOf { tokenManager.getRoleId() } } // <- Esta es la línea clave
 
     // Lista de pantallas que SÍ deben mostrar la barra
     val bottomBarRoutes = listOf(
@@ -57,7 +63,14 @@ fun MainAppScreen(
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
-                    BottomNavDestination.entries.forEachIndexed { index, destination ->
+                    // Filtramos los items basados en el roleId
+                    val visibleItems = if (userRoleId == 1 || userRoleId == 2) {
+                        BottomNavDestination.entries // Muestra todos los items incluyendo AdminArtistMenu
+                    } else {
+                        BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
+                    }
+
+                    visibleItems.forEachIndexed { index, destination ->
                         NavigationBarItem(
                             selected = selectedDestination == index,
                             onClick = {
@@ -86,7 +99,8 @@ fun MainAppScreen(
     ) { contentPadding ->
         HomeNavHost(
             navHostController = navController,
-            modifier = Modifier.padding(contentPadding)
+            modifier = Modifier.padding(contentPadding),
+            tokenManager = tokenManager
         )
     }
 }
@@ -121,6 +135,12 @@ enum class BottomNavDestination(
         filledIcon = Icons.Filled.Person,
         outlinedIcon = Icons.Outlined.Person,
         screen = Screen.ProfileScreen
+    ),
+    AdminArtistMenu(
+    title = "Menú",
+    filledIcon = Icons.Default.Menu, // Asegúrate de importar el icono
+    outlinedIcon = Icons.Outlined.Menu,
+    screen = Screen.AdminArtistMenuScreen
     );
 
     companion object {
