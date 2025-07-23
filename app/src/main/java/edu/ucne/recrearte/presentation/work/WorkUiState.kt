@@ -11,6 +11,7 @@ data class WorkUiState(
     val dimension: String = "",
     val techniqueId: Int = 0,
     val artistId: Int = 0,
+    val statusId: Int = 1,
     val price: Double = 0.0,
     val description: String = "",
     val imageId: Int = 0,
