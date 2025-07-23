@@ -1,10 +1,13 @@
 package edu.ucne.recrearte.presentation.work
 
 import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +22,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -26,19 +30,24 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,11 +62,17 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.presentation.navigation.Screen
+import edu.ucne.recrearte.util.TokenManager
+import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.CoroutineScope
 
 
@@ -66,61 +81,53 @@ import kotlinx.coroutines.CoroutineScope
 fun WorkListScreen(
     drawerState: DrawerState,
     scope: CoroutineScope,
-    viewModel: WorkViewModel = hiltViewModel(),
     goToWork: (Int) -> Unit,
-    createWork: () -> Unit
+    createWork: () -> Unit,
+    navController: NavHostController,
+    viewModel: WorkViewModel = hiltViewModel(),
+    tokenManager: TokenManager
 ) {
-    val uiState by viewModel.uiSate.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    var workToDelete by remember { mutableStateOf<WorksDto?>(null) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiSate.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
 
-    val handleDelete = { work: WorksDto ->
-        workToDelete = work
-        showDeleteConfirmation = true
-    }
+    // Obtener el ID del artista logueado como String primero
+    val userId by remember { derivedStateOf { tokenManager.getUserId() } }
 
-    val onDeleteConfirmed = {
-        workToDelete?.let { work ->
-            viewModel.onEvent(WorkEvent.DeleteWork(work.workId!!))
+    // Convertir a Int solo cuando sea necesario
+//    val artistId = remember(userId) {
+//        userId?.toIntOrNull()
+//    }
+
+    // Cargar obras del artista logueado
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            viewModel.getWorksForLoggedArtist()
+        } else {
+            Log.e("WorkListScreen", "No user ID available")
         }
-        showDeleteConfirmation = false
-        workToDelete = null
-    }
-
-    // Cargar lista
-    LaunchedEffect(Unit) {
-        viewModel.onEvent(WorkEvent.GetWorks)
-    }
-
-    if (showDeleteConfirmation) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Confirmar eliminación") },
-            text = { Text("¿Estás seguro de que quieres eliminar la obra ${workToDelete?.title}?") },
-            confirmButton = {
-                TextButton(onClick = onDeleteConfirmed) {
-                    Text("Eliminar", color = Color.Red)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
     }
 
     WorkListBodyScreen(
         drawerState = drawerState,
         scope = scope,
         uiState = uiState,
-        reloadWorks = { viewModel.onEvent(WorkEvent.GetWorks) },
+        reloadWorks = {
+            if (userId != null) {
+                viewModel.getWorksForLoggedArtist()
+            }
+        },
         goToWork = goToWork,
         createWork = createWork,
-        deleteWork = handleDelete,
-        query = viewModel.searchQuery.collectAsStateWithLifecycle().value,
-        searchResults = viewModel.searchResults.collectAsStateWithLifecycle().value,
+        deleteWork = { work ->
+            work.workId?.let { workId ->
+                viewModel.onEvent(WorkEvent.DeleteWork(workId))
+                // Recargar solo si userId está disponible
+                userId?.let { viewModel.getWorksForLoggedArtist() }
+            }
+        },
+        query = searchQuery,
+        searchResults = searchResults,
         onSearchQueryChanged = viewModel::onSearchQueryChanged
     )
 }
@@ -282,6 +289,55 @@ fun SearchBar(
         label = { Text(placeholder) },
         singleLine = true
     )
+}
+
+@Composable
+fun WorkItem(
+    work: WorksDto,
+    onItemClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        onClick = onItemClick
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            if (!work.base64.isNullOrEmpty()) {
+                // Mostrar imagen si está disponible
+                AsyncImage(
+                    model = work.base64,
+                    contentDescription = work.title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = work.title,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                text = work.description ?: "",
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Precio: $${work.price}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
 }
 
 @Composable
