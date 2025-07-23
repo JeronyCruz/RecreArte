@@ -15,6 +15,7 @@ import androidx.navigation.toRoute
 import edu.ucne.recrearte.presentation.Home.HomeScreen
 import edu.ucne.recrearte.presentation.Home.RecreArteHomeScreen
 import edu.ucne.recrearte.presentation.Like_WishList.FavoritesScreen
+import edu.ucne.recrearte.presentation.bills.BillScreen
 import edu.ucne.recrearte.presentation.login.LoginScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodListScreen
 import edu.ucne.recrearte.presentation.paymentMethods.PaymentMethodScreen
@@ -175,6 +176,9 @@ fun HomeNavHost(
                 navController = navHostController,
                 onWorkClick = { workId ->
                     navHostController.navigate(Screen.WorkDetails(workId))
+                },
+                onCheckOut = {
+                    navHostController.navigate(Screen.BillScreen)
                 }
             )
         }
@@ -185,6 +189,12 @@ fun HomeNavHost(
                 navController = navHostController,
                 viewModel = hiltViewModel(),
                 loginViewModel = hiltViewModel(),
+            )
+        }
+
+        composable<Screen.BillScreen> {
+            BillScreen(
+                navController = navHostController
             )
         }
 
