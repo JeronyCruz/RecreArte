@@ -1,5 +1,6 @@
 package edu.ucne.recrearte.presentation.bills
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -64,10 +66,17 @@ fun BillScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Finalizar Compra") },
+                title = { Text("Finalize Purchase",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )},
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Go back")
                     }
                 }
             )
@@ -77,9 +86,17 @@ fun BillScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
                 Button(
-                    onClick = { viewModel.onEvent(BillEvent.CreateBill) },
+                    onClick = {
+                        viewModel.onEvent(BillEvent.CreateBill)
+                        // Luego actualizamos el estado de las obras
+                        val workIds = state.createdBill?.billDetails?.map { it.workId } ?: emptyList()
+                        if (workIds.isNotEmpty()) {
+                            workViewModel.onEvent(WorkEvent.UpdateWorksStatus(workIds, 2))
+                        }
+                              },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -89,7 +106,7 @@ fun BillScreen(
                     if (state.isLoading) {
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
                     } else {
-                        Text("Confirmar Compra")
+                        Text("Confirm Purchase")
                     }
                 }
             }
@@ -99,6 +116,7 @@ fun BillScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             when {
                 state.isLoading -> {
@@ -133,26 +151,38 @@ private fun CheckoutContent(
         modifier = modifier.padding(16.dp)
     ) {
         item {
+            Spacer(modifier = Modifier.height(20.dp))
             // Sección de información del cliente
             Text(
-                text = "Información del Cliente",
+                text = "Customer Information",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            Text("Nombre: ${bill.customerName}")
+            Divider()
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Sección de método de pago (estático)
-            Text(
-                text = "Método de Pago",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Tarjeta de Crédito",
+                    text = bill.customerName,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Sección de método de pago (estático)
+            Text(
+                text = "Payment Method",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Divider()
+            Spacer(modifier = Modifier.height(20.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Credit card",
                     modifier = Modifier.padding(16.dp)
                 )
             }
@@ -160,7 +190,7 @@ private fun CheckoutContent(
 
             // Sección de resumen de compra
             Text(
-                text = "Resumen de Compra",
+                text = "Purchase Summary",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -176,15 +206,21 @@ private fun CheckoutContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = work?.title ?: "Obra no disponible",
-                        style = MaterialTheme.typography.bodyLarge
+                        text = work?.title ?: "Work not available",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text("$${"%.2f".format(item.subtotal)}")
+                    Text(
+                        "$${"%.2f".format(item.subtotal)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Divider()
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(25.dp))
 
             // Totales
             Row(
@@ -198,14 +234,17 @@ private fun CheckoutContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Impuestos:")
+                Text("Taxes:")
                 Text("$${"%.2f".format(bill.taxes)}")
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Total:", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "Total:",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                )
                 Text(
                     "$${"%.2f".format(bill.total)}",
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
@@ -233,7 +272,7 @@ private fun ErrorState(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onRetry) {
-            Text("Reintentar")
+            Text("Retry")
         }
     }
 }
