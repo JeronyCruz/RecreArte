@@ -2,11 +2,13 @@ package edu.ucne.recrearte.presentation.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavHostController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.InvalidCredentialsException
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.repository.LoginRepository
+import edu.ucne.recrearte.presentation.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -94,10 +96,13 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun logout() {
+    fun logout(navController: NavHostController) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             repository.logout()
+            navController.navigate(Screen.LoginScreen) {
+                popUpTo(0)
+            }
             _uiState.update {
                 it.copy(
                     isLoading = false,
