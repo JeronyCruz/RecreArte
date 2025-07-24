@@ -7,6 +7,7 @@ import javax.inject.Singleton
 import android.util.Base64
 import androidx.compose.runtime.compositionLocalOf
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Singleton
@@ -14,8 +15,8 @@ class TokenManagement @Inject constructor(
     private val context: Context
 ) : TokenManager {
     private val sharedPref = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-    private val roleIdFlow = MutableStateFlow<Int?>(sharedPref.getInt("role_id", -1).takeIf { it != -1 })
-
+    private val _roleIdFlow = MutableStateFlow<Int?>(sharedPref.getInt("role_id", -1).takeIf { it != -1 })
+    val roleIdFlow = _roleIdFlow.asStateFlow()
     override fun saveToken(token: String) {
         sharedPref.edit().apply {
             putString("jwt_token", token)
@@ -31,17 +32,13 @@ class TokenManagement @Inject constructor(
     }
 
     override fun clearToken() {
-        sharedPref.edit().remove("jwt_token").apply()
-        println("🧹 [DEBUG] Token eliminado")
+        sharedPref.edit().remove("jwt_token").remove("role_id").apply()
+        _roleIdFlow.value = null
     }
 
     override fun saveRoleId(roleId: Int) {
-        try {
-            sharedPref.edit().putInt("role_id", roleId).apply()
-            println("💾 [DEBUG] RoleId $roleId guardado exitosamente")
-        } catch (e: Exception) {
-            println("❌ [ERROR] Error guardando roleId: ${e.message}")
-        }
+        sharedPref.edit().putInt("role_id", roleId).apply()
+        _roleIdFlow.value = roleId
     }
 
 
