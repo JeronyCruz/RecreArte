@@ -192,39 +192,6 @@ fun WorkScreenCreate(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Artist Dropdown
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = { expandedArtist = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        uiState.artists.find { it.artistId == uiState.artistId }?.userName
-                            ?: if (uiState.artists.isEmpty()) "No hay artistas" else "Seleccione artista",
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Start
-                    )
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                }
-                DropdownMenu(
-                    expanded = expandedArtist,
-                    onDismissRequest = { expandedArtist = false }
-                ) {
-                    if (uiState.artists.isEmpty()) {
-                        DropdownMenuItem(text = { Text("No hay artistas disponibles") }, onClick = { expandedArtist = false })
-                    } else {
-                        uiState.artists.forEach { artist ->
-                            DropdownMenuItem(
-                                text = { Text(artist.userName ?: "Desconocido") },
-                                onClick = {
-                                    viewModel.onEvent(WorkEvent.ArtistChange(artist.artistId ?: 0))
-                                    expandedArtist = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.height(12.dp))
 
             // Imagen
