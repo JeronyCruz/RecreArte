@@ -146,7 +146,7 @@ fun ProfileScreen(
                                 onSave = viewModel::saveChanges,
                                 onCancel = viewModel::cancelEdit,
                                 onLogout = {
-                                    loginViewModel.logout()
+                                    loginViewModel.logout(navController = navController)
                                     navController.navigate(Screen.LoginScreen) { popUpTo(0) }
                                 }
                             )
@@ -157,7 +157,7 @@ fun ProfileScreen(
                                 onSave = viewModel::saveChanges,
                                 onCancel = viewModel::cancelEdit,
                                 onLogout = {
-                                    loginViewModel.logout()
+                                    loginViewModel.logout(navController = navController)
                                     navController.navigate(Screen.LoginScreen) { popUpTo(0) }
                                 }
                             )
