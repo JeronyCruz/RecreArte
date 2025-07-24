@@ -6,6 +6,7 @@ data class WorksDto(
     val dimension: String,
     val techniqueId: Int,
     val artistId: Int,
+    val statusId: Int,
     val price: Double,
     val description: String,
     val imageId: Int,

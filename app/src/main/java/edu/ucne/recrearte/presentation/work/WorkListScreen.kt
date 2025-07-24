@@ -417,7 +417,7 @@ fun ArtistWorkCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
+           
             if (showDelete) {
                 IconButton(
                     onClick = onDelete,

@@ -2,6 +2,7 @@ package edu.ucne.recrearte.data.remote
 
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
+import edu.ucne.recrearte.data.remote.dto.BillsDto
 import edu.ucne.recrearte.data.remote.dto.ChangePasswordDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
@@ -10,6 +11,7 @@ import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
+import edu.ucne.recrearte.data.remote.dto.StatesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WishListDetailsDto
@@ -212,6 +214,26 @@ interface RecreArteingApi {
     suspend fun removeFromCart(@Path("itemId") itemId: Int)
     @DELETE("api/ShoppingCarts/{customerId}/clear")
     suspend fun clearCart(@Path("customerId") customerId: Int)
-//    @POST("api/ShoppingCarts/{customerId}/checkout")
-//    suspend fun checkout(@Path("customerId") customerId: Int): Response<BillResponse>
+    @POST("api/ShoppingCarts/{customerId}/checkout")
+    suspend fun checkout(@Path("customerId") customerId: Int): BillsDto
+
+    //Bills
+    @GET("api/Bills")
+    suspend fun getAllBills(): List<BillsDto>
+    @GET("api/Bills/{id}")
+    suspend fun getBillById(@Path("id") id: Int): BillsDto
+    @GET("api/Bills/by-customer/{customerId}")
+    suspend fun getBillsByCustomerId(@Path("customerId") customerId: Int): List<BillsDto>
+    @POST("api/Bills")
+    suspend fun createBill(@Body billDto: BillsDto): BillsDto
+    @PUT("api/Bills/{id}")
+    suspend fun updateBill(@Path("id") id: Int, @Body billDto: BillsDto)
+    @DELETE("api/Bills/{id}")
+    suspend fun deleteBill(@Path("id") id: Int)
+
+    //States
+    @GET("api/States")
+    suspend fun getAllStates(): List<StatesDto>
+    @GET("api/States/{id}")
+    suspend fun getStateById(@Path("id") id: Int): StatesDto
 }

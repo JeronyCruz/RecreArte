@@ -42,5 +42,7 @@ sealed class Screen {
     @Serializable
     data class WorkDetails(val workId: Int): Screen()
     @Serializable
+    object BillScreen: Screen()
+    @Serializable
     object AdminArtistMenuScreen : Screen()
 }

@@ -8,6 +8,7 @@ sealed interface WorkEvent {
     data class TitleChange(val title: String): WorkEvent
     data class DimensionChange(val dimension: String): WorkEvent
     data class TechniqueChange(val techniqueId: Int): WorkEvent
+    data class StatusChange(val statusId: Int): WorkEvent
     data class ArtistChange(val artistId: Int): WorkEvent
     data class PriceChange(val price: Double): WorkEvent
     data class DescriptionChange(val description: String): WorkEvent
@@ -28,4 +29,6 @@ sealed interface WorkEvent {
 
     object ToggleLike : WorkEvent
     object ToggleWishlist : WorkEvent
+
+    data class UpdateWorksStatus(val workIds: List<Int>, val statusId: Int) : WorkEvent
 }

@@ -1,6 +1,7 @@
 package edu.ucne.recrearte.data.remote
 
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
+import edu.ucne.recrearte.data.remote.dto.BillsDto
 import edu.ucne.recrearte.data.remote.dto.ChangePasswordDto
 import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
@@ -9,6 +10,7 @@ import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
+import edu.ucne.recrearte.data.remote.dto.StatesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WishListDetailsDto
@@ -310,4 +312,17 @@ class RemoteDataSource @Inject constructor(
     suspend fun addToCart(customerId: Int, workId: Int) = recreArteingApi.addToCart(customerId, workId)
     suspend fun removeFromCart(itemId: Int) = recreArteingApi.removeFromCart(itemId)
     suspend fun clearCart(customerId: Int) = recreArteingApi.clearCart(customerId)
+    suspend fun checkout(customerId: Int): BillsDto = recreArteingApi.checkout(customerId)
+
+    //Bills
+    suspend fun getAllBills(): List<BillsDto> = recreArteingApi.getAllBills()
+    suspend fun getBillById(id: Int): BillsDto = recreArteingApi.getBillById(id)
+    suspend fun getBillsByCustomerId(customerId: Int): List<BillsDto> = recreArteingApi.getBillsByCustomerId(customerId)
+    suspend fun createBill(billDto: BillsDto): BillsDto = recreArteingApi.createBill(billDto)
+    suspend fun updateBill(id: Int, billDto: BillsDto) = recreArteingApi.updateBill(id, billDto)
+    suspend fun deleteBill(id: Int) = recreArteingApi.deleteBill(id)
+
+    //States
+    suspend fun getAllStates(): List<StatesDto> = recreArteingApi.getAllStates()
+    suspend fun getStateById(id: Int): StatesDto = recreArteingApi.getStateById(id)
 }
