@@ -1,6 +1,7 @@
 package edu.ucne.recrearte.presentation.work
 
 import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -39,16 +41,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -56,25 +58,40 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import edu.ucne.recrearte.presentation.Home.HomeEvent
+import edu.ucne.recrearte.presentation.Home.HomeUiState
+import edu.ucne.recrearte.presentation.Home.HomeViewModel
+import edu.ucne.recrearte.util.TokenManager
+import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.CoroutineScope
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkListScreen(
     drawerState: DrawerState,
     scope: CoroutineScope,
-    viewModel: WorkViewModel = hiltViewModel(),
     goToWork: (Int) -> Unit,
-    createWork: () -> Unit
+    createWork: () -> Unit,
+    navController: NavHostController,
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    workViewModel: WorkViewModel = hiltViewModel(), // Añadido WorkViewModel para eliminar
+    tokenManager: TokenManager
 ) {
-    val uiState by viewModel.uiSate.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val uiState by homeViewModel.uiSate.collectAsState()
+    val searchQuery by homeViewModel.searchQuery.collectAsState()
+    val searchResults by homeViewModel.searchResults.collectAsState()
+
+    // Estados para el diálogo de confirmación
     var workToDelete by remember { mutableStateOf<WorksDto?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
+    // Obtener el ID del artista logueado
+    val userId by remember { derivedStateOf { tokenManager.getUserId() } }
+    val artistId = userId
+
+    // Manejar la eliminación
     val handleDelete = { work: WorksDto ->
         workToDelete = work
         showDeleteConfirmation = true
@@ -82,25 +99,39 @@ fun WorkListScreen(
 
     val onDeleteConfirmed = {
         workToDelete?.let { work ->
-            viewModel.onEvent(WorkEvent.DeleteWork(work.workId!!))
+            work.workId?.let { workId ->
+                workViewModel.onEvent(WorkEvent.DeleteWork(workId))
+                // Recargar las obras después de eliminar
+                if (artistId != null) {
+                    homeViewModel.onEvent(HomeEvent.GetWorksByArtist(artistId))
+                }
+            }
         }
         showDeleteConfirmation = false
         workToDelete = null
     }
 
-    // Cargar lista
-    LaunchedEffect(Unit) {
-        viewModel.onEvent(WorkEvent.GetWorks)
+    // Cargar obras del artista logueado
+    LaunchedEffect(artistId) {
+        if (artistId != null) {
+            homeViewModel.onEvent(HomeEvent.GetWorksByArtist(artistId))
+        } else {
+            Log.e("WorkListScreen", "No user ID available")
+        }
     }
 
+    // Mostrar diálogo de confirmación
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
             title = { Text("Confirmar eliminación") },
             text = { Text("¿Estás seguro de que quieres eliminar la obra ${workToDelete?.title}?") },
             confirmButton = {
-                TextButton(onClick = onDeleteConfirmed) {
-                    Text("Eliminar", color = Color.Red)
+                TextButton(
+                    onClick = onDeleteConfirmed,
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -115,13 +146,18 @@ fun WorkListScreen(
         drawerState = drawerState,
         scope = scope,
         uiState = uiState,
-        reloadWorks = { viewModel.onEvent(WorkEvent.GetWorks) },
+        reloadWorks = {
+            if (artistId != null) {
+                homeViewModel.onEvent(HomeEvent.GetWorksByArtist(artistId))
+            }
+        },
         goToWork = goToWork,
         createWork = createWork,
         deleteWork = handleDelete,
-        query = viewModel.searchQuery.collectAsStateWithLifecycle().value,
-        searchResults = viewModel.searchResults.collectAsStateWithLifecycle().value,
-        onSearchQueryChanged = viewModel::onSearchQueryChanged
+        query = searchQuery,
+        searchResults = searchResults,
+        onSearchQueryChanged = homeViewModel::onSearchQueryChanged,
+        navController = navController
     )
 }
 
@@ -130,14 +166,15 @@ fun WorkListScreen(
 fun WorkListBodyScreen(
     drawerState: DrawerState,
     scope: CoroutineScope,
-    uiState: WorkUiState,
+    uiState: HomeUiState, // Cambiado a HomeUiState
     reloadWorks: () -> Unit,
     goToWork: (Int) -> Unit,
     createWork: () -> Unit,
     deleteWork: (WorksDto) -> Unit,
     query: String,
     searchResults: List<WorksDto>,
-    onSearchQueryChanged: (String) -> Unit
+    onSearchQueryChanged: (String) -> Unit,
+    navController: NavHostController,
 ) {
     val pullRefreshState = rememberPullRefreshState(
         refreshing = uiState.isLoading,
@@ -150,7 +187,7 @@ fun WorkListBodyScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Obras de Arte",
+                        text = "Mis Obras de Arte",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -158,6 +195,14 @@ fun WorkListBodyScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        androidx.compose.material3.Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Volver"
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -181,13 +226,13 @@ fun WorkListBodyScreen(
                 .pullRefresh(pullRefreshState)
         ) {
             when {
-                uiState.isLoading && uiState.works.isEmpty() -> {
+                uiState.isLoading && uiState.worksByArtistsDto.isEmpty() -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                uiState.works.isEmpty() -> {
+                uiState.worksByArtistsDto.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -215,13 +260,14 @@ fun WorkListBodyScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        val worksToShow = if (query.isNotBlank()) searchResults else uiState.works
+                        val worksToShow = if (query.isNotBlank()) searchResults else uiState.worksByArtistsDto
 
                         items(worksToShow) { work ->
-                            WorkCard(
+                            ArtistWorkCard(
                                 work = work,
-                                goToWork = { goToWork(work.workId ?: 0) },
-                                deleteWork = deleteWork
+                                onClick = { goToWork(work.workId ?: 0) },
+                                showDelete = true,
+                                onDelete = { deleteWork(work) }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -285,17 +331,18 @@ fun SearchBar(
 }
 
 @Composable
-fun WorkCard(
+fun ArtistWorkCard(
     work: WorksDto,
-    goToWork: () -> Unit,
-    deleteWork: (WorksDto) -> Unit // Puedes mapear a WorksDto aquí si lo necesitas
+    onClick: () -> Unit,
+    showDelete: Boolean = false,
+    onDelete: () -> Unit = {}
 ) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clickable(onClick = goToWork),
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -308,7 +355,7 @@ fun WorkCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Mostrar imagen si está disponible
-            if (work.base64!!.isNotBlank()) {
+            if (!work.base64.isNullOrEmpty()) {
                 val imageBytes = Base64.decode(work.base64, Base64.DEFAULT)
                 val bitmap = remember(work.base64) {
                     try {
@@ -322,7 +369,7 @@ fun WorkCard(
                 bitmap?.let {
                     Image(
                         bitmap = it,
-                        contentDescription = "Imagen de la obra",
+                        contentDescription = work.title,
                         modifier = Modifier
                             .size(80.dp)
                             .padding(end = 12.dp),
@@ -334,7 +381,7 @@ fun WorkCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clickable(onClick = goToWork)
+                    .clickable(onClick = onClick)
             ) {
                 Text(
                     text = work.title,
@@ -370,32 +417,19 @@ fun WorkCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            IconButton(
-                onClick = {
-                    // Puedes mapear aquí a WorksDto si lo necesitas
-                    deleteWork(
-                        WorksDto(
-                            workId = work.workId,
-                            title = work.title,
-                            dimension = work.dimension,
-                            techniqueId = work.techniqueId,
-                            artistId = work.artistId,
-                            statusId = work.statusId,
-                            price = work.price,
-                            description = work.description,
-                            imageId = work.imageId
-                        )
+           
+            if (showDelete) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Eliminar",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
                     )
-                },
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = "Eliminar",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(24.dp)
-                )
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package edu.ucne.recrearte.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.recrearte.data.remote.InvalidCredentialsException
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.repository.LoginRepository
@@ -40,9 +41,23 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(password = password) }
     }
 
+    // En LoginViewModel.kt
     private fun loginUser() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
             try {
+                // Validación básica de campos
+                if (_uiState.value.email.isBlank() || _uiState.value.password.isBlank()) {
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = "Por favor ingrese correo y contraseña",
+                            isLoading = false
+                        )
+                    }
+                    return@launch
+                }
+
                 val response = repository.loginUser(
                     LoginRequestDto(
                         email = _uiState.value.email,
@@ -50,29 +65,31 @@ class LoginViewModel @Inject constructor(
                     )
                 )
 
-                // Debug: Verificar token recibido
-                println("🔐 [LOGIN] Token recibido: ${response.token.take(10)}...")
-
-                // Guardar token
                 tokenManager.saveToken(response.token)
-
-                // Verificar que se guardó correctamente
-                val savedToken = tokenManager.getToken()
-                println("🔍 [LOGIN] Token guardado: ${savedToken?.take(10)}...")
+                tokenManager.saveRoleId(response.roleId)
 
                 _uiState.update {
                     it.copy(
                         isSuccess = true,
+                        isLoading = false,
+                        roleId = response.roleId
+                    )
+                }
+            } catch (e: InvalidCredentialsException) {
+                _uiState.update {
+                    it.copy(
+                        errorMessage = e.message, // "Correo o contraseña incorrectos"
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = "Error de login: ${e.message}",
+                        errorMessage = "Error de conexión. Intente nuevamente",
                         isLoading = false
                     )
                 }
+                println("❌ [LOGIN ERROR] ${e.message}")
             }
         }
     }

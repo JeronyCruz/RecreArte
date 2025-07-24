@@ -23,10 +23,20 @@ class RemoteDataSource @Inject constructor(
     private val recreArteingApi: RecreArteingApi
 ){
     // Login
+    // En RemoteDataSource.kt
     suspend fun loginUser(loginRequest: LoginRequestDto): LoginResponseDto {
-        return recreArteingApi.loginUser(loginRequest)
+        return try {
+            val response = recreArteingApi.loginUser(loginRequest)
+            response // Retorna directamente el DTO si no hay error
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> throw InvalidCredentialsException("Correo o contraseña incorrectos")
+                else -> throw e // Re-lanza otras excepciones HTTP
+            }
+        } catch (e: Exception) {
+            throw e // Re-lanza otras excepciones
+        }
     }
-
     suspend fun logoutUser(): Boolean {
         return try {
             recreArteingApi.logoutUser().isSuccessful

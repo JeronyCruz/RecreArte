@@ -24,7 +24,9 @@ class MainActivity : ComponentActivity() {
 
         // Verificar token antes de mostrar la UI
         val token = tokenManager.getToken()
+        val role = tokenManager.getRoleId()
         println("🔑 Token al iniciar: ${token?.take(5)}...") // Debug
+        println("🔑 RoleId al iniciar: ${role}...") // Debug
 
         setContent {
             RecreArteTheme {
@@ -43,7 +45,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                MainAppScreen(navController = navController)
+                MainAppScreen(
+                    navController = navController,
+                    tokenManager = tokenManager)
 
 //                Scaffold(
 //                    modifier = Modifier.fillMaxSize()

@@ -1,17 +1,25 @@
 package edu.ucne.recrearte.presentation.navigation
 
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import edu.ucne.recrearte.presentation.AdminArtistMenu.AdminArtistMenuSheet
 import edu.ucne.recrearte.presentation.Home.HomeScreen
 import edu.ucne.recrearte.presentation.Home.RecreArteHomeScreen
 import edu.ucne.recrearte.presentation.Like_WishList.FavoritesScreen
@@ -29,12 +37,15 @@ import edu.ucne.recrearte.presentation.work.WorkListByArtistScreen
 import edu.ucne.recrearte.presentation.work.WorkListByTechniqueScreen
 import edu.ucne.recrearte.presentation.work.WorkListScreen
 import edu.ucne.recrearte.presentation.work.WorkScreenCreate
+import edu.ucne.recrearte.util.TokenManager
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeNavHost(
     navHostController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tokenManager: TokenManager
 ){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -163,7 +174,11 @@ fun HomeNavHost(
                 goToWork = { id ->
                     navHostController.navigate(Screen.WorkScreen(id))
                 },
-                createWork = { navHostController.navigate(Screen.WorkScreen(0)) },
+                createWork = {
+                    navHostController.navigate(Screen.WorkScreen(0))
+                },
+                navController = navHostController,
+                tokenManager = tokenManager
             )
         }
 
@@ -198,5 +213,28 @@ fun HomeNavHost(
             )
         }
 
+        composable<Screen.AdminArtistMenuScreen> {
+            val userRoleId by remember { derivedStateOf { tokenManager.getRoleId() } }
+            val sheetState = rememberModalBottomSheetState()
+            val scope = rememberCoroutineScope()
+            var showMenuSheet by remember { mutableStateOf(true) }
+
+            if (showMenuSheet) {
+                AdminArtistMenuSheet(
+                    roleId = userRoleId ?: 0,
+                    onDismiss = {
+                        showMenuSheet = false
+                        navHostController.popBackStack()
+                    },
+                    navController = navHostController,
+                    sheetState = sheetState, // Pasamos el estado
+                    scope = scope // Pasamos el scope
+                )
+            } else {
+                LaunchedEffect(Unit) {
+                    navHostController.popBackStack()
+                }
+            }
+        }
     }
 }

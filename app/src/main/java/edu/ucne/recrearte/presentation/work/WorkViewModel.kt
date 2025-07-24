@@ -59,6 +59,9 @@ class WorkViewModel @Inject constructor(
     private val _likeCount = MutableStateFlow(0)
     val likeCount: StateFlow<Int> = _likeCount.asStateFlow()
 
+    private val _showOnlyArtistWorks = MutableStateFlow(false)
+    val showOnlyArtistWorks: StateFlow<Boolean> = _showOnlyArtistWorks.asStateFlow()
+
 
     fun onEvent(event: WorkEvent){
         when(event){
@@ -245,7 +248,7 @@ class WorkViewModel @Inject constructor(
         }
     }
 
-    private fun getWorks() {
+     fun getWorks() {
         viewModelScope.launch {
             workRepository.getWorks().collectLatest { getting ->
                 when (getting) {
@@ -677,6 +680,113 @@ class WorkViewModel @Inject constructor(
                 getWorks()
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Error updating works status: ${e.message}") }
+    // se debe limpiar 
+    fun loadWorksByArtist(artistId: Int) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            workRepository.getWorksByArtist(artistId).collectLatest { result ->
+                when (result) {
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
+                    is Resource.Success -> {
+                        // Procesar las imágenes
+                        val worksWithImages = result.data?.map { work ->
+                            if (work.imageId > 0) {
+                                try {
+                                    val image = imageRepository.getImageById(work.imageId)
+                                    work.copy(base64 = image.data?.base64 ?: "")
+                                } catch (e: Exception) {
+                                    work.copy(base64 = "")
+                                }
+                            } else {
+                                work
+                            }
+                        } ?: emptyList()
+
+                        _uiState.update {
+                            it.copy(
+                                works = worksWithImages,
+                                isLoading = false
+                            )
+                        }
+                        _showOnlyArtistWorks.value = true
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.message
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Función para alternar entre mostrar todas las obras o solo las del artista
+    fun toggleArtistWorksFilter() {
+        val currentUserId = tokenManager.getUserId() ?: return
+
+        if (_showOnlyArtistWorks.value) {
+            // Si ya está filtrado, mostrar todas las obras
+            getWorks()
+        } else {
+            // Si no está filtrado, filtrar por el artista logueado
+            loadWorksByArtist(currentUserId)
+        }
+
+        _showOnlyArtistWorks.value = !_showOnlyArtistWorks.value
+    }
+
+    // Función para resetear el filtro y mostrar todas las obras
+    fun resetWorksFilter() {
+        getWorks()
+        _showOnlyArtistWorks.value = false
+    }
+
+    fun getWorksForLoggedArtist() {
+        viewModelScope.launch {
+            val artistId = tokenManager.getUserId() ?: return@launch
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            workRepository.getWorksByArtist(artistId).collectLatest { result ->
+                when (result) {
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
+                    is Resource.Success -> {
+                        // Procesar las imágenes
+                        val worksWithImages = result.data?.map { work ->
+                            if (work.imageId > 0) {
+                                try {
+                                    val image = imageRepository.getImageById(work.imageId)
+                                    work.copy(base64 = image.data?.base64 ?: "")
+                                } catch (e: Exception) {
+                                    work.copy(base64 = "")
+                                }
+                            } else {
+                                work
+                            }
+                        } ?: emptyList()
+
+                        _uiState.update {
+                            it.copy(
+                                works = worksWithImages,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.message
+                            )
+                        }
+                    }
+                }
             }
         }
     }
