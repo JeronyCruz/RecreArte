@@ -49,7 +49,8 @@ import edu.ucne.recrearte.R
 @Composable
 fun SignUpStep1(
     uiState: SignUpUiState,
-    onEvent: (SignUpEvent) -> Unit
+    onEvent: (SignUpEvent) -> Unit,
+    goToLogin: () -> Unit
 ) {
     var showPassword by remember { mutableStateOf(false) }
     val roundedShape = RoundedCornerShape(16.dp)
@@ -207,7 +208,7 @@ fun SignUpStep1(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Already have an account?")
-            TextButton(onClick = {  }) {
+            TextButton(onClick =  goToLogin  ) {
                 Text("Login")
             }
         }
