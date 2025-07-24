@@ -22,6 +22,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -38,7 +39,9 @@ fun MainAppScreen(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val userRoleId by remember { derivedStateOf { tokenManager.getRoleId() } } // <- Esta es la línea clave
+
+    // Usar rememberUpdatedState para el roleId para garantizar actualizaciones
+    val currentRoleId by rememberUpdatedState(tokenManager.getRoleId())
 
     // Lista de pantallas que SÍ deben mostrar la barra
     val bottomBarRoutes = listOf(
@@ -51,20 +54,15 @@ fun MainAppScreen(
     // ¿La ruta actual está en la lista?
     val showBottomBar = bottomBarRoutes.contains(currentRoute)
 
-    // Determinar el índice seleccionado basado en la ruta actual
-    val selectedDestination = remember(currentRoute) {
-        BottomNavDestination.entries.indexOfFirst { dest ->
-            currentRoute == dest.screen::class.qualifiedName
-        }.takeIf { it != -1 } ?: 0
-    }
-
     Scaffold(
         modifier = modifier,
         bottomBar = {
             if (showBottomBar) {
+                // Forzar recomposición cuando cambia el roleId
+                val roleId by rememberUpdatedState(currentRoleId)
                 NavigationBar {
                     // Filtramos los items basados en el roleId
-                    val visibleItems = if (userRoleId == 1 || userRoleId == 2) {
+                    val visibleItems = if (roleId == 1 || roleId == 2) {
                         BottomNavDestination.entries // Muestra todos los items incluyendo AdminArtistMenu
                     } else {
                         BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
@@ -72,7 +70,7 @@ fun MainAppScreen(
 
                     visibleItems.forEachIndexed { index, destination ->
                         NavigationBarItem(
-                            selected = selectedDestination == index,
+                            selected = currentRoute == destination.screen::class.qualifiedName,
                             onClick = {
                                 navController.navigate(destination.screen) {
                                     launchSingleTop = true
@@ -84,7 +82,7 @@ fun MainAppScreen(
                             },
                             icon = {
                                 Icon(
-                                    imageVector = if (selectedDestination == index)
+                                    imageVector = if (currentRoute == destination.screen::class.qualifiedName)
                                         destination.filledIcon
                                     else destination.outlinedIcon,
                                     contentDescription = destination.title
