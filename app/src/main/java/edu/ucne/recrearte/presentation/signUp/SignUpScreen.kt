@@ -49,7 +49,8 @@ fun SignUpScreen(
             } else {
                 navController.popBackStack()
             }
-        }
+        },
+        goToLogin = {navController.navigate(Screen.LoginScreen)}
     )
 }
 
@@ -58,7 +59,8 @@ fun SignUpScreen(
 fun SignUpContent(
     uiState: SignUpUiState,
     onEvent: (SignUpEvent) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    goToLogin: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -83,7 +85,7 @@ fun SignUpContent(
                 .padding(paddingValues)
         ) {
             when (uiState.currentStep) {
-                1 -> SignUpStep1(uiState, onEvent)
+                1 -> SignUpStep1(uiState, onEvent, goToLogin)
                 2 -> SignUpStep2(uiState, onEvent)
             }
         }

@@ -108,7 +108,7 @@ class WorkViewModel @Inject constructor(
 
     }
 
-    private fun getLoggedCustomerId(): Int {
+    private fun getLoggedUserId(): Int {
         return tokenManager.getUserId()?.also { userId ->
             println("ID de usuario obtenido del token: $userId")
         } ?: run {
@@ -304,7 +304,7 @@ class WorkViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
             when (val result = workRepository.getWorkById(id)) {
                 is Resource.Success -> {
-                    val customerId = getLoggedCustomerId()
+                    val customerId = getLoggedUserId()
                     _uiState.value = _uiState.value.copy(
                         workId = result.data?.workId,
                         techniqueId = result.data?.techniqueId ?: 0,
@@ -364,15 +364,18 @@ class WorkViewModel @Inject constructor(
         val dimensionError = isValidField(_uiState.value.dimension)
         val descriptionError = isValidField(_uiState.value.description)
         val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
-        val artistError = if (_uiState.value.artistId <= 0) "Select an artist" else null
         val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
+
+
+        val loggedArtistId = getLoggedUserId()
 
         _uiState.value = _uiState.value.copy(
             errorTitle = titleError ?: "",
             errorDimension = dimensionError ?: "",
             errorDescription = descriptionError ?: "",
             errorPrice = priceError ?: "",
-            errorMessage = artistError ?: techniqueError ?: ""
+            errorMessage = techniqueError ?: "",
+            artistId = loggedArtistId
         )
 
         if (
@@ -380,28 +383,35 @@ class WorkViewModel @Inject constructor(
             dimensionError != null ||
             descriptionError != null ||
             priceError != null ||
-            artistError != null ||
             techniqueError != null
         ) return
 
-        viewModelScope.launch {
-            try {
-                val method = WorksDto(
-                    workId = 0,
-                    title = _uiState.value.title,
-                    dimension = _uiState.value.dimension,
-                    description = _uiState.value.description,
-                    price = _uiState.value.price,
-                    artistId = _uiState.value.artistId,
-                    techniqueId = _uiState.value.techniqueId,
-                    imageId = _uiState.value.imageId,
-                    statusId = 1
-                )
-                workRepository.createWork(method)
-                new()
-                onEvent(WorkEvent.GetWorks)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }) {
+            viewModelScope.launch {
+                try {
+                    val method = WorksDto(
+                        workId = 0,
+                        title = _uiState.value.title,
+                        dimension = _uiState.value.dimension,
+                        description = _uiState.value.description,
+                        price = _uiState.value.price,
+                        artistId = loggedArtistId,
+                        techniqueId = _uiState.value.techniqueId,
+                        imageId = _uiState.value.imageId,
+                        statusId = 1
+                    )
+                    workRepository.createWork(method)
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Obra creada exitosamente"
+                    )
+                    // No llamar a goBack() aquí, dejar que la UI lo maneje
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Error creating: ${e.message}",
+                        isSuccess = false
+                    )
+                }
             }
         }
     }
@@ -429,15 +439,17 @@ class WorkViewModel @Inject constructor(
         val dimensionError = isValidField(_uiState.value.dimension)
         val descriptionError = isValidField(_uiState.value.description)
         val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
-        val artistError = if (_uiState.value.artistId <= 0) "Select an artist" else null
         val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
+
+        val loggedArtistId = getLoggedUserId()
 
         _uiState.value = _uiState.value.copy(
             errorTitle = titleError ?: "",
             errorDimension = dimensionError ?: "",
             errorDescription = descriptionError ?: "",
             errorPrice = priceError ?: "",
-            errorMessage = artistError ?: techniqueError ?: ""
+            errorMessage =  techniqueError ?: "",
+            artistId = loggedArtistId
         )
 
         if (
@@ -445,29 +457,35 @@ class WorkViewModel @Inject constructor(
             dimensionError != null ||
             descriptionError != null ||
             priceError != null ||
-            artistError != null ||
             techniqueError != null
         ) return
 
-        viewModelScope.launch {
-            try {
-
-                val method = WorksDto(
-                    workId = id,
-                    title = _uiState.value.title,
-                    dimension = _uiState.value.dimension,
-                    description = _uiState.value.description,
-                    price = _uiState.value.price,
-                    artistId = _uiState.value.artistId,
-                    techniqueId = _uiState.value.artistId,
-                    imageId = _uiState.value.imageId,
-                    statusId = 1
-                )
-                workRepository.updateWork(id,method)
-                new()
-                onEvent(WorkEvent.GetWorks)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }) {
+            viewModelScope.launch {
+                try {
+                    val method = WorksDto(
+                        workId = id,
+                        title = _uiState.value.title,
+                        dimension = _uiState.value.dimension,
+                        description = _uiState.value.description,
+                        price = _uiState.value.price,
+                        artistId = loggedArtistId,
+                        techniqueId = _uiState.value.techniqueId,
+                        imageId = _uiState.value.imageId,
+                        statusId = 1
+                    )
+                    workRepository.createWork(method)
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Obra creada exitosamente"
+                    )
+                    // No llamar a goBack() aquí, dejar que la UI lo maneje
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Error creating: ${e.message}",
+                        isSuccess = false
+                    )
+                }
             }
         }
     }
@@ -566,7 +584,7 @@ class WorkViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val workId = _uiState.value.workId ?: return@launch
-                val customerId = getLoggedCustomerId()
+                val customerId = getLoggedUserId()
 
                 // Toggle the like
                 when (val result = likeRepository.toggleLike(customerId, workId)) {
@@ -600,7 +618,7 @@ class WorkViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val workId = _uiState.value.workId ?: return@launch
-                val customerId = getLoggedCustomerId()
+                val customerId = getLoggedUserId()
 
                 when (val result = wishListRepository.toggleWorkInWishlist(customerId, workId)) {
                     is Resource.Success -> {
@@ -715,75 +733,6 @@ class WorkViewModel @Inject constructor(
                                         )
                                     }
                                     _showOnlyArtistWorks.value = true
-                                }
-
-                                is Resource.Error -> {
-                                    _uiState.update {
-                                        it.copy(
-                                            isLoading = false,
-                                            errorMessage = result.message
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Función para alternar entre mostrar todas las obras o solo las del artista
-                fun toggleArtistWorksFilter() {
-                    val currentUserId = tokenManager.getUserId() ?: return
-
-                    if (_showOnlyArtistWorks.value) {
-                        // Si ya está filtrado, mostrar todas las obras
-                        getWorks()
-                    } else {
-                        // Si no está filtrado, filtrar por el artista logueado
-                        loadWorksByArtist(currentUserId)
-                    }
-
-                    _showOnlyArtistWorks.value = !_showOnlyArtistWorks.value
-                }
-
-                // Función para resetear el filtro y mostrar todas las obras
-                fun resetWorksFilter() {
-                    getWorks()
-                    _showOnlyArtistWorks.value = false
-                }
-
-                fun getWorksForLoggedArtist() {
-                    viewModelScope.launch {
-                        val artistId = tokenManager.getUserId() ?: return@launch
-                        _uiState.value = _uiState.value.copy(isLoading = true)
-
-                        workRepository.getWorksByArtist(artistId).collectLatest { result ->
-                            when (result) {
-                                is Resource.Loading -> {
-                                    _uiState.update { it.copy(isLoading = true) }
-                                }
-
-                                is Resource.Success -> {
-                                    // Procesar las imágenes
-                                    val worksWithImages = result.data?.map { work ->
-                                        if (work.imageId > 0) {
-                                            try {
-                                                val image =
-                                                    imageRepository.getImageById(work.imageId)
-                                                work.copy(base64 = image.data?.base64 ?: "")
-                                            } catch (e: Exception) {
-                                                work.copy(base64 = "")
-                                            }
-                                        } else {
-                                            work
-                                        }
-                                    } ?: emptyList()
-
-                                    _uiState.update {
-                                        it.copy(
-                                            works = worksWithImages,
-                                            isLoading = false
-                                        )
-                                    }
                                 }
 
                                 is Resource.Error -> {

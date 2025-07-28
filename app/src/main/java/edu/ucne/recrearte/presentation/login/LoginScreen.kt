@@ -114,7 +114,7 @@ fun LoginBodyScreen(
             modifier = Modifier
                 .size(230.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onBackground)
+                .background(MaterialTheme.colorScheme.scrim)
                 .padding(bottom = 32.dp)
         )
 
