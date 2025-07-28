@@ -386,24 +386,32 @@ class WorkViewModel @Inject constructor(
             techniqueError != null
         ) return
 
-        viewModelScope.launch {
-            try {
-                val method = WorksDto(
-                    workId = 0,
-                    title = _uiState.value.title,
-                    dimension = _uiState.value.dimension,
-                    description = _uiState.value.description,
-                    price = _uiState.value.price,
-                    artistId = loggedArtistId,
-                    techniqueId = _uiState.value.techniqueId,
-                    imageId = _uiState.value.imageId,
-                    statusId = 1
-                )
-                workRepository.createWork(method)
-                new()
-                onEvent(WorkEvent.GetWorks)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }) {
+            viewModelScope.launch {
+                try {
+                    val method = WorksDto(
+                        workId = 0,
+                        title = _uiState.value.title,
+                        dimension = _uiState.value.dimension,
+                        description = _uiState.value.description,
+                        price = _uiState.value.price,
+                        artistId = loggedArtistId,
+                        techniqueId = _uiState.value.techniqueId,
+                        imageId = _uiState.value.imageId,
+                        statusId = 1
+                    )
+                    workRepository.createWork(method)
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Obra creada exitosamente"
+                    )
+                    // No llamar a goBack() aquí, dejar que la UI lo maneje
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Error creating: ${e.message}",
+                        isSuccess = false
+                    )
+                }
             }
         }
     }
@@ -452,25 +460,32 @@ class WorkViewModel @Inject constructor(
             techniqueError != null
         ) return
 
-        viewModelScope.launch {
-            try {
-
-                val method = WorksDto(
-                    workId = id,
-                    title = _uiState.value.title,
-                    dimension = _uiState.value.dimension,
-                    description = _uiState.value.description,
-                    price = _uiState.value.price,
-                    artistId = _uiState.value.artistId,
-                    techniqueId = _uiState.value.artistId,
-                    imageId = loggedArtistId,
-                    statusId = 1
-                )
-                workRepository.updateWork(id,method)
-                new()
-                onEvent(WorkEvent.GetWorks)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error creating: ${e.message}")
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }) {
+            viewModelScope.launch {
+                try {
+                    val method = WorksDto(
+                        workId = id,
+                        title = _uiState.value.title,
+                        dimension = _uiState.value.dimension,
+                        description = _uiState.value.description,
+                        price = _uiState.value.price,
+                        artistId = loggedArtistId,
+                        techniqueId = _uiState.value.techniqueId,
+                        imageId = _uiState.value.imageId,
+                        statusId = 1
+                    )
+                    workRepository.createWork(method)
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Obra creada exitosamente"
+                    )
+                    // No llamar a goBack() aquí, dejar que la UI lo maneje
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Error creating: ${e.message}",
+                        isSuccess = false
+                    )
+                }
             }
         }
     }

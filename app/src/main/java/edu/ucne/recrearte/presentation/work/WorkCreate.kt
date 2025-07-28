@@ -25,6 +25,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -40,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -48,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkScreenCreate(
@@ -62,6 +65,7 @@ fun WorkScreenCreate(
     var expandedTechnique by remember { mutableStateOf(false) }
     var expandedArtist by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showErrors by remember { mutableStateOf(false) }
 
     LaunchedEffect(workId) {
         if (workId != null && workId != 0) {
@@ -95,7 +99,7 @@ fun WorkScreenCreate(
     // Mostrar mensaje de éxito
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            Toast.makeText(context, uiState.successMessage ?: "Guardado con éxito", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, uiState.successMessage ?: "Saved successfully", Toast.LENGTH_SHORT).show()
             viewModel.onEvent(WorkEvent.ResetSuccessMessage)
             goBack()
         }
@@ -112,10 +116,20 @@ fun WorkScreenCreate(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crear Work") },
+                title = {
+                    Text(
+                        if (workId != 0) "Edit Work" else "Create Work",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                        },
                 navigationIcon = {
                     IconButton(onClick = goBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Go back")
                     }
                 }
             )
@@ -124,53 +138,97 @@ fun WorkScreenCreate(
         val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
-            .padding(padding)
-            .padding(16.dp)
-            .verticalScroll(scrollState)
-        ){
-
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(scrollState)
+        ) {
+            // Campo Título
             OutlinedTextField(
                 value = uiState.title,
                 onValueChange = { viewModel.onEvent(WorkEvent.TitleChange(it)) },
-                label = { Text("Título") },
-                isError = uiState.errorTitle!!.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = uiState.dimension,
-                onValueChange = { viewModel.onEvent(WorkEvent.DimensionChange(it)) },
-                label = { Text("Dimensión") },
-                isError = uiState.errorDimension!!.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = uiState.description,
-                onValueChange = { viewModel.onEvent(WorkEvent.DescriptionChange(it)) },
-                label = { Text("Descripción") },
-                isError = uiState.errorDescription!!.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = if (uiState.price == 0.0) "" else uiState.price.toString(),
-                onValueChange = {
-                    viewModel.onEvent(WorkEvent.PriceChange(it.toDoubleOrNull() ?: 0.0))
+                label = { Text("Title") },
+                isError = showErrors && uiState.errorTitle!!.isNotEmpty(),
+                supportingText = {
+                    if (showErrors && uiState.errorTitle!!.isNotEmpty()) {
+                        Text(
+                            text = uiState.errorTitle!!,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 },
-                label = { Text("Precio") },
-                isError = uiState.errorPrice!!.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Technique Dropdown
+            // Campo Dimensión
+            OutlinedTextField(
+                value = uiState.dimension,
+                onValueChange = { viewModel.onEvent(WorkEvent.DimensionChange(it)) },
+                label = { Text("Dimension") },
+                isError = showErrors && uiState.errorDimension!!.isNotEmpty(),
+                supportingText = {
+                    if (showErrors && uiState.errorDimension!!.isNotEmpty()) {
+                        Text(
+                            text = uiState.errorDimension!!,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Campo Descripción
+            OutlinedTextField(
+                value = uiState.description,
+                onValueChange = { viewModel.onEvent(WorkEvent.DescriptionChange(it)) },
+                label = { Text("Description") },
+                isError = showErrors && uiState.errorDescription!!.isNotEmpty(),
+                supportingText = {
+                    if (showErrors && uiState.errorDescription!!.isNotEmpty()) {
+                        Text(
+                            text = uiState.errorDescription!!,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Campo Precio
+            OutlinedTextField(
+                value = if (uiState.price == 0.0) "" else uiState.price.toString(),
+                onValueChange = {
+                    viewModel.onEvent(WorkEvent.PriceChange(it.toDoubleOrNull() ?: 0.0))
+                },
+                label = { Text("Price") },
+                isError = showErrors && uiState.errorPrice!!.isNotEmpty(),
+                supportingText = {
+                    if (showErrors && uiState.errorPrice!!.isNotEmpty()) {
+                        Text(
+                            text = uiState.errorPrice!!,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Selector de Técnica
             Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = { expandedTechnique = true }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { expandedTechnique = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text(
                         uiState.techniquesL.find { it.techniqueId == uiState.techniqueId }?.techniqueName
-                            ?: "Seleccione técnica",
+                            ?: "Select technique",
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Start
                     )
@@ -192,16 +250,24 @@ fun WorkScreenCreate(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            if (showErrors && uiState.errorMessage?.isNotEmpty() == true) {
+                Text(
+                    text = uiState.errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
 
-            // Imagen
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Selector de Imagen
             val requestPermissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
                 if (isGranted) {
                     launcher.launch("image/*")
                 } else {
-                    Toast.makeText(context, "Permiso denegado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "permission denied", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -221,12 +287,12 @@ fun WorkScreenCreate(
                     }
                 }
             }) {
-                Text(if (uiState.imageId > 0) "Cambiar Imagen" else "Seleccionar Imagen")
+                Text(if (uiState.imageId > 0) "Change Image" else "Select Image")
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Imagen seleccionada nueva
+            // Vista previa de imagen seleccionada
             selectedImageUri?.let {
                 AsyncImage(
                     model = it,
@@ -237,7 +303,7 @@ fun WorkScreenCreate(
                 )
             }
 
-            // Imagen cargada desde base64 si no hay nueva
+            // Vista previa de imagen existente (si no hay nueva selección)
             if (selectedImageUri == null && !uiState.base64.isNullOrBlank()) {
                 AsyncImage(
                     model = "data:image/*;base64,${uiState.base64}",
@@ -249,19 +315,31 @@ fun WorkScreenCreate(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Botón de Guardar
             Button(
                 onClick = {
+                    showErrors = true
                     if (workId != null && workId != 0) {
                         viewModel.onEvent(WorkEvent.UpdateWork(workId))
-                        goBack()
                     } else {
                         viewModel.onEvent(WorkEvent.CreateWork)
-                        goBack()
                     }
+
+                    // Verificar si hay errores después de la validación
+                    val hasErrors = listOf(
+                        uiState.errorTitle,
+                        uiState.errorDimension,
+                        uiState.errorDescription,
+                        uiState.errorPrice,
+                        uiState.errorMessage
+                    ).any { !it.isNullOrEmpty() }
+
+                    // Navegar solo si no hay errores (el éxito se maneja en LaunchedEffect)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar")
+                Text("Save")
             }
         }
     }
