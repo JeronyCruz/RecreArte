@@ -83,7 +83,7 @@ fun ProfileScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Perfil") },
+                title = { Text("Profile") },
                 navigationIcon = {
                     IconButton(onClick = { handleBackClick()} ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -120,7 +120,7 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Cargando perfil...")
+                        Text("Loading Profile...")
                     }
                 }
                 is ProfileUiState.Error -> {
@@ -181,7 +181,7 @@ fun ProfileScreen(
                             confirmPass,
                             onSuccess = {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Contraseña cambiada con éxito")
+                                    snackbarHostState.showSnackbar("Password succesfully changed")
                                 }
                             }
                         )
@@ -307,7 +307,7 @@ private fun CustomerProfileContent(
             )
 
             Text(
-                text = if (customer.roleId == 1) "Administrador" else "Cliente",
+                text = if (customer.roleId == 1) "Administrator" else "Customer",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -343,7 +343,7 @@ private fun NonEditableProfileFields(
             .padding(horizontal = 8.dp)
     ) {
         Text(
-            text = "Detalles del perfil",
+            text = "Profile details",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -356,19 +356,19 @@ private fun NonEditableProfileFields(
             ) {
                 when (userData) {
                     is ArtistsDto -> {
-                        ProfileField(label = "Nombre de usuario", value = "@${userData.userName ?: "usuario"}")
-                        ProfileField(label = "Correo electrónico", value = userData.email)
-                        ProfileField(label = "Teléfono", value = userData.phoneNumber)
-                        ProfileField(label = "Número de documento", value = userData.documentNumber)
-                        ProfileField(label = "Estilo artístico", value = userData.artStyle)
-                        ProfileField(label = "Redes sociales", value = userData.socialMediaLinks)
+                        ProfileField(label = "UserName", value = "@${userData.userName ?: "usuario"}")
+                        ProfileField(label = "Email", value = userData.email)
+                        ProfileField(label = "Phone Number", value = userData.phoneNumber)
+                        ProfileField(label = "Document Number", value = userData.documentNumber)
+                        ProfileField(label = "Art Style", value = userData.artStyle)
+                        ProfileField(label = "Social Media", value = userData.socialMediaLinks)
                     }
                     is CustomersDto -> {
-                        ProfileField(label = "Nombre de usuario", value = "${userData.userName ?: "usuario"}")
-                        ProfileField(label = "Correo electrónico", value = userData.email)
-                        ProfileField(label = "Teléfono", value = userData.phoneNumber)
-                        ProfileField(label = "Dirección", value = userData.address ?: "455 Oak Ave, Airytown, USA")
-                        ProfileField(label = "Número de documento", value = userData.documentNumber)
+                        ProfileField(label = "UserName", value = "${userData.userName ?: "usuario"}")
+                        ProfileField(label = "Email", value = userData.email)
+                        ProfileField(label = "Phone Number", value = userData.phoneNumber)
+                        ProfileField(label = "Address", value = userData.address ?: "455 Oak Ave, Airytown, USA")
+                        ProfileField(label = "Document Number", value = userData.documentNumber)
                     }
                 }
 
@@ -382,7 +382,7 @@ private fun NonEditableProfileFields(
                         contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
-                    Text("Cerrar sesión")
+                    Text("Logout")
                 }
             }
         }
@@ -439,7 +439,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.userName ?: "",
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
-                            label = { Text("Nombre de Usuario") },
+                            label = { Text("Username") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.userName != null,
                             supportingText = {
@@ -456,7 +456,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.firstName ?: "",
                             onValueChange = { onEvent(ProfileEvent.FirstNameChange(it)) },
-                            label = { Text("Nombre") },
+                            label = { Text("Name") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -464,7 +464,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.lastName ?: "",
                             onValueChange = { onEvent(ProfileEvent.LastNameChange(it)) },
-                            label = { Text("Apellido") },
+                            label = { Text("Lastname") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -472,7 +472,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.email ?: "",
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
-                            label = { Text("Correo electrónico") },
+                            label = { Text("Email") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.email != null,
                             supportingText = {
@@ -489,7 +489,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.phoneNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
-                            label = { Text("Teléfono") },
+                            label = { Text("Phone Number") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.phoneNumber != null,
                             supportingText = {
@@ -506,7 +506,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.documentNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
-                            label = { Text("Número de documento") },
+                            label = { Text("Document Number") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.documentNumber != null,
                             supportingText = {
@@ -523,7 +523,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.artStyle ?: "",
                             onValueChange = { onEvent(ProfileEvent.ArtStyleChange(it)) },
-                            label = { Text("Estilo artístico") },
+                            label = { Text("Art style") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -531,7 +531,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.socialMediaLinks ?: "",
                             onValueChange = { onEvent(ProfileEvent.SocialMediaLinksChange(it)) },
-                            label = { Text("Redes sociales") },
+                            label = { Text("Social Media") },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -539,7 +539,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.userName ?: "",
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
-                            label = { Text("Nombre de Usuario") },
+                            label = { Text("Username") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.userName != null,
                             supportingText = {
@@ -555,7 +555,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.firstName ?: "",
                             onValueChange = { onEvent(ProfileEvent.FirstNameChange(it)) },
-                            label = { Text("Nombre") },
+                            label = { Text("Name") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -563,7 +563,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.lastName ?: "",
                             onValueChange = { onEvent(ProfileEvent.LastNameChange(it)) },
-                            label = { Text("Apellido") },
+                            label = { Text("Last name") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -571,7 +571,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.email ?: "",
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
-                            label = { Text("Correo electrónico") },
+                            label = { Text("Email") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.email != null,
                             supportingText = {
@@ -588,7 +588,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.phoneNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
-                            label = { Text("Teléfono") },
+                            label = { Text("Phone Number") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.phoneNumber != null,
                             supportingText = {
@@ -605,7 +605,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.documentNumber ?: "",
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
-                            label = { Text("Número de documento") },
+                            label = { Text("Document Number") },
                             modifier = Modifier.fillMaxWidth(),
                             isError = validationErrors.documentNumber != null,
                             supportingText = {
@@ -622,7 +622,7 @@ private fun EditableProfileFields(
                         OutlinedTextField(
                             value = currentData.address ?: "455 Oak Ave, Airytown, USA",
                             onValueChange = { onEvent(ProfileEvent.AddressChange(it)) },
-                            label = { Text("Dirección") },
+                            label = { Text("Address") },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -637,13 +637,13 @@ private fun EditableProfileFields(
                     Button(
                         onClick = onCancel
                     ) {
-                        Text("Cancelar")
+                        Text("Cancel")
                     }
 
                     Button(
                         onClick = onSave
                     ) {
-                        Text("Guardar cambios")
+                        Text("Save changes")
                     }
                 }
             }
