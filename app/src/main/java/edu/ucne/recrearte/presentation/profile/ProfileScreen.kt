@@ -307,7 +307,7 @@ private fun CustomerProfileContent(
             )
 
             Text(
-                text = "Cliente",
+                text = if (customer.roleId == 1) "Administrador" else "Cliente",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -398,22 +398,22 @@ private fun EditableProfileFields(
     onCancel: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     // Obtenemos los estados editables del ViewModel
     val editableArtist by viewModel.editableArtist.collectAsState()
     val editableCustomer by viewModel.editableCustomer.collectAsState()
 
     // Obtenemos los estados de error
-    val errorUserName by viewModel.errorUserName.collectAsState()
-    val errorEmail by viewModel.errorEmail.collectAsState()
-    val errorPhoneNumber by viewModel.errorPhoneNumber.collectAsState()
-    val errorDocumentNumber by viewModel.errorDocumentNumber.collectAsState()
+    val validationErrors = when (uiState) {
+        is ProfileUiState.Success -> (uiState as ProfileUiState.Success).validationErrors
+        else -> ValidationErrors()
+    }
 
     // Determinamos qué datos mostrar
     val currentData = remember(isArtist, editableArtist, editableCustomer) {
-        if (isArtist) {
-            editableArtist ?: (userData as ArtistsDto)
-        } else {
-            editableCustomer ?: (userData as CustomersDto)
+        when {
+            isArtist -> editableArtist ?: (userData as ArtistsDto)
+            else -> editableCustomer ?: (userData as CustomersDto)
         }
     }
 
@@ -441,11 +441,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
                             label = { Text("Nombre de Usuario") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorUserName != null,
+                            isError = validationErrors.userName != null,
                             supportingText = {
-                                if (errorUserName != null) {
+                                validationErrors.userName?.let { error ->
                                     Text(
-                                        text = errorUserName ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -474,11 +474,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
                             label = { Text("Correo electrónico") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorEmail != null,
+                            isError = validationErrors.email != null,
                             supportingText = {
-                                if (errorEmail != null) {
+                                validationErrors.email?.let { error ->
                                     Text(
-                                        text = errorEmail ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -491,11 +491,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
                             label = { Text("Teléfono") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorPhoneNumber != null,
+                            isError = validationErrors.phoneNumber != null,
                             supportingText = {
-                                if (errorPhoneNumber != null) {
+                                validationErrors.phoneNumber?.let { error ->
                                     Text(
-                                        text = errorPhoneNumber ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -508,11 +508,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
                             label = { Text("Número de documento") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorDocumentNumber != null,
+                            isError = validationErrors.documentNumber != null,
                             supportingText = {
-                                if (errorDocumentNumber != null) {
+                                validationErrors.documentNumber?.let { error ->
                                     Text(
-                                        text = errorDocumentNumber ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -541,11 +541,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.UserNameChange(it)) },
                             label = { Text("Nombre de Usuario") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorUserName != null,
+                            isError = validationErrors.userName != null,
                             supportingText = {
-                                if (errorUserName != null) {
+                                validationErrors.userName?.let { error ->
                                     Text(
-                                        text = errorUserName ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -573,11 +573,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.EmailChange(it)) },
                             label = { Text("Correo electrónico") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorEmail != null,
+                            isError = validationErrors.email != null,
                             supportingText = {
-                                if (errorEmail != null) {
+                                validationErrors.email?.let { error ->
                                     Text(
-                                        text = errorEmail ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -590,11 +590,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.PhoneNumberChange(it)) },
                             label = { Text("Teléfono") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorPhoneNumber != null,
+                            isError = validationErrors.phoneNumber != null,
                             supportingText = {
-                                if (errorPhoneNumber != null) {
+                                validationErrors.phoneNumber?.let { error ->
                                     Text(
-                                        text = errorPhoneNumber ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -607,11 +607,11 @@ private fun EditableProfileFields(
                             onValueChange = { onEvent(ProfileEvent.DocumentNumberChange(it)) },
                             label = { Text("Número de documento") },
                             modifier = Modifier.fillMaxWidth(),
-                            isError = errorDocumentNumber != null,
+                            isError = validationErrors.documentNumber != null,
                             supportingText = {
-                                if (errorDocumentNumber != null) {
+                                validationErrors.documentNumber?.let { error ->
                                     Text(
-                                        text = errorDocumentNumber ?: "",
+                                        text = error,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
