@@ -47,19 +47,6 @@ class ProfileViewModel @Inject constructor(
     private val _passwordChangeError = MutableStateFlow<String?>(null)
     val passwordChangeError: StateFlow<String?> = _passwordChangeError.asStateFlow()
 
-    // Estados para errores de validación
-//    private val _errorUserName = MutableStateFlow<String?>(null)
-//    val errorUserName: StateFlow<String?> = _errorUserName.asStateFlow()
-//
-//    private val _errorEmail = MutableStateFlow<String?>(null)
-//    val errorEmail: StateFlow<String?> = _errorEmail.asStateFlow()
-//
-//    private val _errorPhoneNumber = MutableStateFlow<String?>(null)
-//    val errorPhoneNumber: StateFlow<String?> = _errorPhoneNumber.asStateFlow()
-//
-//    private val _errorDocumentNumber = MutableStateFlow<String?>(null)
-//    val errorDocumentNumber: StateFlow<String?> = _errorDocumentNumber.asStateFlow()
-
     private var currentPasswordHash: String? = null
 
     init {
