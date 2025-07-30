@@ -140,13 +140,13 @@ fun RecreArteHomeScreen(
 
                 // Sección de Obras Destacadas
                 SectionTitle(
-                    if (searchQuery.isNotBlank()) "Resultados de búsqueda" else "Obras destacadas"
+                    if (searchQuery.isNotBlank()) "Search Result" else "Main Works"
                 )
 
                 val worksToShow = if (searchQuery.isNotBlank()) searchResults else uiState.listTopTen
 
                 if (worksToShow.isEmpty() && !uiState.isLoading) {
-                    EmptySectionMessage("No se encontraron obras")
+                    EmptySectionMessage("No works were found")
                 } else {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -169,10 +169,10 @@ fun RecreArteHomeScreen(
                 )
 
                 // Sección de Técnicas
-                SectionTitle("Técnicas")
+                SectionTitle("Techniques")
 
                 if (uiState.techniquesL.isEmpty() && !uiState.isLoading) {
-                    EmptySectionMessage("No hay técnicas disponibles")
+                    EmptySectionMessage("No Techniques avaliable")
                 } else {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -197,10 +197,10 @@ fun RecreArteHomeScreen(
                 )
 
                 // Sección de Artistas
-                SectionTitle("Artistas destacados")
+                SectionTitle("Main Artists")
 
                 if (uiState.listArtist.isEmpty() && !uiState.isLoading) {
-                    EmptySectionMessage("No hay artistas disponibles")
+                    EmptySectionMessage("No Artists avaliable")
                 } else {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -253,11 +253,11 @@ fun SearchBarHome(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        placeholder = { Text("Buscar obras, artistas, técnicas...") },
+        placeholder = { Text("Search works, artists, techinques") },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Buscar",
+                contentDescription = "Search",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },

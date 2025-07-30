@@ -307,9 +307,9 @@ class SignUpViewModel @Inject constructor(
             token = "" // El backend lo completará
         )
 
-        println("🔄 [DEBUG] Registrando artista...")
+        println("[DEBUG] Registrando artista...")
         val result = artistRepository.createArtist(artistDto)
-        println("🔑 [DEBUG] Resultado registro artista: ${result.data?.token?.take(10)}...")
+        println("[DEBUG] Resultado registro artista: ${result.data?.token?.take(10)}...")
         return result
     }
 
@@ -330,9 +330,9 @@ class SignUpViewModel @Inject constructor(
             token = "" // El backend lo completará
         )
 
-        println("🔄 [DEBUG] Registrando cliente...")
+        println("[DEBUG] Registrando cliente...")
         val result = customerRepository.createCustomer(customerDto)
-        println("🔑 [DEBUG] Resultado registro cliente: ${result.data?.token?.take(10)}...")
+        println("[DEBUG] Resultado registro cliente: ${result.data?.token?.take(10)}...")
         return result
     }
 }

@@ -50,14 +50,14 @@ fun AdminArtistMenuSheet(
                 .padding(16.dp)
         ) {
             Text(
-                text = if (roleId == 1) "Menú de Administrador" else "Menú de Artista",
+                text = if (roleId == 1) "Menú of Aministrator" else "Menú of Artist",
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             if (roleId == 1) { // Admin
                 MenuItem(
-                    text = "Métodos de Pago",
+                    text = "Payments Methods",
                     icon = Icons.Default.Payment,
                     onClick = {
                         // Cerrar el modal antes de navegar
@@ -77,7 +77,7 @@ fun AdminArtistMenuSheet(
                 )
 
                 MenuItem(
-                    text = "Técnicas",
+                    text = "Techniques",
                     icon = Icons.Default.Brush,
                     onClick = {
                         scope.launch {
@@ -98,7 +98,7 @@ fun AdminArtistMenuSheet(
 
             if (roleId == 2) { // Artista
                 MenuItem(
-                    text = "Mis Obras",
+                    text = "My Works",
                     icon = Icons.Default.Palette,
                     onClick = {
                         scope.launch {

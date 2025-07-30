@@ -46,7 +46,7 @@ fun FavoritesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis Favoritos") },
+                title = { Text("My Favorites") },
                 actions = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -224,9 +224,9 @@ private fun EmptyFavoritesMessage(
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = if (showWishlist)
-                "No tienes obras en tu wishlist"
+                "You don't have works in your WishList"
             else
-                "No has dado like a ninguna obra",
+                "You haven't liked any work",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center

@@ -91,7 +91,7 @@ class LoginViewModel @Inject constructor(
                         isLoading = false
                     )
                 }
-                println("❌ [LOGIN ERROR] ${e.message}")
+                println("[LOGIN ERROR] ${e.message}")
             }
         }
     }

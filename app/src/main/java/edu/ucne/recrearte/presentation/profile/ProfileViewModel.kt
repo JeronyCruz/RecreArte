@@ -1,5 +1,6 @@
 package edu.ucne.recrearte.presentation.profile
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,19 +47,6 @@ class ProfileViewModel @Inject constructor(
     private val _passwordChangeError = MutableStateFlow<String?>(null)
     val passwordChangeError: StateFlow<String?> = _passwordChangeError.asStateFlow()
 
-    // Estados para errores de validación
-    private val _errorUserName = MutableStateFlow<String?>(null)
-    val errorUserName: StateFlow<String?> = _errorUserName.asStateFlow()
-
-    private val _errorEmail = MutableStateFlow<String?>(null)
-    val errorEmail: StateFlow<String?> = _errorEmail.asStateFlow()
-
-    private val _errorPhoneNumber = MutableStateFlow<String?>(null)
-    val errorPhoneNumber: StateFlow<String?> = _errorPhoneNumber.asStateFlow()
-
-    private val _errorDocumentNumber = MutableStateFlow<String?>(null)
-    val errorDocumentNumber: StateFlow<String?> = _errorDocumentNumber.asStateFlow()
-
     private var currentPasswordHash: String? = null
 
     init {
@@ -97,165 +85,105 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun validateFields(): Boolean {
+        val currentState = _uiState.value as? ProfileUiState.Success ?: return false
+
         var isValid = true
+        var newErrors = currentState.validationErrors.copy() // Start with current errors
 
         _editableArtist.value?.let { artist ->
-            if (!validateUserName(artist.userName)) isValid = false
-            if (!validateEmail(artist.email)) isValid = false
-            if (!validatePhoneNumber(artist.phoneNumber)) isValid = false
-            if (!validateDocumentNumber(artist.documentNumber)) isValid = false
+            newErrors = newErrors.copy(
+                userName = validateUserName(artist.userName).also { if (it != null) isValid = false },
+                email = validateEmail(artist.email).also { if (it != null) isValid = false },
+                phoneNumber = validatePhoneNumber(artist.phoneNumber).also { if (it != null) isValid = false },
+                documentNumber = validateDocumentNumber(artist.documentNumber).also { if (it != null) isValid = false }
+            )
         }
 
         _editableCustomer.value?.let { customer ->
-            if (!validateUserName(customer.userName)) isValid = false
-            if (!validateEmail(customer.email)) isValid = false
-            if (!validatePhoneNumber(customer.phoneNumber)) isValid = false
-            if (!validateDocumentNumber(customer.documentNumber)) isValid = false
+            newErrors = newErrors.copy(
+                userName = validateUserName(customer.userName).also { if (it != null) isValid = false },
+                email = validateEmail(customer.email).also { if (it != null) isValid = false },
+                phoneNumber = validatePhoneNumber(customer.phoneNumber).also { if (it != null) isValid = false },
+                documentNumber = validateDocumentNumber(customer.documentNumber).also { if (it != null) isValid = false }
+            )
         }
+
+        // Update the state with the new errors
+        _uiState.value = currentState.copy(validationErrors = newErrors)
 
         return isValid
     }
 
-    private fun validateUserName(userName: String?): Boolean {
+    private fun validateUserName(userName: String?): String? {
         return when {
-            userName.isNullOrBlank() -> {
-                _errorUserName.value = "Usuario es requerido"
-                false
-            }
-            !userName.matches(Regex("^[a-zA-Z0-9]+\$")) -> {
-                _errorUserName.value = "Solo letras y números"
-                false
-            }
-            userName.length < 4 -> {
-                _errorUserName.value = "Mínimo 4 caracteres"
-                false
-            }
-            userName.length > 20 -> {
-                _errorUserName.value = "Máximo 20 caracteres"
-                false
-            }
-            else -> {
-                _errorUserName.value = null
-                true
-            }
+            userName.isNullOrBlank() -> "Usuario es requerido"
+            !userName.matches(Regex("^[a-zA-Z0-9]+\$")) -> "Solo letras y números"
+            userName.length < 4 -> "Mínimo 4 caracteres"
+            userName.length > 20 -> "Máximo 20 caracteres"
+            else -> null
         }
     }
 
-    private fun validateEmail(email: String?): Boolean {
+    private fun validateEmail(email: String?): String? {
         val emailRegex = Regex(
             "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$",
             RegexOption.IGNORE_CASE
         )
 
         return when {
-            email.isNullOrBlank() -> {
-                _errorEmail.value = "El correo electrónico es requerido"
-                false
-            }
-            !email.matches(emailRegex) -> {
-                _errorEmail.value = "Formato de correo inválido (ej: usuario@ucne.edu.do)"
-                false
-            }
-            !email.contains("@") -> {
-                _errorEmail.value = "Falta el símbolo @"
-                false
-            }
-            email.count { it == '@' } > 1 -> {
-                _errorEmail.value = "Solo puede tener un @"
-                false
-            }
-            email.substringAfterLast('@').isEmpty() -> {
-                _errorEmail.value = "Falta el dominio después del @"
-                false
-            }
-            email.substringBefore('@').isEmpty() -> {
-                _errorEmail.value = "Falta el nombre antes del @"
-                false
-            }
-            !email.substringAfterLast('@').contains(".") -> {
-                _errorEmail.value = "El dominio debe contener un punto (.)"
-                false
-            }
-            email.substringAfterLast('.').length < 2 -> {
-                _errorEmail.value = "La extensión del dominio es muy corta (ej: .com)"
-                false
-            }
-            else -> {
-                _errorEmail.value = null
-                true
-            }
+            email.isNullOrBlank() -> "El correo electrónico es requerido"
+            !email.matches(emailRegex) -> "Formato de correo inválido (ej: usuario@ucne.edu.do)"
+            !email.contains("@") -> "Falta el símbolo @"
+            email.count { it == '@' } > 1 -> "Solo puede tener un @"
+            email.substringAfterLast('@').isEmpty() -> "Falta el dominio después del @"
+            email.substringBefore('@').isEmpty() -> "Falta el nombre antes del @"
+            !email.substringAfterLast('@').contains(".") -> "El dominio debe contener un punto (.)"
+            email.substringAfterLast('.').length < 2 -> "La extensión del dominio es muy corta (ej: .com)"
+            else -> null
         }
     }
 
-    private fun validatePhoneNumber(phoneNumber: String?): Boolean {
-        // Validación para República Dominicana:
-        // - Debe empezar con 809, 829, 849 (o permitir otros formatos)
-        // - Exactamente 10 dígitos
+    private fun validatePhoneNumber(phoneNumber: String?): String? {
         val phoneRegex = Regex("^(809|829|849)[0-9]{7}\$")
 
         return when {
-            phoneNumber.isNullOrBlank() -> {
-                _errorPhoneNumber.value = "Teléfono es requerido"
-                false
-            }
-            !phoneNumber.matches(Regex("^[0-9]+\$")) -> {
-                _errorPhoneNumber.value = "Solo números"
-                false
-            }
-            phoneNumber.length != 10 -> {
-                _errorPhoneNumber.value = "Debe tener 10 dígitos"
-                false
-            }
-            !phoneNumber.matches(phoneRegex) -> {
-                _errorPhoneNumber.value = "Formato inválido (ej: 8091234567)"
-                false
-            }
-            else -> {
-                _errorPhoneNumber.value = null
-                true
-            }
+            phoneNumber.isNullOrBlank() -> "Teléfono es requerido"
+            !phoneNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
+            phoneNumber.length != 10 -> "Debe tener 10 dígitos"
+            !phoneNumber.matches(phoneRegex) -> "Formato inválido (ej: 8091234567)"
+            else -> null
         }
     }
 
-    private fun validateDocumentNumber(documentNumber: String?): Boolean {
-        // Validación para cédula dominicana:
-        // - 11 dígitos exactos
-        // - Puedes añadir validación del dígito verificador si lo deseas
-
+    private fun validateDocumentNumber(documentNumber: String?): String? {
         return when {
-            documentNumber.isNullOrBlank() -> {
-                _errorDocumentNumber.value = "Cédula es requerida"
-                false
-            }
-            !documentNumber.matches(Regex("^[0-9]+\$")) -> {
-                _errorDocumentNumber.value = "Solo números"
-                false
-            }
-            documentNumber.length != 11 -> {
-                _errorDocumentNumber.value = "La cédula debe tener 11 dígitos"
-                false
-            }
-            else -> {
-                _errorDocumentNumber.value = null
-                true
-            }
+            documentNumber.isNullOrBlank() -> "Cédula es requerida"
+            !documentNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
+            documentNumber.length != 11 -> "La cédula debe tener 11 dígitos"
+            else -> null
         }
     }
 
-    private fun clearValidationErrors() {
-        _errorUserName.value = null
-        _errorEmail.value = null
-        _errorPhoneNumber.value = null
-        _errorDocumentNumber.value = null
+    fun clearValidationErrors() {
+        when (val currentState = _uiState.value) {
+            is ProfileUiState.Success -> {
+                _uiState.value = currentState.copy(validationErrors = ValidationErrors())
+            }
+            else -> {}
+        }
     }
 
     // Función para actualizar campos - más eficiente
     fun updateField(event: ProfileEvent) {
+        val currentState = _uiState.value as? ProfileUiState.Success ?: return
         when (event) {
             is ProfileEvent.UserNameChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(userName = event.userName)
                 _editableCustomer.value = _editableCustomer.value?.copy(userName = event.userName)
-                validateUserName(event.userName)
+                val newErrors = currentState.validationErrors.copy(
+                    userName = validateUserName(event.userName)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.FirstNameChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(firstName = event.firstName)
@@ -269,16 +197,28 @@ class ProfileViewModel @Inject constructor(
                 _editableArtist.value = _editableArtist.value?.copy(email = event.email)
                 _editableCustomer.value = _editableCustomer.value?.copy(email = event.email)
                 validateEmail(event.email)
+                val newErrors = currentState.validationErrors.copy(
+                    email = validateEmail(event.email)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.PhoneNumberChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(phoneNumber = event.phoneNumber)
                 _editableCustomer.value = _editableCustomer.value?.copy(phoneNumber = event.phoneNumber)
                 validatePhoneNumber(event.phoneNumber)
+                val newErrors = currentState.validationErrors.copy(
+                    phoneNumber = validatePhoneNumber(event.phoneNumber)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.DocumentNumberChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(documentNumber = event.documentNumber)
                 _editableCustomer.value = _editableCustomer.value?.copy(documentNumber = event.documentNumber)
                 validateDocumentNumber(event.documentNumber)
+                val newErrors = currentState.validationErrors.copy(
+                    documentNumber = validateDocumentNumber(event.documentNumber)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.ArtStyleChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(artStyle = event.artStyle)
