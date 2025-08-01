@@ -17,15 +17,11 @@ sealed interface WorkEvent {
     data object GetWorks: WorkEvent
     data object CreateWork: WorkEvent
 
-    data class ImageCreate(val image: ImagesDto) : WorkEvent
-
     data object New: WorkEvent
     data class UpdateWork(val id: Int): WorkEvent
     data class DeleteWork(val id: Int): WorkEvent
     data object ResetSuccessMessage: WorkEvent
     data object ClearErrorMessage: WorkEvent
-    data object RemoveImage : WorkEvent
-    data class ImageUpdate(val image: ImagesDto): WorkEvent
 
     object ToggleLike : WorkEvent
     object ToggleWishlist : WorkEvent
