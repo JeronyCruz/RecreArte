@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
@@ -404,42 +405,17 @@ fun FeaturedWorkCard(work: WorksDto, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            Box(
+            // Imagen desde URL
+            AsyncImage(
+                model = work.imageUrl ?: R.drawable.placeholder_image,
+                contentDescription = work.title,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                val base64 = work.base64?.replace("data:image/png;base64,", "")
-                    ?.replace("data:image/jpeg;base64,", "")
-                    ?.replace("data:image/jpg;base64,", "")
-                    ?.replace("data:image/gif;base64,", "")
-                    ?.trim()
-
-                val bitmap = remember(base64) {
-                    try {
-                        val imageBytes = Base64.decode(base64, Base64.DEFAULT)
-                        BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)?.asImageBitmap()
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = work.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(R.drawable.placeholder_image),
-                        contentDescription = "Placeholder",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.placeholder_image),
+                error = painterResource(R.drawable.placeholder_image)
+            )
 
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
