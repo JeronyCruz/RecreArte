@@ -1,5 +1,6 @@
 package edu.ucne.recrearte.data.remote
 
+import com.google.gson.Gson
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
 import edu.ucne.recrearte.data.remote.dto.BillsDto
 import edu.ucne.recrearte.data.remote.dto.ChangePasswordDto
@@ -16,11 +17,18 @@ import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WishListDetailsDto
 import edu.ucne.recrearte.data.remote.dto.WishListsDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
+import retrofit2.Response
+import java.io.File
 import javax.inject.Inject
 
 class RemoteDataSource @Inject constructor(
-    private val recreArteingApi: RecreArteingApi
+    private val recreArteingApi: RecreArteingApi,
 ){
     // Login
     // En RemoteDataSource.kt
@@ -168,13 +176,89 @@ class RemoteDataSource @Inject constructor(
             throw HttpException(response)
         }
     }
-    suspend fun updateWork(id: Int, workDto: WorksDto){
-        val response = recreArteingApi.updateWork(id, workDto)
-        if (!response.isSuccessful){
-            throw HttpException(response)
+    // Works - Update con soporte para imagen
+    suspend fun updateWork(
+        id: Int,
+        title: String,
+        dimension: String,
+        techniqueId: Int,
+        artistId: Int,
+        price: Double,
+        description: String,
+        imageFile: File?
+    ): Response<Unit> {
+        return try {
+            val titlePart = title.toRequestBody("text/plain".toMediaTypeOrNull())
+            val dimensionPart = dimension.toRequestBody("text/plain".toMediaTypeOrNull())
+            val techniqueIdPart = techniqueId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val artistIdPart = artistId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val pricePart = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val descriptionPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val imagePart = imageFile?.let {
+                val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("imageFile", it.name, requestFile)
+            }
+
+            recreArteingApi.updateWork(
+                id,
+                titlePart,
+                dimensionPart,
+                techniqueIdPart,
+                artistIdPart,
+                pricePart,
+                descriptionPart,
+                imagePart
+            )
+        } catch (e: Exception) {
+            Response.error(400, "Error updating work".toResponseBody())
         }
     }
-    suspend fun createWork(workDto: WorksDto) = recreArteingApi.createWork(workDto)
+    suspend fun createWork(
+        title: String,
+        dimension: String,
+        techniqueId: Int,
+        artistId: Int,
+        price: Double,
+        description: String,
+        imageFile: File?
+    ): Response<WorksDto> {
+        return try {
+            // Crear las partes del multipart
+            val titlePart = title.toRequestBody("text/plain".toMediaTypeOrNull())
+            val dimensionPart = dimension.toRequestBody("text/plain".toMediaTypeOrNull())
+            val techniqueIdPart = techniqueId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val artistIdPart = artistId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val pricePart = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val descriptionPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
+            val statusIdPart = "1".toRequestBody("text/plain".toMediaTypeOrNull())
+            val imageUrlPart = "".toRequestBody("text/plain".toMediaTypeOrNull()) // Cadena vacía para imageUrl
+
+            val imagePart = imageFile?.let {
+                val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("image", it.name, requestFile)
+            }
+
+            recreArteingApi.createWork(
+                title = titlePart,
+                dimension = dimensionPart,
+                techniqueId = techniqueIdPart,
+                artistId = artistIdPart,
+                price = pricePart,
+                description = descriptionPart,
+                statusId = statusIdPart,
+                imageUrl = imageUrlPart,
+                image = imagePart
+            )
+        } catch (e: Exception) {
+            Response.error(500, "Network error: ${e.message}".toResponseBody())
+        }
+    }
+
+    fun WorksDto.toJson(): String {
+        return Gson().toJson(this)
+    }
+
     suspend fun deleteWork(id: Int) = recreArteingApi.deleteWork(id)
     suspend fun getWorksByTechnique(techniqueId: Int): List<WorksDto> {
         return recreArteingApi.getWorksByTechnique(techniqueId)
