@@ -1,15 +1,11 @@
 package edu.ucne.recrearte.presentation.work
 
-import android.R
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,7 +33,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,21 +46,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartEvent
 import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartViewModel
 import kotlinx.coroutines.launch
-import java.util.Base64
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,8 +92,7 @@ fun WorkDetailScreen(
             artistId = 0,
             techniqueId = 0,
             statusId = 1,
-            imageId = 0,
-            base64 = null
+            imageUrl = "",
         )
     }
 
@@ -115,18 +108,6 @@ fun WorkDetailScreen(
         if (work.artistId > 0 && uiState.nameArtist.isNullOrBlank()) {
             viewModel.findArtist(work.artistId)
         }
-    }
-
-    // Manejo de la imagen como en WorkCard
-    val imageBitmap = if (!work.base64.isNullOrBlank()) {
-        try {
-            val imageBytes = android.util.Base64.decode(work.base64, android.util.Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)?.asImageBitmap()
-        } catch (e: Exception) {
-            null
-        }
-    } else {
-        null
     }
 
     val cartState by shoppingCartViewModel.uiSate.collectAsState()
@@ -197,23 +178,14 @@ fun WorkDetailScreen(
                     .fillMaxWidth()
                     .height(300.dp)
             ) {
-                if (imageBitmap != null) {
-                    Image(
-                        bitmap = imageBitmap,
-                        contentDescription = work.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.LightGray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Image not available", color = Color.Gray)
-                    }
-                }
+                AsyncImage(
+                    model = work.imageUrl ?: R.drawable.placeholder_image,
+                    contentDescription = work.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.placeholder_image),
+                    error = painterResource(R.drawable.placeholder_image)
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
