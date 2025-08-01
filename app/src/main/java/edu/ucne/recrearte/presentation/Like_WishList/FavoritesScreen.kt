@@ -21,11 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.navigation.Screen
@@ -136,69 +139,35 @@ private fun FavoriteWorkCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(200.dp)
+            .height(250.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            // Imagen
-            Box(
+            // Imagen desde URL
+            AsyncImage(
+                model = work.imageUrl ?: R.drawable.placeholder_image,
+                contentDescription = work.title,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                val base64 = work.base64
-                    ?.replace("data:image/png;base64,", "")
-                    ?.replace("data:image/jpeg;base64,", "")
-                    ?.replace("data:image/jpg;base64,", "")
-                    ?.replace("data:image/gif;base64,", "")
-                    ?.trim()
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.placeholder_image),
+                error = painterResource(R.drawable.placeholder_image)
+            )
 
-                val bitmap = remember(base64) {
-                    try {
-                        base64?.let {
-                            val imageBytes = Base64.decode(it, Base64.DEFAULT)
-                            BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)?.asImageBitmap()
-                        }
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = work.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(R.drawable.placeholder_image),
-                        contentDescription = "Placeholder",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
-
-            // Info
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
+            Column(modifier = Modifier.padding(8.dp)) {
                 Text(
-                    text = work.title ?: "Sin título",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = work.title,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "$${work.price ?: 0.0}",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "$${work.price}",
+                    fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
