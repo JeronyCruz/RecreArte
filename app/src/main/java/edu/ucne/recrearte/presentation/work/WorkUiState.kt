@@ -26,10 +26,7 @@ data class WorkUiState(
     val works: List<WorksDto> = emptyList(),
     val techniquesL: List<TechniquesDto> = emptyList(),
     val artists: List<ArtistListDto> = emptyList(),
-    val image: ImagesDto? = null,
-    val images: Map<Int, String> = emptyMap(), // Para cachear imágenes por workId
-    val base64: String? = null,  // Para manejar la imagen actual o nueva
     val imageRemoved: Boolean = false,
-    //para los artistas
-    val nameArtist: String = ""
+    val nameArtist: String = "",
+    val imageUrl: String = ""
 )
