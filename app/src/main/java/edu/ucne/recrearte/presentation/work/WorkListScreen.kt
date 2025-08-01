@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +60,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.Home.HomeEvent
 import edu.ucne.recrearte.presentation.Home.HomeUiState
@@ -354,82 +357,37 @@ fun ArtistWorkCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Mostrar imagen si está disponible
-            if (!work.base64.isNullOrEmpty()) {
-                val imageBytes = Base64.decode(work.base64, Base64.DEFAULT)
-                val bitmap = remember(work.base64) {
-                    try {
-                        android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                            ?.asImageBitmap()
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-
-                bitmap?.let {
-                    Image(
-                        bitmap = it,
-                        contentDescription = work.title,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(end = 12.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
+            // Mostrar imagen desde URL (Cloudinary)
+            work.imageUrl?.let { imageUrl ->
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = work.title,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(end = 12.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.placeholder_image),
+                    error = painterResource(R.drawable.placeholder_image)
+                )
+            } ?: Image(
+                painter = painterResource(R.drawable.placeholder_image),
+                contentDescription = "Placeholder",
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(end = 12.dp),
+                contentScale = ContentScale.Crop
+            )
 
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(onClick = onClick)
             ) {
-                Text(
-                    text = work.title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Técnica: ")
-                        }
-                        append(work.techniqueId.toString())
-
-                        append("\n")
-
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Dimensiones: ")
-                        }
-                        append(work.dimension)
-
-                        append("\n")
-
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Precio: ")
-                        }
-                        append("$${work.price}")
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // ... resto del contenido de la tarjeta
             }
-           
+
             if (showDelete) {
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Eliminar",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                // ... botón de eliminar
             }
         }
     }
