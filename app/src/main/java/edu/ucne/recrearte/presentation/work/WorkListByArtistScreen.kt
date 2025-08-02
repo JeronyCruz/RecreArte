@@ -57,6 +57,8 @@ import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.Home.HomeEvent
 import edu.ucne.recrearte.presentation.Home.HomeViewModel
 
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun WorkListByArtistScreen(
@@ -208,7 +210,7 @@ fun ArtistWorkCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Mostrar imagen si está disponible
+
             AsyncImage(
                 model = work.imageUrl ?: R.drawable.placeholder_image,
                 contentDescription = work.title,
@@ -219,6 +221,7 @@ fun ArtistWorkCard(
                 placeholder = painterResource(R.drawable.placeholder_image),
                 error = painterResource(R.drawable.placeholder_image)
             )
+
 
             Column(
                 modifier = Modifier
