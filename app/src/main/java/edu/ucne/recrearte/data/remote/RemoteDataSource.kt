@@ -224,6 +224,7 @@ class RemoteDataSource @Inject constructor(
         artistId: Int,
         price: Double,
         description: String,
+        statusId: Int,
         imageFile: File?
     ): Response<Unit> {
         return try {
@@ -239,7 +240,7 @@ class RemoteDataSource @Inject constructor(
             val artistIdPart = artistId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val pricePart = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val descriptionPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
-            val statusIdPart = "1".toRequestBody("text/plain".toMediaTypeOrNull()) // Asumiendo status 1 como default
+            val statusIdPart = statusId.toString().toRequestBody("text/plain".toMediaTypeOrNull()) // Asumiendo status 1 como default
             val imageUrlPart = currentImageUrl.toRequestBody("text/plain".toMediaTypeOrNull())
 
             // 3. Manejar la imagen (si se proporciona)

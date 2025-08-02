@@ -80,6 +80,7 @@ class WorkRepository @Inject constructor(
         artistId: Int,
         price: Double,
         description: String,
+        statusId: Int,
         imageFile: File?
     ): Resource<Unit> {
         return try {
@@ -91,6 +92,7 @@ class WorkRepository @Inject constructor(
                 artistId = artistId,
                 price = price,
                 description = description,
+                statusId = statusId,
                 imageFile = imageFile
             )
 

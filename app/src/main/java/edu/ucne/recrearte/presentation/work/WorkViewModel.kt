@@ -405,6 +405,7 @@ class WorkViewModel @Inject constructor(
                                 artistId = loggedArtistId,
                                 price = _uiState.value.price,
                                 description = _uiState.value.description,
+                                statusId = 1,
                                 imageFile = _selectedImage.value
                             )
 
@@ -633,6 +634,7 @@ class WorkViewModel @Inject constructor(
                                     artistId = updatedWork.artistId,
                                     price = updatedWork.price,
                                     description = updatedWork.description,
+                                    statusId = 2,
                                     imageFile = null // No actualizamos la imagen
                                 )
                             }
