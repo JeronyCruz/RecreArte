@@ -28,7 +28,6 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
-import java.io.File
 
 interface RecreArteingApi {
 
@@ -130,7 +129,7 @@ interface RecreArteingApi {
         @Part("price") price: RequestBody,
         @Part("description") description: RequestBody,
         @Part("statusId") statusId: RequestBody,
-        @Part("imageUrl") imageUrl: RequestBody,
+        @Part("imageUrl") imageUrl: RequestBody, // <- Añadir este campo
         @Part image: MultipartBody.Part?
     ): Response<WorksDto>
 
@@ -138,14 +137,18 @@ interface RecreArteingApi {
     @PUT("api/Works/{id}")
     suspend fun updateWork(
         @Path("id") id: Int,
-        @Part("title") title: RequestBody,
-        @Part("dimension") dimension: RequestBody,
-        @Part("techniqueId") techniqueId: RequestBody,
-        @Part("artistId") artistId: RequestBody,
-        @Part("price") price: RequestBody,
-        @Part("description") description: RequestBody,
-        @Part image: MultipartBody.Part?
+        @Part("WorkId") workId: RequestBody,
+        @Part("Title") title: RequestBody,
+        @Part("Dimension") dimension: RequestBody,
+        @Part("TechniqueId") techniqueId: RequestBody,
+        @Part("ArtistId") artistId: RequestBody,
+        @Part("Price") price: RequestBody,
+        @Part("Description") description: RequestBody,
+        @Part("StatusId") statusId: RequestBody,
+        @Part("ImageUrl") imageUrl: RequestBody,
+        @Part imageFile: MultipartBody.Part?
     ): Response<Unit>
+
     @DELETE("api/Works/{id}")
     suspend fun deleteWork(@Path("id") id: Int): Response<Unit>
 
