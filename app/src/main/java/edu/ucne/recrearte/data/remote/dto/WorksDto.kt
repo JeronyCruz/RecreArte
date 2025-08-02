@@ -9,6 +9,5 @@ data class WorksDto(
     val statusId: Int,
     val price: Double,
     val description: String,
-    val imageId: Int,
-    val base64: String? = null
+    val imageUrl: String,
 )

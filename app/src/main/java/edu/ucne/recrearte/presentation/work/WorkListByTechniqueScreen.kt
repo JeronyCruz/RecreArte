@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +51,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.Home.HomeEvent
 import edu.ucne.recrearte.presentation.Home.HomeViewModel
@@ -208,28 +211,16 @@ fun TechniqueWorkCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Mostrar imagen si está disponible
-            if (!work.base64.isNullOrEmpty()) {
-                val imageBytes = Base64.decode(work.base64, Base64.DEFAULT)
-                val bitmap = remember(work.base64) {
-                    try {
-                        android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                            ?.asImageBitmap()
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-
-                bitmap?.let {
-                    Image(
-                        bitmap = it,
-                        contentDescription = work.title,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(end = 12.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
+            AsyncImage(
+                model = work.imageUrl ?: R.drawable.placeholder_image,
+                contentDescription = work.title,
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(end = 12.dp),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.placeholder_image),
+                error = painterResource(R.drawable.placeholder_image)
+            )
 
             Column(
                 modifier = Modifier

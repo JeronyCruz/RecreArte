@@ -17,12 +17,16 @@ import edu.ucne.recrearte.data.remote.dto.UsersDto
 import edu.ucne.recrearte.data.remote.dto.WishListDetailsDto
 import edu.ucne.recrearte.data.remote.dto.WishListsDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface RecreArteingApi {
@@ -114,10 +118,37 @@ interface RecreArteingApi {
 
     @GET("api/Works/by-artist/{artistId}")
     suspend fun getWorksByArtist(@Path("artistId") artistId: Int): List<WorksDto>
+
+    @Multipart
     @POST("api/Works")
-    suspend fun createWork(@Body work: WorksDto):  Response<WorksDto>
+    suspend fun createWork(
+        @Part("title") title: RequestBody,
+        @Part("dimension") dimension: RequestBody,
+        @Part("techniqueId") techniqueId: RequestBody,
+        @Part("artistId") artistId: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("statusId") statusId: RequestBody,
+        @Part("imageUrl") imageUrl: RequestBody, // <- Añadir este campo
+        @Part image: MultipartBody.Part?
+    ): Response<WorksDto>
+
+    @Multipart
     @PUT("api/Works/{id}")
-    suspend fun updateWork(@Path("id") id: Int, @Body work: WorksDto): Response<Unit>
+    suspend fun updateWork(
+        @Path("id") id: Int,
+        @Part("WorkId") workId: RequestBody,
+        @Part("Title") title: RequestBody,
+        @Part("Dimension") dimension: RequestBody,
+        @Part("TechniqueId") techniqueId: RequestBody,
+        @Part("ArtistId") artistId: RequestBody,
+        @Part("Price") price: RequestBody,
+        @Part("Description") description: RequestBody,
+        @Part("StatusId") statusId: RequestBody,
+        @Part("ImageUrl") imageUrl: RequestBody,
+        @Part imageFile: MultipartBody.Part?
+    ): Response<Unit>
+
     @DELETE("api/Works/{id}")
     suspend fun deleteWork(@Path("id") id: Int): Response<Unit>
 

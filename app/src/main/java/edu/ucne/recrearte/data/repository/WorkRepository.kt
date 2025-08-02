@@ -2,11 +2,11 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
-import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
+import java.io.File
 import javax.inject.Inject
 
 class WorkRepository @Inject constructor(
@@ -16,6 +16,9 @@ class WorkRepository @Inject constructor(
         try {
             emit(Resource.Loading())
             val work = remoteDataSource.getWorks()
+            work.forEach { workDto ->
+                println("Work ID: ${workDto.workId}, Image URL: ${workDto.imageUrl}")
+            }
             emit(Resource.Success(work))
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
@@ -35,9 +38,78 @@ class WorkRepository @Inject constructor(
         }
     }
 
-    suspend fun createWork(workDto: WorksDto) = remoteDataSource.createWork(workDto)
+    suspend fun createWork(
+        title: String,
+        dimension: String,
+        techniqueId: Int,
+        artistId: Int,
+        price: Double,
+        description: String,
+        imageFile: File?
+    ): Resource<WorksDto> {
+        return try {
+            val response = remoteDataSource.createWork(
+                title = title,
+                dimension = dimension,
+                techniqueId = techniqueId,
+                artistId = artistId,
+                price = price,
+                description = description,
+                imageFile = imageFile
+            )
 
-    suspend fun updateWork(id: Int, workDto: WorksDto) = remoteDataSource.updateWork(id, workDto)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Resource.Success(it)
+                } ?: Resource.Error("Empty response")
+            } else {
+                // Intenta parsear el mensaje de error del backend
+                val errorBody = response.errorBody()?.string()
+                Resource.Error(errorBody ?: "Error ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun updateWork(
+        workId: Int,
+        title: String,
+        dimension: String,
+        techniqueId: Int,
+        artistId: Int,
+        price: Double,
+        description: String,
+        statusId: Int,
+        imageFile: File?
+    ): Resource<Unit> {
+        return try {
+            val response = remoteDataSource.updateWork(
+                workId = workId,
+                title = title,
+                dimension = dimension,
+                techniqueId = techniqueId,
+                artistId = artistId,
+                price = price,
+                description = description,
+                statusId = statusId,
+                imageFile = imageFile
+            )
+
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Resource.Error(errorBody ?: "Error ${response.code()}")
+            }
+        } catch (e: HttpException) {
+            Resource.Error("HTTP error: ${e.message()}")
+        } catch (e: Exception) {
+            Resource.Error("Unknown error: ${e.message}")
+        }
+    }
+
+
 
     suspend fun deleteWork(id: Int) = remoteDataSource.deleteWork(id)
 
