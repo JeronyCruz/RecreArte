@@ -176,44 +176,6 @@ class RemoteDataSource @Inject constructor(
             throw HttpException(response)
         }
     }
-    // Works - Update con soporte para imagen
-    suspend fun updateWork(
-        id: Int,
-        title: String,
-        dimension: String,
-        techniqueId: Int,
-        artistId: Int,
-        price: Double,
-        description: String,
-        imageFile: File?
-    ): Response<Unit> {
-        return try {
-            val titlePart = title.toRequestBody("text/plain".toMediaTypeOrNull())
-            val dimensionPart = dimension.toRequestBody("text/plain".toMediaTypeOrNull())
-            val techniqueIdPart = techniqueId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-            val artistIdPart = artistId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-            val pricePart = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-            val descriptionPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
-
-            val imagePart = imageFile?.let {
-                val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
-                MultipartBody.Part.createFormData("imageFile", it.name, requestFile)
-            }
-
-            recreArteingApi.updateWork(
-                id,
-                titlePart,
-                dimensionPart,
-                techniqueIdPart,
-                artistIdPart,
-                pricePart,
-                descriptionPart,
-                imagePart
-            )
-        } catch (e: Exception) {
-            Response.error(400, "Error updating work".toResponseBody())
-        }
-    }
     suspend fun createWork(
         title: String,
         dimension: String,
@@ -224,19 +186,18 @@ class RemoteDataSource @Inject constructor(
         imageFile: File?
     ): Response<WorksDto> {
         return try {
-            // Crear las partes del multipart
             val titlePart = title.toRequestBody("text/plain".toMediaTypeOrNull())
             val dimensionPart = dimension.toRequestBody("text/plain".toMediaTypeOrNull())
             val techniqueIdPart = techniqueId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val artistIdPart = artistId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val pricePart = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val descriptionPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
-            val statusIdPart = "1".toRequestBody("text/plain".toMediaTypeOrNull())
-            val imageUrlPart = "".toRequestBody("text/plain".toMediaTypeOrNull()) // Cadena vacía para imageUrl
+            val statusIdPart = "1".toRequestBody("text/plain".toMediaTypeOrNull()) // Default status
+            val imageUrlPart = "temp_url".toRequestBody("text/plain".toMediaTypeOrNull()) // String vacío
 
             val imagePart = imageFile?.let {
                 val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
-                MultipartBody.Part.createFormData("image", it.name, requestFile)
+                MultipartBody.Part.createFormData("imageFile", it.name, requestFile)
             }
 
             recreArteingApi.createWork(
@@ -251,7 +212,61 @@ class RemoteDataSource @Inject constructor(
                 image = imagePart
             )
         } catch (e: Exception) {
-            Response.error(500, "Network error: ${e.message}".toResponseBody())
+            Response.error(500, "Error creating work: ${e.message}".toResponseBody())
+        }
+    }
+
+    suspend fun updateWork(
+        workId: Int,
+        title: String,
+        dimension: String,
+        techniqueId: Int,
+        artistId: Int,
+        price: Double,
+        description: String,
+        imageFile: File?
+    ): Response<Unit> {
+        return try {
+            // 1. Obtener la obra existente para conservar la URL de la imagen actual
+            val existingWork = getByIdWork(workId)
+            val currentImageUrl = existingWork.imageUrl ?: ""
+
+            // 2. Crear todas las partes del formulario
+            val workIdPart = workId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val titlePart = title.toRequestBody("text/plain".toMediaTypeOrNull())
+            val dimensionPart = dimension.toRequestBody("text/plain".toMediaTypeOrNull())
+            val techniqueIdPart = techniqueId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val artistIdPart = artistId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val pricePart = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val descriptionPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
+            val statusIdPart = "1".toRequestBody("text/plain".toMediaTypeOrNull()) // Asumiendo status 1 como default
+            val imageUrlPart = currentImageUrl.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            // 3. Manejar la imagen (si se proporciona)
+            val imagePart = imageFile?.let {
+                MultipartBody.Part.createFormData(
+                    "imageFile",
+                    it.name,
+                    it.asRequestBody("image/*".toMediaTypeOrNull())
+                )
+            }
+
+            // 4. Hacer la llamada API
+            recreArteingApi.updateWork(
+                id = workId,
+                workId = workIdPart,
+                title = titlePart,
+                dimension = dimensionPart,
+                techniqueId = techniqueIdPart,
+                artistId = artistIdPart,
+                price = pricePart,
+                description = descriptionPart,
+                statusId = statusIdPart,
+                imageUrl = imageUrlPart,
+                imageFile = imagePart
+            )
+        } catch (e: Exception) {
+            Response.error(500, "Error updating work: ${e.message}".toResponseBody())
         }
     }
 
