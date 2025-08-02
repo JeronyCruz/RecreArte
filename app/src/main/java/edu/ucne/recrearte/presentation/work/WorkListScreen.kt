@@ -357,6 +357,7 @@ fun ArtistWorkCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Mostrar imagen si está disponible
             // Mostrar imagen desde URL (Cloudinary)
             work.imageUrl?.let { imageUrl ->
                 AsyncImage(
@@ -376,18 +377,60 @@ fun ArtistWorkCard(
                     .size(80.dp)
                     .padding(end = 12.dp),
                 contentScale = ContentScale.Crop
-            )
+                )
 
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(onClick = onClick)
             ) {
-                // ... resto del contenido de la tarjeta
+                Text(
+                    text = work.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    modifier = Modifier.padding(bottom = 4.dp),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Techniques: ")
+                        }
+                        append(work.techniqueId.toString())
+
+                        append("\n")
+
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Dimensions: ")
+                        }
+                        append(work.dimension)
+
+                        append("\n")
+
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Price: ")
+                        }
+                        append("$${work.price}")
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             if (showDelete) {
-                // ... botón de eliminar
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
