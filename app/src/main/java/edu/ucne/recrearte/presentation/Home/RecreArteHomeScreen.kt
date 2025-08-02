@@ -405,17 +405,37 @@ fun FeaturedWorkCard(work: WorksDto, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            // Imagen desde URL
-            AsyncImage(
-                model = work.imageUrl ?: R.drawable.placeholder_image,
-                contentDescription = work.title,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.placeholder_image),
-                error = painterResource(R.drawable.placeholder_image)
-            )
+            if (!work.imageUrl.isNullOrEmpty()) {
+                // Add more detailed logging
+                println("Attempting to load image from URL: ${work.imageUrl}")
+
+                AsyncImage(
+                    model = work.imageUrl,
+                    contentDescription = work.title,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.placeholder_image),
+                    error = painterResource(R.drawable.placeholder_image),
+                    onError = { result ->
+                        println("Error loading image: ${result.result.throwable?.message}")
+                        println("Failed URL: ${work.imageUrl}")
+                    },
+                    onSuccess = {
+                        println("Successfully loaded image from: ${work.imageUrl}")
+                    }
+                )
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.placeholder_image),
+                    contentDescription = "No image available",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
