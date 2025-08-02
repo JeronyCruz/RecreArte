@@ -2,7 +2,6 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
-import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -17,6 +16,9 @@ class WorkRepository @Inject constructor(
         try {
             emit(Resource.Loading())
             val work = remoteDataSource.getWorks()
+            work.forEach { workDto ->
+                println("Work ID: ${workDto.workId}, Image URL: ${workDto.imageUrl}")
+            }
             emit(Resource.Success(work))
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
@@ -71,7 +73,7 @@ class WorkRepository @Inject constructor(
     }
 
     suspend fun updateWork(
-        id: Int,
+        workId: Int,
         title: String,
         dimension: String,
         techniqueId: Int,
@@ -82,7 +84,7 @@ class WorkRepository @Inject constructor(
     ): Resource<Unit> {
         return try {
             val response = remoteDataSource.updateWork(
-                id = id,
+                workId = workId,
                 title = title,
                 dimension = dimension,
                 techniqueId = techniqueId,
@@ -95,7 +97,8 @@ class WorkRepository @Inject constructor(
             if (response.isSuccessful) {
                 Resource.Success(Unit)
             } else {
-                Resource.Error("Failed to update work: ${response.message()}")
+                val errorBody = response.errorBody()?.string()
+                Resource.Error(errorBody ?: "Error ${response.code()}")
             }
         } catch (e: HttpException) {
             Resource.Error("HTTP error: ${e.message()}")
