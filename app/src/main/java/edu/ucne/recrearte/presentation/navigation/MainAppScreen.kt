@@ -58,17 +58,22 @@ fun MainAppScreen(
         modifier = modifier,
         bottomBar = {
             if (showBottomBar) {
-                // Forzar recomposición cuando cambia el roleId
                 val roleId by rememberUpdatedState(currentRoleId)
                 NavigationBar {
                     // Filtramos los items basados en el roleId
-                    val visibleItems = if (roleId == 1 || roleId == 2) {
-                        BottomNavDestination.entries // Muestra todos los items incluyendo AdminArtistMenu
-                    } else {
-                        BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
+                    val visibleItems = when (roleId) {
+                        1, 2 -> { // Admin/Artist - muestra todo excepto Carrito
+                            BottomNavDestination.entries.filter { it != BottomNavDestination.Cart }
+                        }
+                        3 -> { // Cliente - muestra todo excepto AdminArtistMenu
+                            BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
+                        }
+                        else -> { // Otros casos (¿invitado?) - mismo comportamiento que cliente
+                            BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
+                        }
                     }
 
-                    visibleItems.forEachIndexed { index, destination ->
+                    visibleItems.forEach { destination ->
                         NavigationBarItem(
                             selected = currentRoute == destination.screen::class.qualifiedName,
                             onClick = {
