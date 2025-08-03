@@ -12,6 +12,8 @@ import edu.ucne.recrearte.data.remote.dto.WorksDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
+import java.net.ConnectException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 class LikeRepository @Inject constructor(
@@ -56,15 +58,26 @@ class LikeRepository @Inject constructor(
 
 
     fun getWorksLikedByCustomer(customerId: Int): Flow<Resource<List<WorksDto>>> = flow {
+        var listWorksLikedByCustomer: List<WorksEntity> = emptyList()
         try {
             emit(Resource.Loading())
             val works = remoteDataSource.getWorksLikedByCustomer(customerId)
-            emit(Resource.Success(works))
+
         } catch (e: HttpException) {
             emit(Resource.Error("Internet error: ${e.message()}"))
-        } catch (e: Exception) {
+        } catch (e: UnknownHostException) {
+            // No mostrar mensaje, solo usar datos locales
+        }catch (e: ConnectException) {
+            // No emitir error cuando no hay conexión
+        }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
+
+        listWorksLikedByCustomer = likeDao.getWorksLikedByCustomer(customerId)
+        val finalList = listWorksLikedByCustomer.map {
+            it.toDto()
+        }
+        emit(Resource.Success(finalList))
     }
 
     suspend fun toggleLike(customerId: Int, workId: Int): Resource<Boolean> {

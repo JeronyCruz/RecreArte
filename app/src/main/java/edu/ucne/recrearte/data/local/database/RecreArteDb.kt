@@ -12,6 +12,8 @@ import edu.ucne.recrearte.data.local.dao.PaymentMethodDao
 import edu.ucne.recrearte.data.local.dao.RoleDao
 import edu.ucne.recrearte.data.local.dao.TechniqueDao
 import edu.ucne.recrearte.data.local.dao.UserDao
+import edu.ucne.recrearte.data.local.dao.WishListDao
+import edu.ucne.recrearte.data.local.dao.WishListDetailsDao
 import edu.ucne.recrearte.data.local.dao.WorkDao
 import edu.ucne.recrearte.data.local.entities.ArtistsEntity
 import edu.ucne.recrearte.data.local.entities.ArtistsListEntity
@@ -21,6 +23,8 @@ import edu.ucne.recrearte.data.local.entities.PaymentMethodsEntity
 import edu.ucne.recrearte.data.local.entities.RolesEntity
 import edu.ucne.recrearte.data.local.entities.TechniquesEntity
 import edu.ucne.recrearte.data.local.entities.UsersEntity
+import edu.ucne.recrearte.data.local.entities.WishListDetailsEntity
+import edu.ucne.recrearte.data.local.entities.WishListsEntity
 import edu.ucne.recrearte.data.local.entities.WorksEntity
 import java.util.Date
 
@@ -46,9 +50,11 @@ class Converters {
         RolesEntity::class,
         TechniquesEntity::class,
         UsersEntity::class,
-        WorksEntity::class
+        WorksEntity::class,
+        WishListsEntity::class,
+        WishListDetailsEntity::class
     ],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -62,4 +68,6 @@ abstract class RecreArteDb : RoomDatabase() {
     abstract fun LikeDao(): LikeDao
     abstract fun CustomerDao(): CustomerDao
     abstract fun ArtistListDao(): ArtistListDao
+    abstract fun WishListDao(): WishListDao
+    abstract fun WishListDetailsDao(): WishListDetailsDao
 }

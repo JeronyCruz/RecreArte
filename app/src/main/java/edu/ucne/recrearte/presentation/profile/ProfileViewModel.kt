@@ -1,6 +1,5 @@
 package edu.ucne.recrearte.presentation.profile
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,6 +9,9 @@ import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
 import edu.ucne.recrearte.data.repository.CustomerRepository
 import edu.ucne.recrearte.data.repository.UserRepository
+import edu.ucne.recrearte.presentation.profile.ProfileUiState.Error
+import edu.ucne.recrearte.presentation.profile.ProfileUiState.Loading
+import edu.ucne.recrearte.presentation.profile.ProfileUiState.Success
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -249,8 +251,10 @@ class ProfileViewModel @Inject constructor(
                             artistResult.data?.let { artist ->
                                 if (artist.firstName != null) {
                                     currentPasswordHash = artist.password
+
                                     _uiState.value = ProfileUiState.Success(artist)
                                     profileFound = true
+
                                     return@collect
                                 }
                             }
@@ -326,10 +330,10 @@ class ProfileViewModel @Inject constructor(
         when (result) {
             is Resource.Success -> loadUserProfile()
             is Resource.Error -> {
-                _uiState.value = ProfileUiState.Error(result.message ?: "Update failed")
+                _uiState.value = Error(result.message ?: "Update failed")
             }
             is Resource.Loading<*> -> {
-                _uiState.value = ProfileUiState.Loading
+                _uiState.value = Loading
             }
         }
     }
