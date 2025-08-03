@@ -41,4 +41,8 @@ object AppModule {
     fun provideCustomerDao(recreArteDb: RecreArteDb) = recreArteDb.CustomerDao()
     @Provides
     fun provideArtistListDao(recreArteDb: RecreArteDb) = recreArteDb.ArtistListDao()
+    @Provides
+    fun provideWishListDao(recreArteDb: RecreArteDb) = recreArteDb.WishListDao()
+    @Provides
+    fun provideWishListDetailDao(recreArteDb: RecreArteDb) = recreArteDb.WishListDetailsDao()
 }
