@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import java.io.File
+import java.net.ConnectException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 class WorkRepository @Inject constructor(
@@ -33,6 +35,8 @@ class WorkRepository @Inject constructor(
 
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
+        }catch (e: ConnectException) {
+            // No emitir error cuando no hay conexión
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
@@ -162,14 +166,13 @@ class WorkRepository @Inject constructor(
 
         try {
             emit(Resource.Loading())
-            val work = remoteDataSource.getWorksByTechnique(techniqueId)
-            val worksEntity = work.map {
-                it.toEntity()
-            }
-            worksDao.save(worksEntity)
 
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
+        }catch (e: UnknownHostException) {
+            // No mostrar mensaje, solo usar datos locales
+        } catch (e: ConnectException) {
+            // No emitir error cuando no hay conexión
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
@@ -187,14 +190,13 @@ class WorkRepository @Inject constructor(
 
         try {
             emit(Resource.Loading())
-            val work = remoteDataSource.getWorksByArtist(artistId)
-            val worksEntity = work.map {
-                it.toEntity()
-            }
-            worksDao.save(worksEntity)
 
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
+        }catch (e: UnknownHostException) {
+            // No mostrar mensaje, solo usar datos locales
+        }catch (e: ConnectException) {
+            // No emitir error cuando no hay conexión
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
