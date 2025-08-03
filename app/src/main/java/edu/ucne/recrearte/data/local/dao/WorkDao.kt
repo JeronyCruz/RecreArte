@@ -29,14 +29,18 @@ interface WorkDao{
     suspend fun getByArtist(artistId: Int): List<WorksEntity>
     @Query("SELECT * FROM Works WHERE techniqueId=:techniqueId")
     suspend fun getByTechnique(techniqueId: Int): List<WorksEntity>
-//    @Query("""
-//        SELECT w.*, COUNT(l.workId) as likeCount
-//        FROM Works w
-//        LEFT JOIN Likes l ON w.workId = l.workId
-//        WHERE w.statusId = 1
-//        GROUP BY w.workId
-//        ORDER BY likeCount DESC
-//        LIMIT 5
-//    """)
-//    suspend fun getTop5(): List<WorksEntity>
+    @Query("""
+        SELECT w.*
+FROM Works w
+INNER JOIN (
+    SELECT workId, COUNT(*) as likeCount 
+    FROM Likes 
+    GROUP BY workId
+    HAVING COUNT(*) > 0 
+) l ON w.workId = l.workId
+WHERE w.statusId = 1
+ORDER BY l.likeCount DESC
+LIMIT 5
+    """)
+    suspend fun getTop5(): List<WorksEntity>
 }
