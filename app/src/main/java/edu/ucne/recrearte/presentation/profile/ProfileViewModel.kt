@@ -239,37 +239,44 @@ class ProfileViewModel @Inject constructor(
             try {
                 val userId = tokenManager.getUserId() ?: throw Exception("Usuario no autenticado")
 
-                when (val artistResult = artistRepository.getArtistById(userId)) {
-                    is Resource.Success -> {
-                        artistResult.data?.let { artist ->
-                            if (artist.firstName != null) {
-                                currentPasswordHash = artist.password
-                                _uiState.value = ProfileUiState.Success(artist)
-                                return@launch
+                // Primero intentamos obtener el artista
+                artistRepository.getArtistById(userId).collect { artistResult ->
+                    when (artistResult) {
+                        is Resource.Success -> {
+                            artistResult.data?.let { artist ->
+                                if (artist.firstName != null) {
+                                    currentPasswordHash = artist.password
+                                    _uiState.value = ProfileUiState.Success(artist)
+                                    return@collect
+                                }
                             }
                         }
-                    }
-                    is Resource.Error -> Unit
-                    is Resource.Loading<*> -> Unit
-                }
-
-                when (val customerResult = customerRepository.getCustomerById(userId)) {
-                    is Resource.Success -> {
-                        customerResult.data?.let { customer ->
-                            if (customer.firstName != null) {
-                                currentPasswordHash = customer.password
-                                _uiState.value = ProfileUiState.Success(customer)
-                                return@launch
-                            }
+                        is Resource.Error -> {
+                            // Si falla el artista, intentamos con customer
+//                            customerRepository.getCustomerById(userId).collect { customerResult ->
+//                                when (customerResult) {
+//                                    is Resource.Success -> {
+//                                        customerResult.data?.let { customer ->
+//                                            if (customer.firstName != null) {
+//                                                currentPasswordHash = customer.password
+//                                                _uiState.value = ProfileUiState.Success(customer)
+//                                                return@collect
+//                                            }
+//                                        }
+//                                        _uiState.value = ProfileUiState.Error("Perfil no encontrado")
+//                                    }
+//                                    is Resource.Error -> {
+//                                        _uiState.value = ProfileUiState.Error(
+//                                            customerResult.message ?: "Perfil no encontrado"
+//                                        )
+//                                    }
+//                                    is Resource.Loading -> Unit
+//                                }
+//                            }
                         }
+                        is Resource.Loading -> Unit
                     }
-                    is Resource.Error -> {
-                        _uiState.value = ProfileUiState.Error("Perfil no encontrado")
-                    }
-                    is Resource.Loading<*> -> Unit
                 }
-
-                _uiState.value = ProfileUiState.Error("Perfil no encontrado")
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error(e.message ?: "Error al cargar perfil")
             }
