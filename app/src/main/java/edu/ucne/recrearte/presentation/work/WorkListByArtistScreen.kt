@@ -86,7 +86,7 @@ fun WorkListByArtistScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Obras del Artista",
+                        text = "Artist Works",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -128,7 +128,7 @@ fun WorkListByArtistScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No se encontraron obras",
+                            text = "Art works works not found",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -146,7 +146,7 @@ fun WorkListByArtistScreen(
                             SearchBar(
                                 query = searchQuery,
                                 onQueryChanged = viewModel::onSearchQueryChanged,
-                                placeholder = "Buscar obras..."
+                                placeholder = "Search works..."
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }
@@ -240,21 +240,21 @@ fun ArtistWorkCard(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Técnica: ")
+                            append("Techniques: ")
                         }
                         append(work.techniqueId.toString())
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Dimensiones: ")
+                            append("Dimensions: ")
                         }
                         append(work.dimension)
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Precio: ")
+                            append("Price: ")
                         }
                         append("$${work.price}")
                     },

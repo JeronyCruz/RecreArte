@@ -10,6 +10,8 @@ import edu.ucne.recrearte.data.local.entities.TechniquesEntity
 interface TechniqueDao {
     @Upsert()
     suspend fun save(techniques: List<TechniquesEntity>)
+    @Upsert()
+    suspend fun saveOne(techniques: TechniquesEntity)
     @Query(
         """
         SELECT * 

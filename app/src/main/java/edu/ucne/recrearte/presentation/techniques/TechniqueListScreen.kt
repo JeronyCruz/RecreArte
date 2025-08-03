@@ -93,7 +93,7 @@ fun TechniqueListScreen(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Confirm deletion") },
+            title = { Text("Confirm removing") },
             text = { Text("¿Are you sure you want to delete the technique ${techniqueToDelete?.techniqueName}?") },
             confirmButton = {
                 TextButton(onClick = onDeleteConfirmed) {
