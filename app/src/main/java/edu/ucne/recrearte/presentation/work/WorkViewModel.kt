@@ -309,23 +309,25 @@ class WorkViewModel @Inject constructor(
     fun findArtist(id: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            when (val result = artistRepository.getArtistById(id)) {
-                is Resource.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        artistId = result.data?.artistId ?: 0,
-                        nameArtist = result.data?.userName ?: "A",
-                        errorMessage = null
-                    )
-                }
-                is Resource.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = result.message,
-                        isLoading = false
-                    )
-                }
-                else -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
+            artistRepository.getArtistById(id).collect { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            artistId = result.data?.artistId ?: 0,
+                            nameArtist = result.data?.userName ?: "A",
+                            errorMessage = null
+                        )
+                    }
+                    is Resource.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = result.message,
+                            isLoading = false
+                        )
+                    }
+                    is Resource.Loading -> {
+                        _uiState.value = _uiState.value.copy(isLoading = true)
+                    }
                 }
             }
         }

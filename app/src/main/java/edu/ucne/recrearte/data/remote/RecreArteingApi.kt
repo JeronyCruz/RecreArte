@@ -10,6 +10,7 @@ import edu.ucne.recrearte.data.remote.dto.LikesDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
+import edu.ucne.recrearte.data.remote.dto.RolesDto
 import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
 import edu.ucne.recrearte.data.remote.dto.StatesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
@@ -52,6 +53,11 @@ interface RecreArteingApi {
     @DELETE("api/PaymentMethods/{id}")
     suspend fun deletePaymentMethod(@Path("id") id: Int): Response<Unit>
 
+    //Roles
+    @GET("api/Roles")
+    suspend fun getAllRole(): List<RolesDto>
+    @GET("api/Roles/{id}")
+    suspend fun getByIdRole(@Path("id") id: Int): Response<RolesDto>
 
     // Techniques
     @GET("api/Techniques")

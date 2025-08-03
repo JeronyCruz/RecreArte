@@ -10,6 +10,8 @@ import edu.ucne.recrearte.data.local.entities.PaymentMethodsEntity
 interface PaymentMethodDao {
     @Upsert()
     suspend fun save(paymentMethods: List<PaymentMethodsEntity>)
+    @Upsert()
+    suspend fun saveOne(paymentMethods: PaymentMethodsEntity)
     @Query(
         """
         SELECT * 

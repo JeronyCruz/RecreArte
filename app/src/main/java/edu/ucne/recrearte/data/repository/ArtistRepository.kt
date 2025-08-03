@@ -1,5 +1,9 @@
 package edu.ucne.recrearte.data.repository
 
+import edu.ucne.recrearte.data.local.dao.ArtistDao
+import edu.ucne.recrearte.data.local.dao.UserDao
+import edu.ucne.recrearte.data.local.entities.ArtistsEntity
+import edu.ucne.recrearte.data.local.entities.UsersEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
@@ -9,10 +13,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import java.io.IOException
+import java.util.Date
 import javax.inject.Inject
 
 class ArtistRepository @Inject constructor(
-    private val remoteDataSource: RemoteDataSource
+    private val remoteDataSource: RemoteDataSource,
+    private val artistDao: ArtistDao
 ){
     fun getArtists(): Flow<Resource<List<ArtistListDto>>> = flow {
         try {
@@ -44,16 +50,67 @@ class ArtistRepository @Inject constructor(
         }
     }
 
-    suspend fun getArtistById(id: Int): Resource<ArtistsDto> {
-        return try {
-            val artist = remoteDataSource.getArtistById(id)
-            Resource.Success(artist)
+    fun getArtistById(id: Int): Flow<Resource<ArtistsDto>> = flow {
+        var artistDto: ArtistsDto? = null
+
+        try {
+            emit(Resource.Loading())
+
+            val remoteArtist = remoteDataSource.getArtistById(id)
+            artistDto = remoteArtist
+            val artistEntity = remoteArtist.toEntity()
+
+            artistDao.saveOne(artistEntity)
+
         } catch (e: HttpException) {
-            Resource.Error("Internet error: ${e.message()}")
+            emit(Resource.Error("Internet error: ${e.message()}"))
         } catch (e: Exception) {
-            Resource.Error("Unknown error: ${e.message}")
+            emit(Resource.Error("Unknown error: ${e.message}"))
+        }
+
+        val localArtist = artistDao.find(id)
+        if (localArtist != null) {
+            emit(Resource.Success(localArtist.toDto()))
+        } else if (artistDto != null) {
+            emit(Resource.Success(artistDto))
+        } else {
+            emit(Resource.Error("No se encontraron datos locales ni remotos"))
         }
     }
+
+    private fun ArtistsDto.toEntity() = ArtistsEntity(
+         artistId = this.artistId,
+         artStyle = this.artStyle ?: "",
+         socialMediaLinks = this.socialMediaLinks ?: "",
+         firstName  = this.firstName ?: "",
+         lastName = this.lastName ?: "",
+         email = this.email ?: "",
+         password  = this.password ?: "",
+         userName = this.userName ?: "",
+         phoneNumber = this.phoneNumber ?: "",
+         documentNumber = this.documentNumber ?: "",
+         updateAt = this.updateAt,
+         roleId = this.roleId,
+         description = this.description ?: "",
+         token = this.token ?: ""
+    )
+
+    private fun ArtistsEntity.toDto() = ArtistsDto(
+        artistId = this.artistId,
+        artStyle = this.artStyle ?: "",
+        socialMediaLinks = this.socialMediaLinks ?: "",
+        firstName  = this.firstName ?: "",
+        lastName = this.lastName ?: "",
+        email = this.email ?: "",
+        password  = this.password ?: "",
+        userName = this.userName ?: "",
+        phoneNumber = this.phoneNumber ?: "",
+        documentNumber = this.documentNumber ?: "",
+        updateAt = this.updateAt,
+        roleId = this.roleId,
+        description = this.description ?: "",
+        token = this.token ?: ""
+    )
 
     suspend fun createArtist(artistsDto: ArtistsDto): Resource<ArtistsDto> { // Cambia el tipo de retorno
         return try {
