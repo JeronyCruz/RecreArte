@@ -39,4 +39,6 @@ object AppModule {
     fun provideLikeDao(recreArteDb: RecreArteDb) = recreArteDb.LikeDao()
     @Provides
     fun provideCustomerDao(recreArteDb: RecreArteDb) = recreArteDb.CustomerDao()
+    @Provides
+    fun provideArtistListDao(recreArteDb: RecreArteDb) = recreArteDb.ArtistListDao()
 }
