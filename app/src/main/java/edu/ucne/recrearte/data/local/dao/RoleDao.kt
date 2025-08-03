@@ -10,6 +10,8 @@ import edu.ucne.recrearte.data.local.entities.RolesEntity
 interface RoleDao {
     @Upsert()
     suspend fun save(roles: List<RolesEntity>)
+    @Upsert()
+    suspend fun saveOne(roles: RolesEntity)
     @Query(
         """
         SELECT * 
