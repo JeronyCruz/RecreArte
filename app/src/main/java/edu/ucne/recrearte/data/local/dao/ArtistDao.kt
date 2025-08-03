@@ -11,6 +11,8 @@ import edu.ucne.recrearte.data.local.entities.ArtistsEntity
 interface ArtistDao {
     @Upsert()
     suspend fun save(artists: List<ArtistsEntity>)
+    @Upsert()
+    suspend fun saveOne(artists: ArtistsEntity)
     @Query(
         """
         SELECT * 
