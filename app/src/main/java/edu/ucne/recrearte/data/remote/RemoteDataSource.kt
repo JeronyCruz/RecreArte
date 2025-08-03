@@ -10,6 +10,7 @@ import edu.ucne.recrearte.data.remote.dto.LikesDto
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.remote.dto.LoginResponseDto
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
+import edu.ucne.recrearte.data.remote.dto.RolesDto
 import edu.ucne.recrearte.data.remote.dto.ShoppingCartsDto
 import edu.ucne.recrearte.data.remote.dto.StatesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
@@ -71,6 +72,17 @@ class RemoteDataSource @Inject constructor(
     }
     suspend fun createPaymentMethod(paymentMethodsDto: PaymentMethodsDto) = recreArteingApi.createPaymentMethod(paymentMethodsDto)
     suspend fun deletePaymentMethod(id: Int) = recreArteingApi.deletePaymentMethod(id)
+
+    //Roles
+    suspend fun getRole() = recreArteingApi.getAllRole()
+    suspend fun getRoleById(id: Int): RolesDto {
+        val response = recreArteingApi.getByIdRole(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Role not found")
+        } else {
+            throw HttpException(response)
+        }
+    }
 
     //Techniques
     suspend fun getTechniques() = recreArteingApi.getAllTechniques()
