@@ -11,6 +11,8 @@ import edu.ucne.recrearte.data.local.entities.CustomersEntity
 interface CustomerDao {
     @Upsert()
     suspend fun save(customer: List<CustomersEntity>)
+    @Upsert()
+    suspend fun saveOne(customer: CustomersEntity)
     @Query(
         """
         SELECT * 
