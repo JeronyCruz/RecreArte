@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import edu.ucne.recrearte.data.local.entities.LikesEntity
+import edu.ucne.recrearte.data.local.entities.WorksEntity
 
 @Dao
 interface LikeDao {
@@ -23,4 +24,11 @@ interface LikeDao {
     suspend fun delete(like: LikesEntity)
     @Query("SELECT * FROM Likes")
     suspend fun getAll(): List<LikesEntity>
+    @Query("""
+    SELECT w.* 
+    FROM Works w
+    INNER JOIN Likes l ON w.workId = l.workId
+    WHERE l.customerId = :customerId
+    """)
+    suspend fun getWorksLikedByCustomer(customerId: Int): List<WorksEntity>
 }
