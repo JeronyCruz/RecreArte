@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -56,6 +57,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import edu.ucne.recrearte.R
+import edu.ucne.recrearte.data.remote.NetworkMonitor
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartEvent
 import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartViewModel
@@ -67,13 +69,32 @@ fun WorkDetailScreen(
     navController: NavController,
     workId: Int,
     viewModel: WorkViewModel = hiltViewModel(),
-    shoppingCartViewModel: ShoppingCartViewModel = hiltViewModel()
+    shoppingCartViewModel: ShoppingCartViewModel = hiltViewModel(),
+
 ) {
+    val isOnline by viewModel.networkMonitor.isOnline.collectAsState()
     val isLiked by viewModel.isLiked.collectAsState()
     val isInWishlist by viewModel.isInWishlist.collectAsState()
     val likeCount by viewModel.likeCount.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
     val scope = rememberCoroutineScope()
+    // Cargar los datos de la obra (siempre, independientemente de la conexión)
+    LaunchedEffect(workId) {
+        viewModel.loadWork(workId)
+    }
+
+    // Mostrar snackbar cuando no hay conexión
+    LaunchedEffect(isOnline) {
+        if (!isOnline) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Connect to see updated information",
+                    duration = SnackbarDuration.Long
+                )
+            }
+        }
+    }
 
     // Cargar los datos de la obra
     LaunchedEffect(workId) {
@@ -321,6 +342,55 @@ fun WorkDetailScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Add to cart", fontSize = 16.sp)
+            }
+        }
+    }
+}
+@Composable
+fun OfflineMessage(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.baseline_wifi_off_24), // Añade un icono apropiado
+                contentDescription = "Offline",
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "No internet connection",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Please connect to the internet to view work details",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = { navController.popBackStack() },
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Go back")
             }
         }
     }
