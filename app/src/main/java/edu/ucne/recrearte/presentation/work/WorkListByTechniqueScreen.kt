@@ -86,7 +86,7 @@ fun WorkListByTechniqueScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Obras por Técnica",
+                        text = "Works by Techniques",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -128,7 +128,7 @@ fun WorkListByTechniqueScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No se encontraron obras para esta técnica",
+                            text = "Art works not found for this techniques",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -146,7 +146,7 @@ fun WorkListByTechniqueScreen(
                             SearchBar(
                                 query = searchQuery,
                                 onQueryChanged = viewModel::onSearchQueryChanged,
-                                placeholder = "Buscar obras..."
+                                placeholder = "Search works..."
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }
