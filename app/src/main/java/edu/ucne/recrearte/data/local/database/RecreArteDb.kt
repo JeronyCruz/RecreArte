@@ -5,12 +5,16 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import edu.ucne.recrearte.data.local.dao.ArtistDao
+import edu.ucne.recrearte.data.local.dao.CustomerDao
+import edu.ucne.recrearte.data.local.dao.LikeDao
 import edu.ucne.recrearte.data.local.dao.PaymentMethodDao
 import edu.ucne.recrearte.data.local.dao.RoleDao
 import edu.ucne.recrearte.data.local.dao.TechniqueDao
 import edu.ucne.recrearte.data.local.dao.UserDao
 import edu.ucne.recrearte.data.local.dao.WorkDao
 import edu.ucne.recrearte.data.local.entities.ArtistsEntity
+import edu.ucne.recrearte.data.local.entities.CustomersEntity
+import edu.ucne.recrearte.data.local.entities.LikesEntity
 import edu.ucne.recrearte.data.local.entities.PaymentMethodsEntity
 import edu.ucne.recrearte.data.local.entities.RolesEntity
 import edu.ucne.recrearte.data.local.entities.TechniquesEntity
@@ -33,13 +37,15 @@ class Converters {
 @Database(
     entities = [
         ArtistsEntity::class,
+        CustomersEntity::class,
+        LikesEntity::class,
         PaymentMethodsEntity::class,
         RolesEntity::class,
         TechniquesEntity::class,
         UsersEntity::class,
         WorksEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -50,4 +56,6 @@ abstract class RecreArteDb : RoomDatabase() {
     abstract fun TechniqueDao(): TechniqueDao
     abstract fun UserDao(): UserDao
     abstract fun WorkDao(): WorkDao
+    abstract fun LikeDao(): LikeDao
+    abstract fun CustomerDao(): CustomerDao
 }
