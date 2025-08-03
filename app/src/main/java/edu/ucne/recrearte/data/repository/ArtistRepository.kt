@@ -1,8 +1,10 @@
 package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.local.dao.ArtistDao
+import edu.ucne.recrearte.data.local.dao.ArtistListDao
 import edu.ucne.recrearte.data.local.dao.UserDao
 import edu.ucne.recrearte.data.local.entities.ArtistsEntity
+import edu.ucne.recrearte.data.local.entities.ArtistsListEntity
 import edu.ucne.recrearte.data.local.entities.UsersEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
@@ -18,17 +20,22 @@ import javax.inject.Inject
 
 class ArtistRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource,
-    private val artistDao: ArtistDao
+    private val artistDao: ArtistDao,
+    private val artistList: ArtistListDao
 ){
     fun getArtists(): Flow<Resource<List<ArtistListDto>>> = flow {
         try {
             println("[DEBUG] Intentando obtener Artists...")
             emit(Resource.Loading())
 
-            val methods = remoteDataSource.getArtists()
-            println("[DEBUG] API devolvio ${methods.size} Artist")
+            val remoteArtists = remoteDataSource.getArtists()
+            println("[DEBUG] API devolvió ${remoteArtists.size} artistas")
 
-            emit(Resource.Success(methods))
+            val artistsEntities = remoteArtists.map { it.toEntity() }
+            artistList.save(artistsEntities)
+
+            emit(Resource.Success(remoteArtists))
+
         } catch (e: HttpException) {
             val errorMsg = when (e.code()) {
                 401 -> "Tu sesión ha expirado. Por favor inicia sesión nuevamente"
@@ -36,19 +43,73 @@ class ArtistRepository @Inject constructor(
                 else -> "Error del servidor (${e.code()})"
             }
             println("[DEBUG] Error HTTP: $errorMsg")
-            emit(Resource.Error(errorMsg))
+
+
+            val localArtists = artistList.getAll().map { it.toDto() }
+            if (localArtists.isNotEmpty()) {
+                println("[DEBUG] Usando datos locales (${localArtists.size} artistas)")
+                emit(Resource.Success(localArtists))
+            } else {
+                emit(Resource.Error(errorMsg))
+            }
+
         } catch (e: IOException) {
             val errorMsg = "Error de conexión: ${e.message}"
             println("[DEBUG] Network Error: $errorMsg")
-            emit(Resource.Error(errorMsg))
+
+            val localArtists = artistList.getAll().map { it.toDto() }
+            if (localArtists.isNotEmpty()) {
+                println("[DEBUG] Usando datos locales (${localArtists.size} artistas)")
+                emit(Resource.Success(localArtists))
+            } else {
+                emit(Resource.Error(errorMsg))
+            }
+
         } catch (e: Exception) {
             val errorMsg = "Error inesperado: ${e.message}"
             println("[DEBUG] Unexpected Error: $errorMsg")
-            emit(Resource.Error(errorMsg))
-        }catch (e: HttpException){
-            emit(Resource.Error("Internet error: ${e.message()}"))
+
+            val localArtists = artistList.getAll().map { it.toDto() }
+            if (localArtists.isNotEmpty()) {
+                println("[DEBUG] Usando datos locales (${localArtists.size} artistas)")
+                emit(Resource.Success(localArtists))
+            } else {
+                emit(Resource.Error(errorMsg))
+            }
         }
     }
+    private fun ArtistListDto.toEntity() = ArtistsListEntity(
+        artistId = this.artistId,
+        artStyle = this.artStyle ?: "",
+        socialMediaLinks = this.socialMediaLinks ?: "",
+        firstName  = this.firstName ?: "",
+        lastName = this.lastName ?: "",
+        email = this.email ?: "",
+        password  = this.password ?: "",
+        userName = this.userName ?: "",
+        phoneNumber = this.phoneNumber ?: "",
+        documentNumber = this.documentNumber ?: "",
+        updateAt = this.updateAt,
+        roleId = this.roleId,
+        description = this.description ?: "",
+    )
+
+    // Conversión de Entity a DTO
+    private fun ArtistsListEntity.toDto() = ArtistListDto(
+        artistId = this.artistId,
+        artStyle = this.artStyle ?: "",
+        socialMediaLinks = this.socialMediaLinks ?: "",
+        firstName  = this.firstName ?: "",
+        lastName = this.lastName ?: "",
+        email = this.email ?: "",
+        password  = this.password ?: "",
+        userName = this.userName ?: "",
+        phoneNumber = this.phoneNumber ?: "",
+        documentNumber = this.documentNumber ?: "",
+        updateAt = this.updateAt,
+        roleId = this.roleId,
+        description = this.description ?: "",
+    )
 
     fun getArtistById(id: Int): Flow<Resource<ArtistsDto>> = flow {
         var artistDto: ArtistsDto? = null
