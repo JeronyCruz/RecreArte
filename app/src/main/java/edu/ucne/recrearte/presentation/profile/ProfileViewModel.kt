@@ -239,6 +239,9 @@ class ProfileViewModel @Inject constructor(
             try {
                 val userId = tokenManager.getUserId() ?: throw Exception("Usuario no autenticado")
 
+                // Creamos una bandera para saber si encontramos el perfil
+                var profileFound = false
+
                 // Primero intentamos obtener el artista
                 artistRepository.getArtistById(userId).collect { artistResult ->
                     when (artistResult) {
@@ -247,38 +250,52 @@ class ProfileViewModel @Inject constructor(
                                 if (artist.firstName != null) {
                                     currentPasswordHash = artist.password
                                     _uiState.value = ProfileUiState.Success(artist)
+                                    profileFound = true
                                     return@collect
                                 }
                             }
+                            // Si llegamos aquí y no encontramos artista, buscamos customer
+                            if (!profileFound) {
+                                loadCustomerProfile(userId)
+                            }
                         }
                         is Resource.Error -> {
-                            // Si falla el artista, intentamos con customer
-//                            customerRepository.getCustomerById(userId).collect { customerResult ->
-//                                when (customerResult) {
-//                                    is Resource.Success -> {
-//                                        customerResult.data?.let { customer ->
-//                                            if (customer.firstName != null) {
-//                                                currentPasswordHash = customer.password
-//                                                _uiState.value = ProfileUiState.Success(customer)
-//                                                return@collect
-//                                            }
-//                                        }
-//                                        _uiState.value = ProfileUiState.Error("Perfil no encontrado")
-//                                    }
-//                                    is Resource.Error -> {
-//                                        _uiState.value = ProfileUiState.Error(
-//                                            customerResult.message ?: "Perfil no encontrado"
-//                                        )
-//                                    }
-//                                    is Resource.Loading -> Unit
-//                                }
-//                            }
+                            // Si hay error con artista, intentamos con customer
+                            loadCustomerProfile(userId)
                         }
-                        is Resource.Loading -> Unit
+                        is Resource.Loading -> {
+                            // Mantenemos el estado de carga
+                            _uiState.value = ProfileUiState.Loading
+                        }
                     }
                 }
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error(e.message ?: "Error al cargar perfil")
+            }
+        }
+    }
+
+    private suspend fun loadCustomerProfile(userId: Int) {
+        customerRepository.getCustomerById(userId).collect { customerResult ->
+            when (customerResult) {
+                is Resource.Success -> {
+                    customerResult.data?.let { customer ->
+                        if (customer.firstName != null) {
+                            currentPasswordHash = customer.password
+                            _uiState.value = ProfileUiState.Success(customer)
+                            return@collect
+                        }
+                    }
+                    _uiState.value = ProfileUiState.Error("Perfil no encontrado")
+                }
+                is Resource.Error -> {
+                    _uiState.value = ProfileUiState.Error(
+                        customerResult.message ?: "Error al cargar perfil de cliente"
+                    )
+                }
+                is Resource.Loading -> {
+                    _uiState.value = ProfileUiState.Loading
+                }
             }
         }
     }
