@@ -21,7 +21,7 @@ class PaymentMethodRepository @Inject constructor(
             println("[DEBUG] Intentando obtener payment methods...")
             emit(Resource.Loading())
 
-            // 1. Obtener datos remotos
+
             val remoteMethods = remoteDataSource.getPaymentMethod()
             println("[DEBUG] API devolvió ${remoteMethods.size} payment methods")
 
@@ -29,7 +29,7 @@ class PaymentMethodRepository @Inject constructor(
             val methodsEntities = remoteMethods.map { it.toEntity() }
             paymentMethodDao.save(methodsEntities)
 
-            // 3. Emitir datos remotos
+
             emit(Resource.Success(remoteMethods))
 
         } catch (e: HttpException) {
@@ -40,7 +40,7 @@ class PaymentMethodRepository @Inject constructor(
             }
             println("[DEBUG] Error HTTP: $errorMsg")
 
-            // Fallback a datos locales
+
             val localMethods = paymentMethodDao.getAll().map { it.toDto() }
             if (localMethods.isNotEmpty()) {
                 println("[DEBUG] Usando datos locales (${localMethods.size} métodos)")
@@ -53,7 +53,7 @@ class PaymentMethodRepository @Inject constructor(
             val errorMsg = "Error de conexión: ${e.message}"
             println("[DEBUG] Network Error: $errorMsg")
 
-            // Fallback a datos locales
+
             val localMethods = paymentMethodDao.getAll().map { it.toDto() }
             if (localMethods.isNotEmpty()) {
                 println("[DEBUG] Usando datos locales (${localMethods.size} métodos)")
@@ -66,7 +66,7 @@ class PaymentMethodRepository @Inject constructor(
             val errorMsg = "Error inesperado: ${e.message}"
             println("[DEBUG] Unexpected Error: $errorMsg")
 
-            // Fallback a datos locales
+
             val localMethods = paymentMethodDao.getAll().map { it.toDto() }
             if (localMethods.isNotEmpty()) {
                 println("[DEBUG] Usando datos locales (${localMethods.size} métodos)")
@@ -82,22 +82,22 @@ class PaymentMethodRepository @Inject constructor(
             println("[DEBUG] Intentando obtener payment method con ID $id...")
             emit(Resource.Loading())
 
-            // 1. Obtener datos remotos
+
             val remoteMethod = remoteDataSource.getPaymentMethodById(id)
             println("[DEBUG] API devolvió: ${remoteMethod.paymentMethodName}")
 
-            // 2. Convertir y guardar en base de datos local
+
             val methodEntity = remoteMethod.toEntity()
             paymentMethodDao.saveOne(methodEntity)
 
-            // 3. Emitir datos remotos
+
             emit(Resource.Success(remoteMethod))
 
         } catch (e: HttpException) {
             val errorMsg = "Error HTTP: ${e.message()}"
             println("[DEBUG] $errorMsg")
 
-            // Fallback a datos locales
+
             val localMethod = paymentMethodDao.find(id)?.toDto()
             if (localMethod != null) {
                 println("[DEBUG] Usando datos locales: ${localMethod.paymentMethodName}")
@@ -110,7 +110,7 @@ class PaymentMethodRepository @Inject constructor(
             val errorMsg = "Error de conexión: ${e.message}"
             println("[DEBUG] $errorMsg")
 
-            // Fallback a datos locales
+
             val localMethod = paymentMethodDao.find(id)?.toDto()
             if (localMethod != null) {
                 println("[DEBUG] Usando datos locales: ${localMethod.paymentMethodName}")
@@ -123,7 +123,7 @@ class PaymentMethodRepository @Inject constructor(
             val errorMsg = "Error inesperado: ${e.message}"
             println("[DEBUG] $errorMsg")
 
-            // Fallback a datos locales
+
             val localMethod = paymentMethodDao.find(id)?.toDto()
             if (localMethod != null) {
                 println("[DEBUG] Usando datos locales: ${localMethod.paymentMethodName}")
