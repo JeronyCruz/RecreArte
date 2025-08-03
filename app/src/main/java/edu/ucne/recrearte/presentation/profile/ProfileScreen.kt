@@ -238,7 +238,7 @@ private fun ArtistProfileContent(
             )
 
             Text(
-                text = "Artist",
+                text = if (artist.roleId == 1) "Administrator" else "Artist",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
