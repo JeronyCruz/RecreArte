@@ -19,16 +19,15 @@ class RoleRepository @Inject constructor(
         try {
             println("[DEBUG] Intentando obtener roles...")
             emit(Resource.Loading())
-
-            // Obtener datos remotos
+            
             val remoteRoles = remoteDataSource.getRole()
             println("[DEBUG] API devolvió ${remoteRoles.size} roles")
 
-            // Convertir y guardar en base de datos local
+
             val rolesEntities = remoteRoles.map { it.toEntity() }
             roleDao.save(rolesEntities)
 
-            // Emitir datos remotos
+
             emit(Resource.Success(remoteRoles))
 
         } catch (e: HttpException) {
@@ -39,7 +38,7 @@ class RoleRepository @Inject constructor(
             }
             println("[DEBUG] Error HTTP: $errorMsg")
 
-            // Fallback a datos locales
+
             val localRoles = roleDao.getAll().map { it.toDto() }
             if (localRoles.isNotEmpty()) {
                 emit(Resource.Success(localRoles))
@@ -51,7 +50,7 @@ class RoleRepository @Inject constructor(
             val errorMsg = "Error de conexión: ${e.message}"
             println("[DEBUG] Network Error: $errorMsg")
 
-            // Fallback a datos locales
+
             val localRoles = roleDao.getAll().map { it.toDto() }
             if (localRoles.isNotEmpty()) {
                 emit(Resource.Success(localRoles))
@@ -63,7 +62,7 @@ class RoleRepository @Inject constructor(
             val errorMsg = "Error inesperado: ${e.message}"
             println("[DEBUG] Unexpected Error: $errorMsg")
 
-            // Fallback a datos locales
+
             val localRoles = roleDao.getAll().map { it.toDto() }
             if (localRoles.isNotEmpty()) {
                 emit(Resource.Success(localRoles))
@@ -90,22 +89,22 @@ class RoleRepository @Inject constructor(
             println("[DEBUG] Intentando obtener rol con ID $id...")
             emit(Resource.Loading())
 
-            // Obtener datos remotos
+
             val remoteRole = remoteDataSource.getRoleById(id)
             println("[DEBUG] API devolvió rol: ${remoteRole.description}")
 
-            // Convertir y guardar en base de datos local
+
             val roleEntity = remoteRole.toEntity()
             roleDao.saveOne(roleEntity)
 
-            // Emitir datos remotos
+
             emit(Resource.Success(remoteRole))
 
         } catch (e: HttpException) {
             val errorMsg = "Error HTTP: ${e.message()}"
             println("[DEBUG] $errorMsg")
 
-            // Fallback a datos locales
+
             val localRole = roleDao.find(id)?.toDto()
             if (localRole != null) {
                 emit(Resource.Success(localRole))
@@ -117,7 +116,7 @@ class RoleRepository @Inject constructor(
             val errorMsg = "Error de conexión: ${e.message}"
             println("[DEBUG] $errorMsg")
 
-            // Fallback a datos locales
+
             val localRole = roleDao.find(id)?.toDto()
             if (localRole != null) {
                 emit(Resource.Success(localRole))
@@ -129,7 +128,7 @@ class RoleRepository @Inject constructor(
             val errorMsg = "Error inesperado: ${e.message}"
             println("[DEBUG] $errorMsg")
 
-            // Fallback a datos locales
+
             val localRole = roleDao.find(id)?.toDto()
             if (localRole != null) {
                 emit(Resource.Success(localRole))
