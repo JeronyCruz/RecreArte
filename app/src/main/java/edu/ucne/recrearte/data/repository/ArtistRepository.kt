@@ -56,12 +56,10 @@ class ArtistRepository @Inject constructor(
         try {
             emit(Resource.Loading())
 
-            // Obtener datos remotos
             val remoteArtist = remoteDataSource.getArtistById(id)
             artistDto = remoteArtist
             val artistEntity = remoteArtist.toEntity()
 
-            // Guardar en base de datos local
             artistDao.saveOne(artistEntity)
 
         } catch (e: HttpException) {
@@ -70,15 +68,12 @@ class ArtistRepository @Inject constructor(
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
 
-        // Obtener datos locales (ya sea como fallback o después de éxito remoto)
         val localArtist = artistDao.find(id)
         if (localArtist != null) {
             emit(Resource.Success(localArtist.toDto()))
         } else if (artistDto != null) {
-            // Si tenemos datos remotos pero no locales (caso raro)
             emit(Resource.Success(artistDto))
         } else {
-            // No hay datos ni locales ni remotos
             emit(Resource.Error("No se encontraron datos locales ni remotos"))
         }
     }
