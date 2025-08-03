@@ -1,5 +1,7 @@
 package edu.ucne.recrearte.data.repository
 
+import edu.ucne.recrearte.data.local.dao.WorkDao
+import edu.ucne.recrearte.data.local.entities.WorksEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.WorksDto
@@ -10,31 +12,73 @@ import java.io.File
 import javax.inject.Inject
 
 class WorkRepository @Inject constructor(
-    private val remoteDataSource: RemoteDataSource
+    private val remoteDataSource: RemoteDataSource,
+    private val worksDao: WorkDao
 ) {
     fun getWorks(): Flow<Resource<List<WorksDto>>> = flow {
+
+        var listWorksDto: List<WorksEntity> = emptyList()
+
         try {
             emit(Resource.Loading())
             val work = remoteDataSource.getWorks()
+            val worksEntity = work.map {
+                it.toEntity()
+            }
             work.forEach { workDto ->
                 println("Work ID: ${workDto.workId}, Image URL: ${workDto.imageUrl}")
             }
-            emit(Resource.Success(work))
+
+            worksDao.save(worksEntity)
+
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
-        } catch (e: Exception) {
+        }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
+        listWorksDto = worksDao.getAll()
+        val finalList = listWorksDto.map {
+            it.toDto()
+        }
+
+        emit(Resource.Success(finalList))
     }
 
+
     suspend fun getWorkById(id: Int): Resource<WorksDto> {
-        return try {
-            val work = remoteDataSource.getByIdWork(id)
-            Resource.Success(work)
+        var workDto: WorksDto? = null
+
+        try {
+            val remoteWork = remoteDataSource.getByIdWork(id)
+            workDto = remoteWork
+            val workEntity = remoteWork.toEntity()
+
+            worksDao.saveOne(workEntity)
+
         } catch (e: HttpException) {
-            Resource.Error("Internet error: ${e.message()}")
+
+            val localWork = worksDao.find(id)
+            return if (localWork != null) {
+                Resource.Success(localWork.toDto())
+            } else {
+                Resource.Error("Internet error: ${e.message()}")
+            }
         } catch (e: Exception) {
-            Resource.Error("Unknown error: ${e.message}")
+            val localWork = worksDao.find(id)
+            return if (localWork != null) {
+                Resource.Success(localWork.toDto())
+            } else {
+                Resource.Error("Unknown error: ${e.message}")
+            }
+        }
+
+        val localWork = worksDao.find(id)
+        return if (localWork != null) {
+            Resource.Success(localWork.toDto())
+        } else if (workDto != null) {
+            Resource.Success(workDto)
+        } else {
+            Resource.Error("No se encontró la obra ni local ni remotamente")
         }
     }
 
@@ -114,26 +158,75 @@ class WorkRepository @Inject constructor(
     suspend fun deleteWork(id: Int) = remoteDataSource.deleteWork(id)
 
     fun getWorksByTechnique(techniqueId: Int): Flow<Resource<List<WorksDto>>> = flow {
+        var listWorksByTechniqueDto: List<WorksEntity> = emptyList()
+
         try {
             emit(Resource.Loading())
             val work = remoteDataSource.getWorksByTechnique(techniqueId)
-            emit(Resource.Success(work))
+            val worksEntity = work.map {
+                it.toEntity()
+            }
+            worksDao.save(worksEntity)
+
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
-        } catch (e: Exception) {
+        }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
+
+        listWorksByTechniqueDto = worksDao.getByTechnique(techniqueId)
+        val finalList = listWorksByTechniqueDto.map {
+            it.toDto()
+        }
+
+        emit(Resource.Success(finalList))
     }
 
     fun getWorksByArtist(artistId: Int): Flow<Resource<List<WorksDto>>> = flow {
+        var listWorksByByArtist: List<WorksEntity> = emptyList()
+
         try {
             emit(Resource.Loading())
             val work = remoteDataSource.getWorksByArtist(artistId)
-            emit(Resource.Success(work))
+            val worksEntity = work.map {
+                it.toEntity()
+            }
+            worksDao.save(worksEntity)
+
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
-        } catch (e: Exception) {
+        }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
+        listWorksByByArtist = worksDao.getByArtist(artistId)
+        val finalList = listWorksByByArtist.map {
+            it.toDto()
+        }
+
+        emit(Resource.Success(finalList))
     }
+
+    private fun WorksDto.toEntity() = WorksEntity(
+        workId = this.workId,
+        title = this.title ?: "",
+        dimension = this.dimension ?: "",
+        techniqueId = this.techniqueId ?: 0,
+        artistId = this.artistId ?: 0,
+        statusId = this.statusId ?: 0,
+        price = this.price ?: 0.0,
+        description = this.description ?: "",
+        imageUrl = this.imageUrl ?: ""
+    )
+
+    private fun WorksEntity.toDto() = WorksDto(
+        workId = this.workId,
+        title = this.title ?: "",
+        dimension = this.dimension ?: "",
+        techniqueId = this.techniqueId ?: 0,
+        artistId = this.artistId ?: 0,
+        statusId = this.statusId ?: 0,
+        price = this.price ?: 0.0,
+        description = this.description ?: "",
+        imageUrl = this.imageUrl ?: ""
+    )
 }
