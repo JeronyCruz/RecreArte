@@ -8,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import edu.ucne.recrearte.data.remote.NetworkMonitor
 import edu.ucne.recrearte.data.remote.RecreArteingApi
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.util.TokenManager
@@ -82,6 +83,14 @@ object ApiModule {
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
+        return NetworkMonitor(context).apply {
+            startMonitoring()
         }
     }
 }

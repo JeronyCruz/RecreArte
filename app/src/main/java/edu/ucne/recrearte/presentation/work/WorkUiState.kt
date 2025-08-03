@@ -28,5 +28,10 @@ data class WorkUiState(
     val artists: List<ArtistListDto> = emptyList(),
     val imageRemoved: Boolean = false,
     val nameArtist: String = "",
-    val imageUrl: String = ""
+    val imageUrl: String = "",
+    val isCached: Boolean = false,
+    val networkMessage: String? = null,
+    val lastUpdated: String = "",
+    val showRetryButton: Boolean = false,
+    val isOnline: Boolean = true
 )

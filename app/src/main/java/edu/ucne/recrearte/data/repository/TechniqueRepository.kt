@@ -9,6 +9,7 @@ import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
+import java.io.IOException
 import javax.inject.Inject
 
 class TechniqueRepository @Inject constructor(
@@ -40,12 +41,53 @@ class TechniqueRepository @Inject constructor(
     }
     suspend fun getTechniqueById(id: Int): Resource<TechniquesDto> {
         return try {
-            val technique = remoteDataSource.getTechniqueById(id)
-            Resource.Success(technique)
+            println("[DEBUG] Intentando obtener técnica con ID $id desde la API...")
+            val remoteTechnique = remoteDataSource.getTechniqueById(id)
+            println("[DEBUG] API devolvió: ${remoteTechnique.techniqueName}")
+
+
+            val techniqueEntity = remoteTechnique.toEntity()
+            techniqueDao.saveOne(techniqueEntity)
+
+            println("[DEBUG] Técnica guardada en base de datos local")
+            Resource.Success(remoteTechnique)
+
         } catch (e: HttpException) {
-            Resource.Error("Internet error: ${e.message()}")
+            val errorMsg = "Error HTTP: ${e.message()}"
+            println("[DEBUG] $errorMsg")
+
+
+            val localTechnique = techniqueDao.find(id)?.toDto()
+            if (localTechnique != null) {
+                println("[DEBUG] Usando datos locales: ${localTechnique.techniqueName}")
+                Resource.Success(localTechnique)
+            } else {
+                Resource.Error(errorMsg)
+            }
+
+        } catch (e: IOException) {
+            val errorMsg = "Error de conexión: ${e.message}"
+            println("[DEBUG] $errorMsg")
+
+            val localTechnique = techniqueDao.find(id)?.toDto()
+            if (localTechnique != null) {
+                println("[DEBUG] Usando datos locales: ${localTechnique.techniqueName}")
+                Resource.Success(localTechnique)
+            } else {
+                Resource.Error(errorMsg)
+            }
+
         } catch (e: Exception) {
-            Resource.Error("Unknown error: ${e.message}")
+            val errorMsg = "Error inesperado: ${e.message}"
+            println("[DEBUG] $errorMsg")
+
+            val localTechnique = techniqueDao.find(id)?.toDto()
+            if (localTechnique != null) {
+                println("[DEBUG] Usando datos locales: ${localTechnique.techniqueName}")
+                Resource.Success(localTechnique)
+            } else {
+                Resource.Error(errorMsg)
+            }
         }
     }
 

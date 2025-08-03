@@ -127,8 +127,8 @@ fun WorkListScreen(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Confirmar eliminación") },
-            text = { Text("¿Estás seguro de que quieres eliminar la obra ${workToDelete?.title}?") },
+            title = { Text("Confirm removing ") },
+            text = { Text("¿Are you sure that you want to remove the work ${workToDelete?.title}?") },
             confirmButton = {
                 TextButton(
                     onClick = onDeleteConfirmed,
@@ -139,7 +139,7 @@ fun WorkListScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text("Cancelar")
+                    Text("Cancel")
                 }
             }
         )
@@ -190,7 +190,7 @@ fun WorkListBodyScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Mis Obras de Arte",
+                        text = "My main Works",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -241,7 +241,7 @@ fun WorkListBodyScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No se encontraron obras",
+                            text = "Art works not found",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -258,7 +258,7 @@ fun WorkListBodyScreen(
                             SearchBar(
                                 query = query,
                                 onQueryChanged = onSearchQueryChanged,
-                                placeholder = "Buscar obras..."
+                                placeholder = "Search works..."
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }

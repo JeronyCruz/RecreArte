@@ -3,6 +3,7 @@ package edu.ucne.recrearte.presentation.work
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.recrearte.data.remote.NetworkMonitor
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
@@ -28,6 +29,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.collections.emptyList
 import kotlin.collections.filter
@@ -41,7 +45,26 @@ class WorkViewModel @Inject constructor(
     private val artistRepository: ArtistRepository,
     private val imageRepository: ImageRepository,
     private val tokenManager: TokenManager,
+    val networkMonitor: NetworkMonitor
 ): ViewModel() {
+    private val _connectionError = MutableStateFlow(false)
+    val connectionError: StateFlow<Boolean> = _connectionError.asStateFlow()
+
+    private val _isCachedData = MutableStateFlow(false)
+    val isCachedData: StateFlow<Boolean> = _isCachedData.asStateFlow()
+
+    private val _networkMessage = MutableStateFlow<String?>(null)
+    val networkMessage: StateFlow<String?> = _networkMessage.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { isOnline ->
+                if (!isOnline) {
+                    _connectionError.value = true
+                }
+            }
+        }
+    }
     private val _uiState = MutableStateFlow(WorkUiState())
     val uiSate = _uiState.asStateFlow()
     private val _loading = MutableStateFlow(false)
@@ -280,29 +303,109 @@ class WorkViewModel @Inject constructor(
         return null
     }
 
+    private fun updateUiState(work: WorksDto?, isFromCache: Boolean = false) {
+        work?.let {
+            _uiState.value = _uiState.value.copy(
+                workId = it.workId,
+                title = it.title ?: "",
+                dimension = it.dimension ?: "",
+                techniqueId = it.techniqueId ?: 0,
+                artistId = it.artistId ?: 0,
+                statusId = it.statusId ?: 1,
+                price = it.price ?: 0.0,
+                description = it.description ?: "",
+                imageUrl = it.imageUrl ?: "",
+                isCached = isFromCache,
+                networkMessage = if (isFromCache) "Datos almacenados localmente" else null,
+                lastUpdated = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
+                isLoading = false
+            )
+        }
+    }
+
     fun loadWork(id: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            when (val result = workRepository.getWorkById(id)) {
-                is Resource.Success -> {
-                    val customerId = getLoggedUserId()
-                    _uiState.value = _uiState.value.copy(
-                        workId = result.data?.workId,
-                        techniqueId = result.data?.techniqueId ?: 0,
-                        title = result.data?.title ?: "",
-                        dimension = result.data?.dimension ?: "",
-                        description = result.data?.description ?: "",
-                        price = result.data?.price ?: 0.0,
-                        isLoading = false,
-                        imageRemoved = false
-                    )
-                    loadLikeStatus(id, customerId)
+
+            try {
+                // 1. Cargar la obra (primero intenta de red, si falla usa caché)
+                val workResult = if (networkMonitor.isOnline.value) {
+                    workRepository.getWorkById(id)
+                } else {
+                    // Si no hay conexión, ir directamente a caché
+                    workRepository.getWorkById(id) // Asumiendo que tu repositorio ya maneja la caché
                 }
-                // ... (keep rest of the cases)
-                is Resource.Error<*> -> TODO()
-                is Resource.Loading<*> -> TODO()
+
+                when (workResult) {
+                    is Resource.Success -> {
+                        val work = workResult.data
+                        val customerId = getLoggedUserId()
+
+                        // 2. Actualizar UI con los datos de la obra
+                        _uiState.value = _uiState.value.copy(
+                            workId = work?.workId,
+                            techniqueId = work?.techniqueId ?: 0,
+                            title = work?.title ?: "",
+                            dimension = work?.dimension ?: "",
+                            description = work?.description ?: "",
+                            price = work?.price ?: 0.0,
+                            isLoading = false,
+                            imageRemoved = false
+                        )
+
+                        // 3. Cargar estados de like y wishlist (esto es lo más importante)
+                        loadLikeStatus(id, customerId)
+                    }
+                    is Resource.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = workResult.message ?: "Error al cargar la obra"
+                        )
+                    }
+                    is Resource.Loading -> {
+                        // Manejar estado de carga si es necesario
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Error inesperado: ${e.message}"
+                )
             }
         }
+    }
+
+    private suspend fun loadFromCache(id: Int) {
+        when (val cachedResult = workRepository.getWorkById(id)) {
+            is Resource.Success -> {
+                updateUiState(cachedResult.data, true)
+                _uiState.value = _uiState.value.copy(
+                    networkMessage = "Conéctate para datos actualizados",
+                    showRetryButton = true
+                )
+            }
+            is Resource.Error -> {
+                _uiState.value = _uiState.value.copy(
+                    networkMessage = cachedResult.message ?: "Error al cargar datos",
+                    showRetryButton = true,
+                    isLoading = false
+                )
+            }
+
+            is Resource.Loading<*> -> TODO()
+        }
+    }
+
+    fun retryLoadWork(id: Int) {
+        _uiState.value = _uiState.value.copy(
+            networkMessage = "Intentando conectar...",
+            showRetryButton = false
+        )
+        loadWork(id)
+    }
+
+    fun clearNetworkMessage() {
+        _uiState.value = _uiState.value.copy(networkMessage = null)
     }
 
     //para los artistas
