@@ -1,0 +1,26 @@
+package edu.ucne.recrearte.data.local.dao
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Query
+import androidx.room.Upsert
+import edu.ucne.recrearte.data.local.entities.LikesEntity
+
+@Dao
+interface LikeDao {
+    @Upsert()
+    suspend fun save(like: List<LikesEntity>)
+    @Query(
+        """
+        SELECT * 
+        FROM Likes 
+        WHERE likeId=:id  
+        LIMIT 1
+        """
+    )
+    suspend fun find(id: Int): LikesEntity?
+    @Delete
+    suspend fun delete(like: LikesEntity)
+    @Query("SELECT * FROM Likes")
+    suspend fun getAll(): List<LikesEntity>
+}
