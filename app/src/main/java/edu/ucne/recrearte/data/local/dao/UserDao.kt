@@ -10,6 +10,8 @@ import edu.ucne.recrearte.data.local.entities.UsersEntity
 interface UserDao {
     @Upsert()
     suspend fun save(users: List<UsersEntity>)
+    @Upsert()
+    suspend fun saveOne(users: UsersEntity)
     @Query(
         """
         SELECT * 
