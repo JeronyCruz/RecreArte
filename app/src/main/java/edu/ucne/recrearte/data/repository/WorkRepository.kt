@@ -39,6 +39,7 @@ class WorkRepository @Inject constructor(
             emit(Resource.Error("Internet error: ${e.message()}"))
         }catch (e: ConnectException) {
             // No emitir error cuando no hay conexión
+            emit(Resource.Error("No tienes conexion a internet"))
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
@@ -172,8 +173,10 @@ class WorkRepository @Inject constructor(
             emit(Resource.Error("Internet error: ${e.message()}"))
         }catch (e: UnknownHostException) {
             // No mostrar mensaje, solo usar datos locales
+            emit(Resource.Error("No tienes conexion a internet"))
         } catch (e: ConnectException) {
             // No emitir error cuando no hay conexión
+            emit(Resource.Error("No tienes conexion a internet"))
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
@@ -195,8 +198,10 @@ class WorkRepository @Inject constructor(
             emit(Resource.Error("Internet error: ${e.message()}"))
         }catch (e: UnknownHostException) {
             // No mostrar mensaje, solo usar datos locales
+            emit(Resource.Error("No tienes conexion a internet"))
         }catch (e: ConnectException) {
             // No emitir error cuando no hay conexión
+            emit(Resource.Error("No tienes conexion a internet"))
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
