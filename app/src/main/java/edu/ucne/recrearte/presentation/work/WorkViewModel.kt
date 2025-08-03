@@ -339,35 +339,61 @@ class WorkViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+        val titleError = isValidField(_uiState.value.title)
+        val dimensionError = isValidField(_uiState.value.dimension)
+        val descriptionError = isValidField(_uiState.value.description)
+        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
+        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
 
-            val result = workRepository.createWork(
-                title = _uiState.value.title,
-                dimension = _uiState.value.dimension,
-                techniqueId = _uiState.value.techniqueId,
-                artistId = loggedArtistId,
-                price = _uiState.value.price,
-                description = _uiState.value.description,
-                imageFile = _selectedImage.value
-            )
 
-            _uiState.value = when (result) {
-                is Resource.Success -> {
-                    _uiState.value.copy(
-                        isLoading = false,
-                        isSuccess = true,
-                        successMessage = "Obra creada exitosamente"
-                    )
-                }
-                is Resource.Error -> {
-                    _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message ?: "Error desconocido al crear la obra"
-                    )
-                }
-                is Resource.Loading -> {
-                    _uiState.value.copy(isLoading = true)
+        _uiState.value = _uiState.value.copy(
+            errorTitle = titleError ?: "",
+            errorDimension = dimensionError ?: "",
+            errorDescription = descriptionError ?: "",
+            errorPrice = priceError ?: "",
+            errorMessage = techniqueError ?: "",
+            artistId = loggedArtistId
+        )
+
+        if (
+            titleError != null ||
+            dimensionError != null ||
+            descriptionError != null ||
+            priceError != null ||
+            techniqueError != null
+        ) return
+
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }){
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+
+                val result = workRepository.createWork(
+                    title = _uiState.value.title,
+                    dimension = _uiState.value.dimension,
+                    techniqueId = _uiState.value.techniqueId,
+                    artistId = loggedArtistId,
+                    price = _uiState.value.price,
+                    description = _uiState.value.description,
+                    imageFile = _selectedImage.value
+                )
+
+                _uiState.value = when (result) {
+                    is Resource.Success -> {
+                        _uiState.value.copy(
+                            isLoading = false,
+                            isSuccess = true,
+                            successMessage = "Obra creada exitosamente"
+                        )
+                    }
+                    is Resource.Error -> {
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = result.message ?: "Error desconocido al crear la obra"
+                        )
+                    }
+                    is Resource.Loading -> {
+                        _uiState.value.copy(isLoading = true)
+                    }
                 }
             }
         }
@@ -388,77 +414,103 @@ class WorkViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+        val titleError = isValidField(_uiState.value.title)
+        val dimensionError = isValidField(_uiState.value.dimension)
+        val descriptionError = isValidField(_uiState.value.description)
+        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
+        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
 
-            try {
-                // Obtener la obra actual para asegurar que tenemos todos los datos
-                when (val currentWorkResult = workRepository.getWorkById(id)) {
-                    is Resource.Success -> {
-                        currentWorkResult.data?.let { currentWork ->
-                            val result = workRepository.updateWork(
-                                workId = id,
-                                title = _uiState.value.title,
-                                dimension = _uiState.value.dimension,
-                                techniqueId = _uiState.value.techniqueId,
-                                artistId = loggedArtistId,
-                                price = _uiState.value.price,
-                                description = _uiState.value.description,
-                                statusId = 1,
-                                imageFile = _selectedImage.value
-                            )
 
-                            _uiState.value = when (result) {
-                                is Resource.Success -> {
-                                    _selectedImage.value = null
-                                    _uiState.value.copy(
-                                        isLoading = false,
-                                        isSuccess = true,
-                                        successMessage = "Obra actualizada exitosamente",
-                                        works = _uiState.value.works.map {
-                                            if (it.workId == id) {
-                                                it.copy(
-                                                    title = _uiState.value.title,
-                                                    dimension = _uiState.value.dimension,
-                                                    techniqueId = _uiState.value.techniqueId,
-                                                    price = _uiState.value.price,
-                                                    description = _uiState.value.description,
-                                                    statusId = _uiState.value.statusId
-                                                )
-                                            } else {
-                                                it
+        _uiState.value = _uiState.value.copy(
+            errorTitle = titleError ?: "",
+            errorDimension = dimensionError ?: "",
+            errorDescription = descriptionError ?: "",
+            errorPrice = priceError ?: "",
+            errorMessage =  techniqueError ?: "",
+            artistId = loggedArtistId
+        )
+
+        if (
+            titleError != null ||
+            dimensionError != null ||
+            descriptionError != null ||
+            priceError != null ||
+            techniqueError != null
+        ) return
+
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }){
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+
+                try {
+                    // Obtener la obra actual para asegurar que tenemos todos los datos
+                    when (val currentWorkResult = workRepository.getWorkById(id)) {
+                        is Resource.Success -> {
+                            currentWorkResult.data?.let { currentWork ->
+                                val result = workRepository.updateWork(
+                                    workId = id,
+                                    title = _uiState.value.title,
+                                    dimension = _uiState.value.dimension,
+                                    techniqueId = _uiState.value.techniqueId,
+                                    artistId = loggedArtistId,
+                                    price = _uiState.value.price,
+                                    description = _uiState.value.description,
+                                    statusId = 1,
+                                    imageFile = _selectedImage.value
+                                )
+
+                                _uiState.value = when (result) {
+                                    is Resource.Success -> {
+                                        _selectedImage.value = null
+                                        _uiState.value.copy(
+                                            isLoading = false,
+                                            isSuccess = true,
+                                            successMessage = "Obra actualizada exitosamente",
+                                            works = _uiState.value.works.map {
+                                                if (it.workId == id) {
+                                                    it.copy(
+                                                        title = _uiState.value.title,
+                                                        dimension = _uiState.value.dimension,
+                                                        techniqueId = _uiState.value.techniqueId,
+                                                        price = _uiState.value.price,
+                                                        description = _uiState.value.description,
+                                                        statusId = _uiState.value.statusId
+                                                    )
+                                                } else {
+                                                    it
+                                                }
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
+                                    is Resource.Error -> {
+                                        _uiState.value.copy(
+                                            isLoading = false,
+                                            errorMessage = result.message ?: "Error al actualizar la obra"
+                                        )
+                                    }
+                                    else -> _uiState.value.copy(isLoading = false)
                                 }
-                                is Resource.Error -> {
-                                    _uiState.value.copy(
-                                        isLoading = false,
-                                        errorMessage = result.message ?: "Error al actualizar la obra"
-                                    )
-                                }
-                                else -> _uiState.value.copy(isLoading = false)
+                            } ?: run {
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    errorMessage = "No se pudo obtener la obra actual"
+                                )
                             }
-                        } ?: run {
+                        }
+                        is Resource.Error -> {
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
-                                errorMessage = "No se pudo obtener la obra actual"
+                                errorMessage = currentWorkResult.message ?: "Error al obtener la obra actual"
                             )
                         }
+                        else -> _uiState.value.copy(isLoading = false)
                     }
-                    is Resource.Error -> {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = currentWorkResult.message ?: "Error al obtener la obra actual"
-                        )
-                    }
-                    else -> _uiState.value.copy(isLoading = false)
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Error inesperado: ${e.message}"
+                    )
                 }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Error inesperado: ${e.message}"
-                )
             }
         }
     }
