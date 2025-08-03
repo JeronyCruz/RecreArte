@@ -164,17 +164,39 @@ class TechniqueViewModel @Inject constructor(
             .copy(errorMessage = null)
     }
 
-    private fun deleteTechnique(id: Int){
+//    private fun deleteTechnique(id: Int){
+//        viewModelScope.launch {
+//            try {
+//                repository.deleteTechnique(id)
+//                _uiState.value = _uiState.value.copy(
+//                    isSuccess = true,
+//                    successMessage = "Technique successfully removed"
+//                )
+//                onEvent(TechniqueEvent.GetTechniques)
+//            } catch (e: Exception) {
+//                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+//            }
+//        }
+//    }
+    private fun deleteTechnique(id: Int) {
         viewModelScope.launch {
             try {
-                repository.deleteTechnique(id)
-                _uiState.value = _uiState.value.copy(
-                    isSuccess = true,
-                    successMessage = "Technique successfully removed"
-                )
-                onEvent(TechniqueEvent.GetTechniques)
+                val response = repository.deleteTechnique(id)
+                if (response.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Technique successfully removed"
+                    )
+                    onEvent(TechniqueEvent.GetTechniques)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Failed to delete technique: ${response.message()}"
+                    )
+                }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error deleting technique: ${e.message}"
+                )
             }
         }
     }
