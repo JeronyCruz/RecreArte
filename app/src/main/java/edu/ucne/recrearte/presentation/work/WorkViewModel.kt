@@ -13,6 +13,7 @@ import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WishListRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
+import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -249,13 +250,22 @@ class WorkViewModel @Inject constructor(
     private fun deleteWork(id: Int) {
         viewModelScope.launch {
             try {
-                val work = workRepository.getWorkById(id)
-                if (work is Resource.Success) {
-                    workRepository.deleteWork(id)
-                    onEvent(WorkEvent.GetWorks)
+                val isDeleted = workRepository.deleteWork(id)
+                if (isDeleted) {
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Work successfully removed"
+                    )
+                    onEvent(WorkEvent.GetWorks) // Refresca la lista
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Failed to delete work"
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error deleting work: ${e.message}"
+                )
             }
         }
     }

@@ -161,7 +161,17 @@ class WorkRepository @Inject constructor(
 
 
 
-    suspend fun deleteWork(id: Int) = remoteDataSource.deleteWork(id)
+    suspend fun deleteWork(id: Int): Boolean{
+        return try {
+
+            remoteDataSource.deleteWork(id)
+
+            worksDao.deleteById(id)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     fun getWorksByTechnique(techniqueId: Int): Flow<Resource<List<WorksDto>>> = flow {
         var listWorksByTechniqueDto: List<WorksEntity> = emptyList()

@@ -23,6 +23,8 @@ interface WorkDao{
     suspend fun find(id: Int): WorksEntity?
     @Delete
     suspend fun delete(work: WorksEntity)
+    @Query("DELETE FROM Works WHERE workId = :id")
+    suspend fun deleteById(id: Int)
     @Query("SELECT * FROM Works WHERE statusId = 1")
     suspend fun getAll(): List<WorksEntity>
     @Query("SELECT * FROM Works WHERE artistId=:artistId AND statusId = 1")
