@@ -7,4 +7,5 @@ sealed interface BillEvent {
     data class SetPaymentMethod(val id: Int, val name: String) : BillEvent
     data object CreateBill : BillEvent
     data object ResetState : BillEvent
+    data class ValidateCreditCard(val cardNumber: String) : BillEvent
 }

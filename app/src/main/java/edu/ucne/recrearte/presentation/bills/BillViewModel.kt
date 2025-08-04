@@ -9,10 +9,12 @@ import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.BillRepository
 import edu.ucne.recrearte.data.repository.CustomerRepository
 import edu.ucne.recrearte.data.repository.ShoppingCartRepository
+import edu.ucne.recrearte.data.repository.WorkRepository
 import edu.ucne.recrearte.di.DateAdapter
 import edu.ucne.recrearte.presentation.work.WorkViewModel
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
+import edu.ucne.recrearte.util.isValidCreditCardNumber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -36,6 +38,7 @@ class BillViewModel @Inject constructor(
             BillEvent.LoadCheckout -> loadCheckout()
             BillEvent.ResetState -> resetState()
             is BillEvent.SetPaymentMethod -> setPaymentMethod(event.id, event.name)
+            is BillEvent.ValidateCreditCard -> validateCreditCard(event.cardNumber)
         }
     }
 
@@ -43,10 +46,19 @@ class BillViewModel @Inject constructor(
         return tokenManager.getUserId()
     }
 
+    // Nuevo método para validar tarjeta
+    fun validateCreditCard(cardNumber: String) {
+        val isValid = cardNumber.isValidCreditCardNumber()
+        _uiState.update { it.copy(
+            isCardValid = isValid,
+            cardValidationMessage = if (isValid) null else "Invalid card number"
+        ) }
+    }
+
     private fun loadCheckout() {
         val customerId = getCurrentCustomerId() ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Usuario no autenticado"
+                errorMessage = "Unauthenticated user"
             )
             return
         }
@@ -62,7 +74,7 @@ class BillViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error al cargar checkout: ${e.message}"
+                    errorMessage = "Error loading checkout: ${e.message}"
                 )
             }
         }
@@ -82,14 +94,14 @@ class BillViewModel @Inject constructor(
     private fun createBill() {
         val currentBill = _uiState.value.createdBill ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "No hay datos de factura para crear"
+                errorMessage = "There is no invoice data to create"
             )
             return
         }
 
         val customerId = getCurrentCustomerId() ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Usuario no autenticado"
+                errorMessage = "Unauthenticated user"
             )
             return
         }
@@ -97,18 +109,17 @@ class BillViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             try {
-                // 1. Crear la factura en el backend
+
                 val createdBill = billRepository.createBill(currentBill)
 
-                // 2. Vaciar el carrito
                 shoppingCartRepository.clearCart(customerId)
 
-                // 3. Actualizar estado
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isSuccess = true,
                     createdBill = createdBill
                 )
+
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
