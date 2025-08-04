@@ -134,7 +134,7 @@ fun WorkListScreen(
                     onClick = onDeleteConfirmed,
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -217,7 +217,7 @@ fun WorkListBodyScreen(
             FloatingActionButton(
                 onClick = createWork,
             ) {
-                Icon(Icons.Filled.Add, "Crear obra")
+                Icon(Icons.Filled.Add, "Create Work")
             }
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -320,7 +320,7 @@ fun WorkListBodyScreen(
 fun SearchBar(
     query: String,
     onQueryChanged: (String) -> Unit,
-    placeholder: String = "Buscar..."
+    placeholder: String = "Look for..."
 ) {
     androidx.compose.material3.OutlinedTextField(
         value = query,
