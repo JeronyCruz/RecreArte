@@ -19,9 +19,9 @@ class ShoppingCartRepository @Inject constructor(
         } catch (e: HttpException) {
             Resource.Error("Internet error: ${e.message()}")
         } catch (e: ConnectException) {
-            Resource.Error("No tienes conexion a internet")
+            Resource.Error("You don't have an internet connection")
         } catch (e: Exception) {
-            Resource.Error("No tienes conexion a internet")
+            Resource.Error("You don't have an internet connection")
         }
     }
 

@@ -39,18 +39,15 @@ class WishListRepository @Inject constructor(
 
     suspend fun getWorksInWishlistByCustomer(customerId: Int): Resource<List<WorksDto>> {
         return try {
-            // Primero intentamos obtener datos de la API
             val remoteWishlist = remoteDataSource.getWorksInWishlistByCustomer(customerId)
 
-            // Si tenemos datos remotos, actualizamos la base local
             remoteWishlist.forEach { workDto ->
                 worksDao.saveOne(workDto.toEntity())
             }
 
-            // Actualizamos la wishlist local
             val wishList = wishListDao.findByCustomerId(customerId) ?: run {
                 val newWishList = WishListsEntity(
-                    wishListId = 0, // Se generará automáticamente si es autoincremental
+                    wishListId = 0,
                     customerId = customerId,
                     userName = null
                 )
@@ -58,7 +55,6 @@ class WishListRepository @Inject constructor(
                 newWishList
             }
 
-            // Actualizamos los detalles
             val details = remoteWishlist.map { work ->
                 WishListDetailsEntity(
                     wishListId = wishList.wishListId,
@@ -67,20 +63,19 @@ class WishListRepository @Inject constructor(
             }
             wishListDetailsDao.save(details)
 
-            // Devolvemos los datos remotos (frescos)
             Resource.Success(remoteWishlist)
         } catch (e: Exception) {
-            // Si falla la conexión, devolvemos datos locales
+
             when (e) {
                 is HttpException, is ConnectException, is java.net.UnknownHostException -> {
                     val localWorks = wishListDao.getByCustomer(customerId)
                     if (localWorks.isNotEmpty()) {
                         Resource.Success(localWorks.map { it.toDto() })
                     } else {
-                        Resource.Error("No hay conexión y no hay datos locales disponibles")
+                        Resource.Error("There is no connection and no local data available.")
                     }
                 }
-                else -> Resource.Error("Error desconocido: ${e.message}")
+                else -> Resource.Error("Unknown error: ${e.message}")
             }
         }
     }
@@ -88,10 +83,9 @@ class WishListRepository @Inject constructor(
 
     suspend fun toggleWorkInWishlist(customerId: Int, workId: Int): Resource<Boolean> {
         return try {
-            // Primero intentamos con la API
+
             val result = remoteDataSource.toggleWorkInWishlist(customerId, workId)
 
-            // Actualizamos localmente según el resultado
             val wishList = wishListDao.findByCustomerId(customerId) ?: run {
                 val newWishList = WishListsEntity(
                     wishListId = 0,
@@ -103,7 +97,7 @@ class WishListRepository @Inject constructor(
             }
 
             if (result) {
-                // Agregar a la wishlist local
+
                 wishListDetailsDao.saveOne(
                     WishListDetailsEntity(
                         wishListId = wishList.wishListId,
@@ -111,7 +105,7 @@ class WishListRepository @Inject constructor(
                     )
                 )
             } else {
-                // Quitar de la wishlist local
+
                 wishListDetailsDao.delete(wishList.wishListId, workId)
             }
 
@@ -119,7 +113,7 @@ class WishListRepository @Inject constructor(
         } catch (e: Exception) {
             when (e) {
                 is HttpException, is ConnectException, is java.net.UnknownHostException -> {
-                    // Modo offline - operación local
+
                     val wishList = wishListDao.findByCustomerId(customerId) ?: run {
                         val newWishList = WishListsEntity(
                             wishListId = 0,
@@ -145,25 +139,25 @@ class WishListRepository @Inject constructor(
                         Resource.Success(true)
                     }
                 }
-                else -> Resource.Error("Error desconocido: ${e.message}")
+                else -> Resource.Error("Unknown error: ${e.message}")
             }
         }
     }
 
     suspend fun isWorkInWishlist(customerId: Int, workId: Int): Resource<Boolean> {
         return try {
-            // Primero intentamos con la API
+
             val result = remoteDataSource.isWorkInWishlist(customerId, workId)
             Resource.Success(result)
         } catch (e: Exception) {
             when (e) {
                 is HttpException, is ConnectException, is java.net.UnknownHostException -> {
-                    // Modo offline - verificación local
+
                     val wishList = wishListDao.findByCustomerId(customerId) ?: return Resource.Success(false)
                     val exists = wishListDetailsDao.exists(wishList.wishListId, workId)
                     Resource.Success(exists)
                 }
-                else -> Resource.Error("Error desconocido: ${e.message}")
+                else -> Resource.Error("Unknown error: ${e.message}")
             }
         }
     }

@@ -66,7 +66,7 @@ class ArtistRepository @Inject constructor(
             }
 
         } catch (e: Exception) {
-            val errorMsg = "Error inesperado: ${e.message}"
+            val errorMsg = "Unexpected error: ${e.message}"
             println("[DEBUG] Unexpected Error: $errorMsg")
 
             val localArtists = artistList.getAll().map { it.toDto() }
@@ -135,7 +135,7 @@ class ArtistRepository @Inject constructor(
         } else if (artistDto != null) {
             emit(Resource.Success(artistDto))
         } else {
-            emit(Resource.Error("No se encontraron datos locales ni remotos"))
+            emit(Resource.Error("No local or remote data found"))
         }
     }
 

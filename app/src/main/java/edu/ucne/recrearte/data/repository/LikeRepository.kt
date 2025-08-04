@@ -114,25 +114,22 @@ class LikeRepository @Inject constructor(
     }
 
     fun getTop10MostLikedWorks(): Flow<Resource<List<WorksDto>>> = flow {
-        // Primero intenta obtener los likes actualizados
         try {
             emit(Resource.Loading())
             val remoteLikes = remoteDataSource.getLikes()
             likeDao.save(remoteLikes.map { it.toEntity() })
 
-            // Luego obtiene las obras más populares
             val remoteWorks = remoteDataSource.getTop10MostLikedWorks()
             workDao.save(remoteWorks.map { it.toEntity() })
 
-            // Emite los datos remotos directamente
-            emit(Resource.Success(remoteWorks.take(5))) // Cambiado a top 5 para consistencia
+            emit(Resource.Success(remoteWorks.take(5)))
         } catch (e: Exception) {
             // En caso de error, usa los datos locales
             val localTop5 = workDao.getTop5().map { it.toDto() }
             if (localTop5.isNotEmpty()) {
                 emit(Resource.Success(localTop5))
             } else {
-                emit(Resource.Error("No se pudo obtener datos y no hay caché disponible"))
+                emit(Resource.Error("Could not fetch data and no cache available"))
             }
         }
     }

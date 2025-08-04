@@ -66,7 +66,7 @@ class TechniqueRepository @Inject constructor(
             }
 
         } catch (e: IOException) {
-            val errorMsg = "Error de conexión: ${e.message}"
+            val errorMsg = "Connection error: ${e.message}"
             println("[DEBUG] $errorMsg")
 
             val localTechnique = techniqueDao.find(id)?.toDto()
@@ -78,7 +78,7 @@ class TechniqueRepository @Inject constructor(
             }
 
         } catch (e: Exception) {
-            val errorMsg = "Error inesperado: ${e.message}"
+            val errorMsg = "Unexpected error: ${e.message}"
             println("[DEBUG] $errorMsg")
 
             val localTechnique = techniqueDao.find(id)?.toDto()
@@ -97,15 +97,12 @@ class TechniqueRepository @Inject constructor(
 
     suspend fun deleteTechnique(id: Int): Boolean {
         return try {
-            // 1. Intenta eliminar en la API
+
             remoteDataSource.deleteTechnique(id)
 
-            // 2. Si la API responde correctamente, elimina localmente
             techniqueDao.deleteById(id)
             true
         } catch (e: Exception) {
-            // Si falla la API, puedes decidir si eliminar igualmente localmente
-            // o guardar en una cola de sincronización para reintentar luego
             false
         }
     }
