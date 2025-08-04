@@ -3,6 +3,7 @@ package edu.ucne.recrearte.presentation.shoppingCarts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.repository.ShoppingCartRepository
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
@@ -35,32 +36,65 @@ class ShoppingCartViewModel @Inject constructor(
         return tokenManager.getUserId() // Asume que TokenManager tiene este método
     }
 
-    private fun getCart() {
-        val customerId = getCurrentCustomerId() ?: run {
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                errorMessage = "Usuario no autenticado"
-            )
-            return
-        }
+//    private fun getCart() {
+//        val customerId = getCurrentCustomerId() ?: run {
+//            _uiState.value = _uiState.value.copy(
+//                isLoading = false,
+//                errorMessage = "Usuario no autenticado"
+//            )
+//            return
+//        }
+//
+//        _uiState.value = _uiState.value.copy(isLoading = true)
+//        viewModelScope.launch {
+//            try {
+//                val cart = repository.getCart(customerId)
+//                _uiState.value = _uiState.value.copy(
+//                    items = cart.items,
+//                    subTotal = cart.subTotal,
+//                    isLoading = false
+//                )
+//            } catch (e: Exception) {
+//                _uiState.value = _uiState.value.copy(
+//                    isLoading = false,
+//                    errorMessage = "Error al obtener el carrito: ${e.message}"
+//                )
+//            }
+//        }
+//    }
+private fun getCart() {
+    val customerId = getCurrentCustomerId() ?: run {
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            errorMessage = "Usuario no autenticado"
+        )
+        return
+    }
 
-        _uiState.value = _uiState.value.copy(isLoading = true)
-        viewModelScope.launch {
-            try {
-                val cart = repository.getCart(customerId)
+    _uiState.value = _uiState.value.copy(isLoading = true)
+
+    viewModelScope.launch {
+        when (val result = repository.getCart(customerId)) {
+            is Resource.Success -> {
                 _uiState.value = _uiState.value.copy(
-                    items = cart.items,
-                    subTotal = cart.subTotal,
-                    isLoading = false
+                    items = result.data?.items ?: emptyList(),
+                    subTotal = result.data?.subTotal ?: 0.0,
+                    isLoading = false,
+                    errorMessage = null
                 )
-            } catch (e: Exception) {
+            }
+            is Resource.Error -> {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error al obtener el carrito: ${e.message}"
+                    errorMessage = result.message ?: "Error desconocido al obtener el carrito"
                 )
+            }
+            is Resource.Loading -> {
+                _uiState.value = _uiState.value.copy(isLoading = true)
             }
         }
     }
+}
 
     private fun addToCart(workId: Int) {
         val customerId = getCurrentCustomerId() ?: run {
