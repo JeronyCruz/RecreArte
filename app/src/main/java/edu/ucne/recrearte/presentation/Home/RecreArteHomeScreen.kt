@@ -250,7 +250,7 @@ fun SearchBarHome(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        placeholder = { Text("Search works, artists, techinques") },
+        placeholder = { Text("Search works, description") },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
