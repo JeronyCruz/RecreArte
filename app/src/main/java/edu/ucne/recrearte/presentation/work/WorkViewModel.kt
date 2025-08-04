@@ -9,7 +9,6 @@ import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
-import edu.ucne.recrearte.data.repository.ImageRepository
 import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WishListRepository
@@ -40,7 +39,6 @@ class WorkViewModel @Inject constructor(
     private val wishListRepository: WishListRepository,
     private val techniqueRepository: TechniqueRepository,
     private val artistRepository: ArtistRepository,
-    private val imageRepository: ImageRepository,
     private val tokenManager: TokenManager,
     val networkMonitor: NetworkMonitor
 ): ViewModel() {
@@ -137,7 +135,7 @@ class WorkViewModel @Inject constructor(
             if (System.getProperty("DEBUG") != null) {  // Alternativa para desarrollo
                 1 // Valor temporal para desarrollo/debug
             } else {
-                throw IllegalStateException("Usuario no autenticado")
+                throw IllegalStateException("Unauthenticated user")
             }
         }
     }
@@ -251,7 +249,6 @@ class WorkViewModel @Inject constructor(
     private fun deleteWork(id: Int) {
         viewModelScope.launch {
             try {
-                // Primero obtenemos el work para saber el imageId
                 val work = workRepository.getWorkById(id)
                 if (work is Resource.Success) {
                     workRepository.deleteWork(id)
@@ -313,7 +310,7 @@ class WorkViewModel @Inject constructor(
                 description = it.description ?: "",
                 imageUrl = it.imageUrl ?: "",
                 isCached = isFromCache,
-                networkMessage = if (isFromCache) "Datos almacenados localmente" else null,
+                networkMessage = if (isFromCache) "Data stored locally" else null,
                 lastUpdated = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
                 isLoading = false
             )
@@ -325,12 +322,10 @@ class WorkViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             try {
-                // 1. Cargar la obra (primero intenta de red, si falla usa caché)
                 val workResult = if (networkMonitor.isOnline.value) {
                     workRepository.getWorkById(id)
                 } else {
-                    // Si no hay conexión, ir directamente a caché
-                    workRepository.getWorkById(id) // Asumiendo que tu repositorio ya maneja la caché
+                    workRepository.getWorkById(id)
                 }
 
                 when (workResult) {
@@ -338,7 +333,6 @@ class WorkViewModel @Inject constructor(
                         val work = workResult.data
                         val customerId = getLoggedUserId()
 
-                        // 2. Actualizar UI con los datos de la obra
                         _uiState.value = _uiState.value.copy(
                             workId = work?.workId,
                             techniqueId = work?.techniqueId ?: 0,
@@ -350,13 +344,12 @@ class WorkViewModel @Inject constructor(
                             imageRemoved = false
                         )
 
-                        // 3. Cargar estados de like y wishlist (esto es lo más importante)
                         loadLikeStatus(id, customerId)
                     }
                     is Resource.Error -> {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            errorMessage = workResult.message ?: "Error al cargar la obra"
+                            errorMessage = workResult.message ?: "Error loading the work"
                         )
                     }
                     is Resource.Loading -> {
@@ -366,7 +359,7 @@ class WorkViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error inesperado: ${e.message}"
+                    errorMessage = "Unexpected error: ${e.message}"
                 )
             }
         }
@@ -377,13 +370,13 @@ class WorkViewModel @Inject constructor(
             is Resource.Success -> {
                 updateUiState(cachedResult.data, true)
                 _uiState.value = _uiState.value.copy(
-                    networkMessage = "Conéctate para datos actualizados",
+                    networkMessage = "Connect for updated data",
                     showRetryButton = true
                 )
             }
             is Resource.Error -> {
                 _uiState.value = _uiState.value.copy(
-                    networkMessage = cachedResult.message ?: "Error al cargar datos",
+                    networkMessage = cachedResult.message ?: "Error loading data",
                     showRetryButton = true,
                     isLoading = false
                 )
@@ -395,7 +388,7 @@ class WorkViewModel @Inject constructor(
 
     fun retryLoadWork(id: Int) {
         _uiState.value = _uiState.value.copy(
-            networkMessage = "Intentando conectar...",
+            networkMessage = "Trying to connect...",
             showRetryButton = false
         )
         loadWork(id)
@@ -436,7 +429,7 @@ class WorkViewModel @Inject constructor(
     fun createWork() {
         val loggedArtistId = tokenManager.getUserId() ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Usuario no autenticado",
+                errorMessage = "Unauthenticated user",
                 isLoading = false
             )
             return
@@ -485,13 +478,13 @@ class WorkViewModel @Inject constructor(
                         _uiState.value.copy(
                             isLoading = false,
                             isSuccess = true,
-                            successMessage = "Obra creada exitosamente"
+                            successMessage = "Work successfully created"
                         )
                     }
                     is Resource.Error -> {
                         _uiState.value.copy(
                             isLoading = false,
-                            errorMessage = result.message ?: "Error desconocido al crear la obra"
+                            errorMessage = result.message ?: "Unknown error while creating the work"
                         )
                     }
                     is Resource.Loading -> {
@@ -511,7 +504,7 @@ class WorkViewModel @Inject constructor(
     private fun updateWork(id: Int) {
         val loggedArtistId = tokenManager.getUserId() ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Usuario no autenticado",
+                errorMessage = "Unauthenticated user",
                 isLoading = false
             )
             return
@@ -568,7 +561,7 @@ class WorkViewModel @Inject constructor(
                                         _uiState.value.copy(
                                             isLoading = false,
                                             isSuccess = true,
-                                            successMessage = "Obra actualizada exitosamente",
+                                            successMessage = "Work successfully updated",
                                             works = _uiState.value.works.map {
                                                 if (it.workId == id) {
                                                     it.copy(
@@ -588,7 +581,7 @@ class WorkViewModel @Inject constructor(
                                     is Resource.Error -> {
                                         _uiState.value.copy(
                                             isLoading = false,
-                                            errorMessage = result.message ?: "Error al actualizar la obra"
+                                            errorMessage = result.message ?: "Error updating the work"
                                         )
                                     }
                                     else -> _uiState.value.copy(isLoading = false)
@@ -596,14 +589,14 @@ class WorkViewModel @Inject constructor(
                             } ?: run {
                                 _uiState.value = _uiState.value.copy(
                                     isLoading = false,
-                                    errorMessage = "No se pudo obtener la obra actual"
+                                    errorMessage = "The current work could not be obtained"
                                 )
                             }
                         }
                         is Resource.Error -> {
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
-                                errorMessage = currentWorkResult.message ?: "Error al obtener la obra actual"
+                                errorMessage = currentWorkResult.message ?: "Error getting the current work"
                             )
                         }
                         else -> _uiState.value.copy(isLoading = false)
@@ -611,7 +604,7 @@ class WorkViewModel @Inject constructor(
                 } catch (e: Exception) {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = "Error inesperado: ${e.message}"
+                        errorMessage = "Unexpected error: ${e.message}"
                     )
                 }
             }
@@ -741,10 +734,10 @@ class WorkViewModel @Inject constructor(
                 else -> {}
             }
 
-            // Cargar contador de likes - CORRECCIÓN AQUÍ
+            // Cargar contador de likes
             when (val result = likeRepository.getLikeCountForWork(workId)) {
                 is Resource.Success -> {
-                    _likeCount.value = result.data ?: 0 // Usamos result.data en lugar de result
+                    _likeCount.value = result.data ?: 0
                 }
                 is Resource.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
@@ -772,14 +765,11 @@ class WorkViewModel @Inject constructor(
 
             try {
                 workIds.forEach { workId ->
-                    // Get the current work
                     when (val result = workRepository.getWorkById(workId)) {
                         is Resource.Success -> {
                             result.data?.let { work ->
-                                // Update only the statusId
                                 val updatedWork = work.copy(statusId = statusId)
 
-                                // Llamar al método updateWork con todos los parámetros necesarios
                                 workRepository.updateWork(
                                     workId = workId,
                                     title = updatedWork.title,
@@ -796,7 +786,7 @@ class WorkViewModel @Inject constructor(
                         is Resource.Error -> {
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
-                                errorMessage = result.message ?: "Error al obtener la obra para actualizar"
+                                errorMessage = result.message ?: "Error getting the work to update"
                             )
                             return@launch
                         }
@@ -809,7 +799,7 @@ class WorkViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isSuccess = true,
-                    successMessage = "Estados actualizados correctamente"
+                    successMessage = "States updated successfully"
                 )
 
                 // Refresh works list
@@ -818,7 +808,7 @@ class WorkViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error actualizando estados: ${e.message}"
+                    errorMessage = "Error updating states: ${e.message}"
                 )
             }
         }

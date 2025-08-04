@@ -33,73 +33,47 @@ class ShoppingCartViewModel @Inject constructor(
     }
 
     private fun getCurrentCustomerId(): Int? {
-        return tokenManager.getUserId() // Asume que TokenManager tiene este método
+        return tokenManager.getUserId()
     }
 
-//    private fun getCart() {
-//        val customerId = getCurrentCustomerId() ?: run {
-//            _uiState.value = _uiState.value.copy(
-//                isLoading = false,
-//                errorMessage = "Usuario no autenticado"
-//            )
-//            return
-//        }
-//
-//        _uiState.value = _uiState.value.copy(isLoading = true)
-//        viewModelScope.launch {
-//            try {
-//                val cart = repository.getCart(customerId)
-//                _uiState.value = _uiState.value.copy(
-//                    items = cart.items,
-//                    subTotal = cart.subTotal,
-//                    isLoading = false
-//                )
-//            } catch (e: Exception) {
-//                _uiState.value = _uiState.value.copy(
-//                    isLoading = false,
-//                    errorMessage = "Error al obtener el carrito: ${e.message}"
-//                )
-//            }
-//        }
-//    }
-private fun getCart() {
-    val customerId = getCurrentCustomerId() ?: run {
-        _uiState.value = _uiState.value.copy(
-            isLoading = false,
-            errorMessage = "Usuario no autenticado"
-        )
-        return
-    }
+    private fun getCart() {
+        val customerId = getCurrentCustomerId() ?: run {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "Unauthenticated user"
+            )
+            return
+        }
 
-    _uiState.value = _uiState.value.copy(isLoading = true)
+        _uiState.value = _uiState.value.copy(isLoading = true)
 
-    viewModelScope.launch {
-        when (val result = repository.getCart(customerId)) {
-            is Resource.Success -> {
-                _uiState.value = _uiState.value.copy(
-                    items = result.data?.items ?: emptyList(),
-                    subTotal = result.data?.subTotal ?: 0.0,
-                    isLoading = false,
-                    errorMessage = null
-                )
-            }
-            is Resource.Error -> {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = result.message ?: "Error desconocido al obtener el carrito"
-                )
-            }
-            is Resource.Loading -> {
-                _uiState.value = _uiState.value.copy(isLoading = true)
+        viewModelScope.launch {
+            when (val result = repository.getCart(customerId)) {
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        items = result.data?.items ?: emptyList(),
+                        subTotal = result.data?.subTotal ?: 0.0,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+                is Resource.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message ?: "Unknown error while getting the cart"
+                    )
+                }
+                is Resource.Loading -> {
+                    _uiState.value = _uiState.value.copy(isLoading = true)
+                }
             }
         }
     }
-}
 
     private fun addToCart(workId: Int) {
         val customerId = getCurrentCustomerId() ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Usuario no autenticado"
+                errorMessage = "Unauthenticated user"
             )
             return
         }
@@ -107,14 +81,14 @@ private fun getCart() {
         viewModelScope.launch {
             try {
                 repository.addToCart(customerId, workId)
-                getCart() // Refrescar el carrito
+                getCart()
                 _uiState.value = _uiState.value.copy(
                     isSuccess = true,
-                    successMessage = "Agregado al carrito"
+                    successMessage = "Added to cart"
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "No se pudo agregar al carrito: ${e.message}"
+                    errorMessage = "Could not add to cart: ${e.message}"
                 )
             }
         }
@@ -123,7 +97,7 @@ private fun getCart() {
     private fun removeFromCart(itemId: Int) {
         val customerId = getCurrentCustomerId() ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Usuario no autenticado"
+                errorMessage = "Unauthenticated user"
             )
             return
         }
@@ -131,14 +105,14 @@ private fun getCart() {
         viewModelScope.launch {
             try {
                 repository.removeFromCart(itemId)
-                getCart() // Refrescar el carrito
+                getCart()
                 _uiState.value = _uiState.value.copy(
                     isSuccess = true,
-                    successMessage = "Item eliminado del carrito"
+                    successMessage = "Item removed from cart"
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "Error al eliminar el item: ${e.message}"
+                    errorMessage = "Error deleting item: ${e.message}"
                 )
             }
         }
@@ -147,7 +121,7 @@ private fun getCart() {
     private fun clearCart() {
         val customerId = getCurrentCustomerId() ?: run {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Usuario no autenticado"
+                errorMessage = "Unauthenticated user"
             )
             return
         }
@@ -155,14 +129,14 @@ private fun getCart() {
         viewModelScope.launch {
             try {
                 repository.clearCart(customerId)
-                getCart() // Refrescar el carrito (debería estar vacío)
+                getCart()
                 _uiState.value = _uiState.value.copy(
                     isSuccess = true,
-                    successMessage = "Carrito vaciado"
+                    successMessage = "Cart emptied"
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "No se pudo vaciar el carrito: ${e.message}"
+                    errorMessage = "The cart could not be emptied: ${e.message}"
                 )
             }
         }
