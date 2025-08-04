@@ -28,7 +28,7 @@ interface LikeDao {
     SELECT w.* 
     FROM Works w
     INNER JOIN Likes l ON w.workId = l.workId
-    WHERE l.customerId = :customerId
+    WHERE l.customerId = :customerId and statusId = 1
     """)
     suspend fun getWorksLikedByCustomer(customerId: Int): List<WorksEntity>
 }
