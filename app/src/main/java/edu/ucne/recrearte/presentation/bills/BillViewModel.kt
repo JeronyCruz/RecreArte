@@ -123,7 +123,7 @@ class BillViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error al crear factura: ${e.message}"
+                    errorMessage = "Error creating invoice: ${e.message}"
                 )
             }
         }

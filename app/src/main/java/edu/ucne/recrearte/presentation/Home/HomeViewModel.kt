@@ -6,7 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
-import edu.ucne.recrearte.data.repository.ImageRepository
 import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
@@ -26,7 +25,6 @@ class HomeViewModel @Inject constructor(
     private val workRepository: WorkRepository,
     private val likeRepository: LikeRepository,
     private val artistRepository: ArtistRepository,
-    private val imageRepository: ImageRepository,
     private val techniqueRepository: TechniqueRepository
 ): ViewModel(){
     private val _uiState = MutableStateFlow(HomeUiState())

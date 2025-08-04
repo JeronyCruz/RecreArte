@@ -71,7 +71,7 @@ class PaymentMethodViewModel @Inject constructor(
             if (token == null) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = "No autenticado. Por favor inicia sesión",
+                        errorMessage = "Not authenticated. Please log in.",
                         isLoading = false
                     )
                 }
