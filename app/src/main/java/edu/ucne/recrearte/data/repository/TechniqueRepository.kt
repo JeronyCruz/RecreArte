@@ -66,7 +66,7 @@ class TechniqueRepository @Inject constructor(
             }
 
         } catch (e: IOException) {
-            val errorMsg = "Error de conexión: ${e.message}"
+            val errorMsg = "Connection error: ${e.message}"
             println("[DEBUG] $errorMsg")
 
             val localTechnique = techniqueDao.find(id)?.toDto()
@@ -78,7 +78,7 @@ class TechniqueRepository @Inject constructor(
             }
 
         } catch (e: Exception) {
-            val errorMsg = "Error inesperado: ${e.message}"
+            val errorMsg = "Unexpected error: ${e.message}"
             println("[DEBUG] $errorMsg")
 
             val localTechnique = techniqueDao.find(id)?.toDto()
@@ -95,7 +95,17 @@ class TechniqueRepository @Inject constructor(
 
     suspend fun updateTechnique(id: Int, techniqueDto: TechniquesDto) = remoteDataSource.updateTechnique(id, techniqueDto)
 
-    suspend fun deleteTechnique(id: Int) = remoteDataSource.deleteTechnique(id)
+    suspend fun deleteTechnique(id: Int): Boolean {
+        return try {
+
+            remoteDataSource.deleteTechnique(id)
+
+            techniqueDao.deleteById(id)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     private fun TechniquesDto.toEntity() = TechniquesEntity(
         techniqueId = this.techniqueId,

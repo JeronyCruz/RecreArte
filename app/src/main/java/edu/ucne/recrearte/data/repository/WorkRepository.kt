@@ -38,8 +38,7 @@ class WorkRepository @Inject constructor(
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
         }catch (e: ConnectException) {
-            // No emitir error cuando no hay conexión
-            emit(Resource.Error("No tienes conexion a internet"))
+            emit(Resource.Error("You don't have an internet connection"))
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
@@ -85,7 +84,7 @@ class WorkRepository @Inject constructor(
         } else if (workDto != null) {
             Resource.Success(workDto)
         } else {
-            Resource.Error("No se encontró la obra ni local ni remotamente")
+            Resource.Error("The work was not found either locally or remotely")
         }
     }
 
@@ -172,11 +171,9 @@ class WorkRepository @Inject constructor(
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
         }catch (e: UnknownHostException) {
-            // No mostrar mensaje, solo usar datos locales
-            emit(Resource.Error("No tienes conexion a internet"))
+            emit(Resource.Error("You don't have an internet connection"))
         } catch (e: ConnectException) {
-            // No emitir error cuando no hay conexión
-            emit(Resource.Error("No tienes conexion a internet"))
+            emit(Resource.Error("You don't have an internet connection"))
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }
@@ -197,11 +194,9 @@ class WorkRepository @Inject constructor(
         }catch (e: HttpException){
             emit(Resource.Error("Internet error: ${e.message()}"))
         }catch (e: UnknownHostException) {
-            // No mostrar mensaje, solo usar datos locales
-            emit(Resource.Error("No tienes conexion a internet"))
+            emit(Resource.Error("You don't have an internet connection"))
         }catch (e: ConnectException) {
-            // No emitir error cuando no hay conexión
-            emit(Resource.Error("No tienes conexion a internet"))
+            emit(Resource.Error("You don't have an internet connection"))
         }catch (e: Exception) {
             emit(Resource.Error("Unknown error: ${e.message}"))
         }

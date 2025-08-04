@@ -239,21 +239,21 @@ fun TechniqueWorkCard(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Artista: ")
+                            append("Artist: ")
                         }
                         append(work.artistId.toString())
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Dimensiones: ")
+                            append("Dimensions: ")
                         }
                         append(work.dimension)
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Precio: ")
+                            append("Price: ")
                         }
                         append("$${work.price}")
                     },

@@ -63,7 +63,7 @@ class PaymentMethodRepository @Inject constructor(
             }
 
         } catch (e: Exception) {
-            val errorMsg = "Error inesperado: ${e.message}"
+            val errorMsg = "Unexpected error: ${e.message}"
             println("[DEBUG] Unexpected Error: $errorMsg")
 
 
@@ -107,7 +107,7 @@ class PaymentMethodRepository @Inject constructor(
             }
 
         } catch (e: IOException) {
-            val errorMsg = "Error de conexión: ${e.message}"
+            val errorMsg = "Connection error: ${e.message}"
             println("[DEBUG] $errorMsg")
 
 
@@ -120,7 +120,7 @@ class PaymentMethodRepository @Inject constructor(
             }
 
         } catch (e: Exception) {
-            val errorMsg = "Error inesperado: ${e.message}"
+            val errorMsg = "Unexpected error: ${e.message}"
             println("[DEBUG] $errorMsg")
 
 

@@ -40,7 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -57,7 +56,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import edu.ucne.recrearte.R
-import edu.ucne.recrearte.data.remote.NetworkMonitor
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartEvent
 import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartViewModel
@@ -106,8 +104,8 @@ fun WorkDetailScreen(
     val work = remember(uiState.works, workId) {
         uiState.works.find { it.workId == workId } ?: WorksDto(
             workId = 0,
-            title = "Obra no encontrada",
-            description = "No se pudo cargar la información",
+            title = "Work not found",
+            description = "The information could not be loaded.",
             dimension = "N/A",
             price = 0.0,
             artistId = 0,

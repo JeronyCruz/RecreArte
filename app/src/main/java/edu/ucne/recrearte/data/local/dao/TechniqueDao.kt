@@ -23,6 +23,8 @@ interface TechniqueDao {
     suspend fun find(id: Int): TechniquesEntity?
     @Delete
     suspend fun delete(technique: TechniquesEntity)
+    @Query("DELETE FROM Techniques WHERE techniqueId = :id")
+    suspend fun deleteById(id: Int)
     @Query("SELECT * FROM Techniques")
     suspend fun getAll(): List<TechniquesEntity>
 }
