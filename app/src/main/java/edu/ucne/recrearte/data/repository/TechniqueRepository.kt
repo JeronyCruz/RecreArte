@@ -95,7 +95,20 @@ class TechniqueRepository @Inject constructor(
 
     suspend fun updateTechnique(id: Int, techniqueDto: TechniquesDto) = remoteDataSource.updateTechnique(id, techniqueDto)
 
-    suspend fun deleteTechnique(id: Int) = remoteDataSource.deleteTechnique(id)
+    suspend fun deleteTechnique(id: Int): Boolean {
+        return try {
+            // 1. Intenta eliminar en la API
+            remoteDataSource.deleteTechnique(id)
+
+            // 2. Si la API responde correctamente, elimina localmente
+            techniqueDao.deleteById(id)
+            true
+        } catch (e: Exception) {
+            // Si falla la API, puedes decidir si eliminar igualmente localmente
+            // o guardar en una cola de sincronización para reintentar luego
+            false
+        }
+    }
 
     private fun TechniquesDto.toEntity() = TechniquesEntity(
         techniqueId = this.techniqueId,
