@@ -305,6 +305,14 @@ fun WorkScreenCreate(
                 )
             }
 
+            if (showErrors && uiState.errorMessage?.contains("image") == true) {
+                Text(
+                    text = uiState.errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Botón de Guardar
@@ -313,8 +321,10 @@ fun WorkScreenCreate(
                     showErrors = true
                     if (workId != null && workId != 0) {
                         viewModel.onEvent(WorkEvent.UpdateWork(workId))
+                        viewModel.onEvent(WorkEvent.GetWorks)
                     } else {
                         viewModel.onEvent(WorkEvent.CreateWork)
+                        viewModel.onEvent(WorkEvent.GetWorks)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

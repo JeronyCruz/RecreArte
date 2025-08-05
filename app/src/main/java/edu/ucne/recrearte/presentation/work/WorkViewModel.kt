@@ -445,6 +445,11 @@ class WorkViewModel @Inject constructor(
             return
         }
 
+        // Nueva validación para la imagen
+        val imageError = if (_selectedImage.value == null && _uiState.value.imageUrl.isNullOrEmpty()) {
+            "You must select an image"
+        } else null
+
         val titleError = isValidField(_uiState.value.title)
         val dimensionError = isValidField(_uiState.value.dimension)
         val descriptionError = isValidField(_uiState.value.description)
@@ -457,7 +462,7 @@ class WorkViewModel @Inject constructor(
             errorDimension = dimensionError ?: "",
             errorDescription = descriptionError ?: "",
             errorPrice = priceError ?: "",
-            errorMessage = techniqueError ?: "",
+            errorMessage = techniqueError ?: imageError ?: "",
             artistId = loggedArtistId
         )
 
@@ -466,10 +471,11 @@ class WorkViewModel @Inject constructor(
             dimensionError != null ||
             descriptionError != null ||
             priceError != null ||
-            techniqueError != null
+            techniqueError != null ||
+            imageError != null
         ) return
 
-        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }){
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError, imageError).all { it == null }){
             viewModelScope.launch {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
@@ -509,8 +515,6 @@ class WorkViewModel @Inject constructor(
         _selectedImage.value = file
     }
 
-
-
     private fun updateWork(id: Int) {
         val loggedArtistId = tokenManager.getUserId() ?: run {
             _uiState.value = _uiState.value.copy(
@@ -526,13 +530,12 @@ class WorkViewModel @Inject constructor(
         val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
         val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
 
-
         _uiState.value = _uiState.value.copy(
             errorTitle = titleError ?: "",
             errorDimension = dimensionError ?: "",
             errorDescription = descriptionError ?: "",
             errorPrice = priceError ?: "",
-            errorMessage =  techniqueError ?: "",
+            errorMessage = techniqueError ?: "",
             artistId = loggedArtistId
         )
 
@@ -544,79 +547,84 @@ class WorkViewModel @Inject constructor(
             techniqueError != null
         ) return
 
-        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }){
-            viewModelScope.launch {
-                _uiState.value = _uiState.value.copy(isLoading = true)
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
 
-                try {
-                    // Obtener la obra actual para asegurar que tenemos todos los datos
-                    when (val currentWorkResult = workRepository.getWorkById(id)) {
-                        is Resource.Success -> {
-                            currentWorkResult.data?.let { currentWork ->
-                                val result = workRepository.updateWork(
-                                    workId = id,
-                                    title = _uiState.value.title,
-                                    dimension = _uiState.value.dimension,
-                                    techniqueId = _uiState.value.techniqueId,
-                                    artistId = loggedArtistId,
-                                    price = _uiState.value.price,
-                                    description = _uiState.value.description,
-                                    statusId = 1,
-                                    imageFile = _selectedImage.value
-                                )
+            try {
 
-                                _uiState.value = when (result) {
-                                    is Resource.Success -> {
-                                        _selectedImage.value = null
-                                        _uiState.value.copy(
-                                            isLoading = false,
-                                            isSuccess = true,
-                                            successMessage = "Work successfully updated",
-                                            works = _uiState.value.works.map {
-                                                if (it.workId == id) {
-                                                    it.copy(
-                                                        title = _uiState.value.title,
-                                                        dimension = _uiState.value.dimension,
-                                                        techniqueId = _uiState.value.techniqueId,
-                                                        price = _uiState.value.price,
-                                                        description = _uiState.value.description,
-                                                        statusId = _uiState.value.statusId
-                                                    )
-                                                } else {
-                                                    it
-                                                }
-                                            }
-                                        )
-                                    }
-                                    is Resource.Error -> {
-                                        _uiState.value.copy(
-                                            isLoading = false,
-                                            errorMessage = result.message ?: "Error updating the work"
-                                        )
-                                    }
-                                    else -> _uiState.value.copy(isLoading = false)
-                                }
-                            } ?: run {
-                                _uiState.value = _uiState.value.copy(
-                                    isLoading = false,
-                                    errorMessage = "The current work could not be obtained"
-                                )
+                when (val currentWorkResult = workRepository.getWorkById(id)) {
+                    is Resource.Success -> {
+                        currentWorkResult.data?.let { currentWork ->
+
+                            val imageToUpdate = if (_selectedImage.value != null) {
+                                _selectedImage.value
+                            } else {
+                                null
                             }
-                        }
-                        is Resource.Error -> {
+
+                            val result = workRepository.updateWork(
+                                workId = id,
+                                title = _uiState.value.title,
+                                dimension = _uiState.value.dimension,
+                                techniqueId = _uiState.value.techniqueId,
+                                artistId = loggedArtistId,
+                                price = _uiState.value.price,
+                                description = _uiState.value.description,
+                                statusId = _uiState.value.statusId,
+                                imageFile = imageToUpdate
+                            )
+
+                            _uiState.value = when (result) {
+                                is Resource.Success -> {
+                                    _selectedImage.value = null
+                                    _uiState.value.copy(
+                                        isLoading = false,
+                                        isSuccess = true,
+                                        successMessage = "Work successfully updated",
+                                        works = _uiState.value.works.map {
+                                            if (it.workId == id) {
+                                                it.copy(
+                                                    title = _uiState.value.title,
+                                                    dimension = _uiState.value.dimension,
+                                                    techniqueId = _uiState.value.techniqueId,
+                                                    price = _uiState.value.price,
+                                                    description = _uiState.value.description,
+                                                    statusId = _uiState.value.statusId
+                                                )
+                                            } else {
+                                                it
+                                            }
+                                        }
+                                    )
+                                }
+                                is Resource.Error -> {
+                                    _uiState.value.copy(
+                                        isLoading = false,
+                                        errorMessage = result.message ?: "Error updating the work"
+                                    )
+                                }
+                                else -> _uiState.value.copy(isLoading = false)
+                            }
+                        } ?: run {
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
-                                errorMessage = currentWorkResult.message ?: "Error getting the current work"
+                                errorMessage = "The current work could not be obtained"
                             )
                         }
-                        else -> _uiState.value.copy(isLoading = false)
                     }
-                } catch (e: Exception) {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = "Unexpected error: ${e.message}"
-                    )
+                    is Resource.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = currentWorkResult.message ?: "Error getting the current work"
+                        )
+                    }
+                    else -> _uiState.value.copy(isLoading = false)
                 }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Unexpected error: ${e.message}"
+                )
             }
         }
     }
