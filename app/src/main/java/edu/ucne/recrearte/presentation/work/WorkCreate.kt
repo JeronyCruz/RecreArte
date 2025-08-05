@@ -321,8 +321,10 @@ fun WorkScreenCreate(
                     showErrors = true
                     if (workId != null && workId != 0) {
                         viewModel.onEvent(WorkEvent.UpdateWork(workId))
+                        viewModel.onEvent(WorkEvent.GetWorks)
                     } else {
                         viewModel.onEvent(WorkEvent.CreateWork)
+                        viewModel.onEvent(WorkEvent.GetWorks)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
