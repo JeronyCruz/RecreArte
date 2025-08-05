@@ -305,6 +305,14 @@ fun WorkScreenCreate(
                 )
             }
 
+            if (showErrors && uiState.errorMessage?.contains("image") == true) {
+                Text(
+                    text = uiState.errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Botón de Guardar
