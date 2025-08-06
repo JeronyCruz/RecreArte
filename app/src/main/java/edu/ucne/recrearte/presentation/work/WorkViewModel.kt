@@ -3,17 +3,17 @@ package edu.ucne.recrearte.presentation.work
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.recrearte.data.remote.NetworkMonitor
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
-import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
-import edu.ucne.recrearte.data.repository.ImageRepository
 import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WishListRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
+import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +27,11 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
-import kotlin.collections.emptyList
-import kotlin.collections.filter
 
 @HiltViewModel
 class WorkViewModel @Inject constructor(
@@ -38,9 +40,27 @@ class WorkViewModel @Inject constructor(
     private val wishListRepository: WishListRepository,
     private val techniqueRepository: TechniqueRepository,
     private val artistRepository: ArtistRepository,
-    private val imageRepository: ImageRepository,
     private val tokenManager: TokenManager,
+    val networkMonitor: NetworkMonitor
 ): ViewModel() {
+    private val _connectionError = MutableStateFlow(false)
+    val connectionError: StateFlow<Boolean> = _connectionError.asStateFlow()
+
+    private val _isCachedData = MutableStateFlow(false)
+    val isCachedData: StateFlow<Boolean> = _isCachedData.asStateFlow()
+
+    private val _networkMessage = MutableStateFlow<String?>(null)
+    val networkMessage: StateFlow<String?> = _networkMessage.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { isOnline ->
+                if (!isOnline) {
+                    _connectionError.value = true
+                }
+            }
+        }
+    }
     private val _uiState = MutableStateFlow(WorkUiState())
     val uiSate = _uiState.asStateFlow()
     private val _loading = MutableStateFlow(false)
@@ -62,6 +82,9 @@ class WorkViewModel @Inject constructor(
     private val _showOnlyArtistWorks = MutableStateFlow(false)
     val showOnlyArtistWorks: StateFlow<Boolean> = _showOnlyArtistWorks.asStateFlow()
 
+    private val _selectedImage = MutableStateFlow<File?>(null)
+    val selectedImage = _selectedImage.asStateFlow()
+
 
     fun onEvent(event: WorkEvent){
         when(event){
@@ -79,10 +102,7 @@ class WorkViewModel @Inject constructor(
             is WorkEvent.TitleChange -> titleOnChange(event.title)
             is WorkEvent.UpdateWork -> updateWork(event.id)
             is WorkEvent.WorkdIdChange -> workIdOnchange(event.workId)
-            is WorkEvent.ImageCreate -> createImage(event.image)
             is WorkEvent.ImageIdChange -> imageOnChange(event.imageId)
-            WorkEvent.RemoveImage -> removeImage()
-            is WorkEvent.ImageUpdate -> updateImage(event.image)
             WorkEvent.ToggleLike -> toggleLike()
             WorkEvent.ToggleWishlist -> toggleWishlist()
             is WorkEvent.StatusChange -> statusOnChange(event.statusId)
@@ -116,7 +136,7 @@ class WorkViewModel @Inject constructor(
             if (System.getProperty("DEBUG") != null) {  // Alternativa para desarrollo
                 1 // Valor temporal para desarrollo/debug
             } else {
-                throw IllegalStateException("Usuario no autenticado")
+                throw IllegalStateException("Unauthenticated user")
             }
         }
     }
@@ -230,25 +250,27 @@ class WorkViewModel @Inject constructor(
     private fun deleteWork(id: Int) {
         viewModelScope.launch {
             try {
-                // Primero obtenemos el work para saber el imageId
-                val work = workRepository.getWorkById(id)
-                if (work is Resource.Success) {
-                    work.data?.imageId?.let { imageId ->
-                        if (imageId > 0) {
-                            // Eliminar la imagen asociada
-                            imageRepository.deleteImage(imageId)
-                        }
-                    }
-                    workRepository.deleteWork(id)
-                    onEvent(WorkEvent.GetWorks)
+                val isDeleted = workRepository.deleteWork(id)
+                if (isDeleted) {
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Work successfully removed"
+                    )
+                    onEvent(WorkEvent.GetWorks) // Refresca la lista
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Failed to delete work"
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error deleting work: ${e.message}"
+                )
             }
         }
     }
 
-     fun getWorks() {
+    fun getWorks() {
         viewModelScope.launch {
             workRepository.getWorks().collectLatest { getting ->
                 when (getting) {
@@ -256,23 +278,9 @@ class WorkViewModel @Inject constructor(
                         _uiState.update { it.copy(isLoading = true) }
                     }
                     is Resource.Success -> {
-                        // Procesar las imágenes
-                        val worksWithImages = getting.data?.map { work ->
-                            if (work.imageId > 0) {
-                                try {
-                                    val image = imageRepository.getImageById(work.imageId)
-                                    work.copy(base64 = image.data?.base64 ?: "")
-                                } catch (e: Exception) {
-                                    work.copy(base64 = "")
-                                }
-                            } else {
-                                work
-                            }
-                        } ?: emptyList()
-
                         _uiState.update {
                             it.copy(
-                                works = worksWithImages,
+                                works = getting.data ?: emptyList(),
                                 isLoading = false
                             )
                         }
@@ -299,67 +307,149 @@ class WorkViewModel @Inject constructor(
         return null
     }
 
+    private fun updateUiState(work: WorksDto?, isFromCache: Boolean = false) {
+        work?.let {
+            _uiState.value = _uiState.value.copy(
+                workId = it.workId,
+                title = it.title ?: "",
+                dimension = it.dimension ?: "",
+                techniqueId = it.techniqueId ?: 0,
+                artistId = it.artistId ?: 0,
+                statusId = it.statusId ?: 1,
+                price = it.price ?: 0.0,
+                description = it.description ?: "",
+                imageUrl = it.imageUrl ?: "",
+                isCached = isFromCache,
+                networkMessage = if (isFromCache) "Data stored locally" else null,
+                lastUpdated = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
+                isLoading = false
+            )
+        }
+    }
+
     fun loadWork(id: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            when (val result = workRepository.getWorkById(id)) {
-                is Resource.Success -> {
-                    val customerId = getLoggedUserId()
-                    _uiState.value = _uiState.value.copy(
-                        workId = result.data?.workId,
-                        techniqueId = result.data?.techniqueId ?: 0,
-                        title = result.data?.title ?: "",
-                        dimension = result.data?.dimension ?: "",
-                        description = result.data?.description ?: "",
-                        price = result.data?.price ?: 0.0,
-                        isLoading = false,
-                        imageId = result.data?.imageId ?: 0,
-                        base64 = result.data?.base64,
-                        imageRemoved = false
-                    )
 
-                    loadLikeStatus(id, customerId)
+            try {
+                val workResult = if (networkMonitor.isOnline.value) {
+                    workRepository.getWorkById(id)
+                } else {
+                    workRepository.getWorkById(id)
                 }
-                is Resource.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = result.message,
-                        isLoading = false
-                    )
+
+                when (workResult) {
+                    is Resource.Success -> {
+                        val work = workResult.data
+                        val customerId = getLoggedUserId()
+
+                        _uiState.value = _uiState.value.copy(
+                            workId = work?.workId,
+                            techniqueId = work?.techniqueId ?: 0,
+                            title = work?.title ?: "",
+                            dimension = work?.dimension ?: "",
+                            description = work?.description ?: "",
+                            price = work?.price ?: 0.0,
+                            isLoading = false,
+                            imageRemoved = false
+                        )
+
+                        loadLikeStatus(id, customerId)
+                    }
+                    is Resource.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = workResult.message ?: "Error loading the work"
+                        )
+                    }
+                    is Resource.Loading -> {
+                        // Manejar estado de carga si es necesario
+                    }
                 }
-                else -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
-                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Unexpected error: ${e.message}"
+                )
             }
         }
+    }
+
+    private suspend fun loadFromCache(id: Int) {
+        when (val cachedResult = workRepository.getWorkById(id)) {
+            is Resource.Success -> {
+                updateUiState(cachedResult.data, true)
+                _uiState.value = _uiState.value.copy(
+                    networkMessage = "Connect for updated data",
+                    showRetryButton = true
+                )
+            }
+            is Resource.Error -> {
+                _uiState.value = _uiState.value.copy(
+                    networkMessage = cachedResult.message ?: "Error loading data",
+                    showRetryButton = true,
+                    isLoading = false
+                )
+            }
+
+            is Resource.Loading<*> -> TODO()
+        }
+    }
+
+    fun retryLoadWork(id: Int) {
+        _uiState.value = _uiState.value.copy(
+            networkMessage = "Trying to connect...",
+            showRetryButton = false
+        )
+        loadWork(id)
+    }
+
+    fun clearNetworkMessage() {
+        _uiState.value = _uiState.value.copy(networkMessage = null)
     }
 
     //para los artistas
     fun findArtist(id: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            when (val result = artistRepository.getArtistById(id)) {
-                is Resource.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        artistId = result.data?.artistId ?: 0,
-                        nameArtist = result.data?.userName ?: "A",
-                        errorMessage = null
-                    )
-                }
-                is Resource.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = result.message,
-                        isLoading = false
-                    )
-                }
-                else -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
+            artistRepository.getArtistById(id).collect { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            artistId = result.data?.artistId ?: 0,
+                            nameArtist = result.data?.userName ?: "A",
+                            errorMessage = null
+                        )
+                    }
+                    is Resource.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = result.message,
+                            isLoading = false
+                        )
+                    }
+                    is Resource.Loading -> {
+                        _uiState.value = _uiState.value.copy(isLoading = true)
+                    }
                 }
             }
         }
     }
 
-    private fun createWork() {
+    fun createWork() {
+        val loggedArtistId = tokenManager.getUserId() ?: run {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Unauthenticated user",
+                isLoading = false
+            )
+            return
+        }
+
+        // Nueva validación para la imagen
+        val imageError = if (_selectedImage.value == null && _uiState.value.imageUrl.isNullOrEmpty()) {
+            "You must select an image"
+        } else null
+
         val titleError = isValidField(_uiState.value.title)
         val dimensionError = isValidField(_uiState.value.dimension)
         val descriptionError = isValidField(_uiState.value.description)
@@ -367,7 +457,78 @@ class WorkViewModel @Inject constructor(
         val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
 
 
-        val loggedArtistId = getLoggedUserId()
+        _uiState.value = _uiState.value.copy(
+            errorTitle = titleError ?: "",
+            errorDimension = dimensionError ?: "",
+            errorDescription = descriptionError ?: "",
+            errorPrice = priceError ?: "",
+            errorMessage = techniqueError ?: imageError ?: "",
+            artistId = loggedArtistId
+        )
+
+        if (
+            titleError != null ||
+            dimensionError != null ||
+            descriptionError != null ||
+            priceError != null ||
+            techniqueError != null ||
+            imageError != null
+        ) return
+
+        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError, imageError).all { it == null }){
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+
+                val result = workRepository.createWork(
+                    title = _uiState.value.title,
+                    dimension = _uiState.value.dimension,
+                    techniqueId = _uiState.value.techniqueId,
+                    artistId = loggedArtistId,
+                    price = _uiState.value.price,
+                    description = _uiState.value.description,
+                    imageFile = _selectedImage.value
+                )
+
+                _uiState.value = when (result) {
+                    is Resource.Success -> {
+                        _uiState.value.copy(
+                            isLoading = false,
+                            isSuccess = true,
+                            successMessage = "Work successfully created"
+                        )
+                    }
+                    is Resource.Error -> {
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = result.message ?: "Unknown error while creating the work"
+                        )
+                    }
+                    is Resource.Loading -> {
+                        _uiState.value.copy(isLoading = true)
+                    }
+                }
+            }
+        }
+    }
+
+    fun selectImage(file: File) {
+        _selectedImage.value = file
+    }
+
+    private fun updateWork(id: Int) {
+        val loggedArtistId = tokenManager.getUserId() ?: run {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Unauthenticated user",
+                isLoading = false
+            )
+            return
+        }
+
+        val titleError = isValidField(_uiState.value.title)
+        val dimensionError = isValidField(_uiState.value.dimension)
+        val descriptionError = isValidField(_uiState.value.description)
+        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
+        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
 
         _uiState.value = _uiState.value.copy(
             errorTitle = titleError ?: "",
@@ -386,106 +547,84 @@ class WorkViewModel @Inject constructor(
             techniqueError != null
         ) return
 
-        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }) {
-            viewModelScope.launch {
-                try {
-                    val method = WorksDto(
-                        workId = 0,
-                        title = _uiState.value.title,
-                        dimension = _uiState.value.dimension,
-                        description = _uiState.value.description,
-                        price = _uiState.value.price,
-                        artistId = loggedArtistId,
-                        techniqueId = _uiState.value.techniqueId,
-                        imageId = _uiState.value.imageId,
-                        statusId = 1
-                    )
-                    workRepository.createWork(method)
-                    _uiState.value = _uiState.value.copy(
-                        isSuccess = true,
-                        successMessage = "Obra creada exitosamente"
-                    )
-                    // No llamar a goBack() aquí, dejar que la UI lo maneje
-                } catch (e: Exception) {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Error creating: ${e.message}",
-                        isSuccess = false
-                    )
-                }
-            }
-        }
-    }
-
-    private fun createImage(imageDto: ImagesDto) {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
             try {
-                _uiState.update {
-                    it.copy(
-                        imageId = imageDto.imageId ?: 0,
-                        base64 = imageDto.base64,
-                        imageRemoved = false
-                    )
+
+                when (val currentWorkResult = workRepository.getWorkById(id)) {
+                    is Resource.Success -> {
+                        currentWorkResult.data?.let { currentWork ->
+
+                            val imageToUpdate = if (_selectedImage.value != null) {
+                                _selectedImage.value
+                            } else {
+                                null
+                            }
+
+                            val result = workRepository.updateWork(
+                                workId = id,
+                                title = _uiState.value.title,
+                                dimension = _uiState.value.dimension,
+                                techniqueId = _uiState.value.techniqueId,
+                                artistId = loggedArtistId,
+                                price = _uiState.value.price,
+                                description = _uiState.value.description,
+                                statusId = _uiState.value.statusId,
+                                imageFile = imageToUpdate
+                            )
+
+                            _uiState.value = when (result) {
+                                is Resource.Success -> {
+                                    _selectedImage.value = null
+                                    _uiState.value.copy(
+                                        isLoading = false,
+                                        isSuccess = true,
+                                        successMessage = "Work successfully updated",
+                                        works = _uiState.value.works.map {
+                                            if (it.workId == id) {
+                                                it.copy(
+                                                    title = _uiState.value.title,
+                                                    dimension = _uiState.value.dimension,
+                                                    techniqueId = _uiState.value.techniqueId,
+                                                    price = _uiState.value.price,
+                                                    description = _uiState.value.description,
+                                                    statusId = _uiState.value.statusId
+                                                )
+                                            } else {
+                                                it
+                                            }
+                                        }
+                                    )
+                                }
+                                is Resource.Error -> {
+                                    _uiState.value.copy(
+                                        isLoading = false,
+                                        errorMessage = result.message ?: "Error updating the work"
+                                    )
+                                }
+                                else -> _uiState.value.copy(isLoading = false)
+                            }
+                        } ?: run {
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = "The current work could not be obtained"
+                            )
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = currentWorkResult.message ?: "Error getting the current work"
+                        )
+                    }
+                    else -> _uiState.value.copy(isLoading = false)
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Error al crear imagen: ${e.message}") }
-            }
-        }
-    }
-
-
-    private fun updateWork(id: Int){
-
-        val titleError = isValidField(_uiState.value.title)
-        val dimensionError = isValidField(_uiState.value.dimension)
-        val descriptionError = isValidField(_uiState.value.description)
-        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
-        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
-
-        val loggedArtistId = getLoggedUserId()
-
-        _uiState.value = _uiState.value.copy(
-            errorTitle = titleError ?: "",
-            errorDimension = dimensionError ?: "",
-            errorDescription = descriptionError ?: "",
-            errorPrice = priceError ?: "",
-            errorMessage =  techniqueError ?: "",
-            artistId = loggedArtistId
-        )
-
-        if (
-            titleError != null ||
-            dimensionError != null ||
-            descriptionError != null ||
-            priceError != null ||
-            techniqueError != null
-        ) return
-
-        if (listOf(titleError, dimensionError, descriptionError, priceError, techniqueError).all { it == null }) {
-            viewModelScope.launch {
-                try {
-                    val method = WorksDto(
-                        workId = id,
-                        title = _uiState.value.title,
-                        dimension = _uiState.value.dimension,
-                        description = _uiState.value.description,
-                        price = _uiState.value.price,
-                        artistId = loggedArtistId,
-                        techniqueId = _uiState.value.techniqueId,
-                        imageId = _uiState.value.imageId,
-                        statusId = 1
-                    )
-                    workRepository.createWork(method)
-                    _uiState.value = _uiState.value.copy(
-                        isSuccess = true,
-                        successMessage = "Obra creada exitosamente"
-                    )
-                    // No llamar a goBack() aquí, dejar que la UI lo maneje
-                } catch (e: Exception) {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Error creating: ${e.message}",
-                        isSuccess = false
-                    )
-                }
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Unexpected error: ${e.message}"
+                )
             }
         }
     }
@@ -538,43 +677,6 @@ class WorkViewModel @Inject constructor(
                         _uiState.update { it.copy(isLoading = true) }
                     }
                 }
-            }
-        }
-    }
-
-    private fun removeImage() {
-        _uiState.update {
-            it.copy(
-                base64 = null,
-                imageRemoved = true
-            )
-        }
-    }
-    private fun updateImage(imageDto: ImagesDto) {
-        viewModelScope.launch {
-            try {
-                val imageId = _uiState.value.imageId
-                if (imageId > 0) {
-                    imageRepository.updateImage(imageId, imageDto)
-                    _uiState.update {
-                        it.copy(
-                            base64 = imageDto.base64,
-                            imageRemoved = false
-                        )
-                    }
-                } else {
-                    // Si no hay una imagen existente, se puede crear una nueva si deseas
-                    val result = imageRepository.createImage(imageDto)
-                    _uiState.update {
-                        it.copy(
-                            imageId = result.imageId ?: 0,
-                            base64 = result.base64,
-                            imageRemoved = false
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Error actualizando imagen: ${e.message}") }
             }
         }
     }
@@ -650,10 +752,10 @@ class WorkViewModel @Inject constructor(
                 else -> {}
             }
 
-            // Cargar contador de likes - CORRECCIÓN AQUÍ
+            // Cargar contador de likes
             when (val result = likeRepository.getLikeCountForWork(workId)) {
                 is Resource.Success -> {
-                    _likeCount.value = result.data ?: 0 // Usamos result.data en lugar de result
+                    _likeCount.value = result.data ?: 0
                 }
                 is Resource.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
@@ -677,78 +779,56 @@ class WorkViewModel @Inject constructor(
     //para actualizar el status
     private fun updateWorksStatus(workIds: List<Int>, statusId: Int) {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
             try {
                 workIds.forEach { workId ->
-                    // Obtener la obra actual
                     when (val result = workRepository.getWorkById(workId)) {
                         is Resource.Success -> {
                             result.data?.let { work ->
-                                // Actualizar solo el statusId
                                 val updatedWork = work.copy(statusId = statusId)
-                                workRepository.updateWork(workId, updatedWork)
+
+                                workRepository.updateWork(
+                                    workId = workId,
+                                    title = updatedWork.title,
+                                    dimension = updatedWork.dimension,
+                                    techniqueId = updatedWork.techniqueId,
+                                    artistId = updatedWork.artistId,
+                                    price = updatedWork.price,
+                                    description = updatedWork.description,
+                                    statusId = 2,
+                                    imageFile = null // No actualizamos la imagen
+                                )
                             }
                         }
-
                         is Resource.Error -> {
-                            _uiState.update { it.copy(errorMessage = result.message) }
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = result.message ?: "Error getting the work to update"
+                            )
+                            return@launch
                         }
-
-                        else -> {}
+                        is Resource.Loading -> {
+                            // Podemos manejar el estado de carga si es necesario
+                        }
                     }
                 }
-                // Refrescar la lista de obras después de actualizar
+
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isSuccess = true,
+                    successMessage = "States updated successfully"
+                )
+
+                // Refresh works list
                 getWorks()
+
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Error updating works status: ${e.message}") }
-                // se debe limpiar
-                fun loadWorksByArtist(artistId: Int) {
-                    viewModelScope.launch {
-                        _uiState.value = _uiState.value.copy(isLoading = true)
-                        workRepository.getWorksByArtist(artistId).collectLatest { result ->
-                            when (result) {
-                                is Resource.Loading -> {
-                                    _uiState.update { it.copy(isLoading = true) }
-                                }
-
-                                is Resource.Success -> {
-                                    // Procesar las imágenes
-                                    val worksWithImages = result.data?.map { work ->
-                                        if (work.imageId > 0) {
-                                            try {
-                                                val image =
-                                                    imageRepository.getImageById(work.imageId)
-                                                work.copy(base64 = image.data?.base64 ?: "")
-                                            } catch (e: Exception) {
-                                                work.copy(base64 = "")
-                                            }
-                                        } else {
-                                            work
-                                        }
-                                    } ?: emptyList()
-
-                                    _uiState.update {
-                                        it.copy(
-                                            works = worksWithImages,
-                                            isLoading = false
-                                        )
-                                    }
-                                    _showOnlyArtistWorks.value = true
-                                }
-
-                                is Resource.Error -> {
-                                    _uiState.update {
-                                        it.copy(
-                                            isLoading = false,
-                                            errorMessage = result.message
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Error updating states: ${e.message}"
+                )
             }
-
         }
     }
 }

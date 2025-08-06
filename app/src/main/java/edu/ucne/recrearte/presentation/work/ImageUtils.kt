@@ -1,16 +1,22 @@
 package edu.ucne.recrearte.presentation.work
+import android.content.Context
+import android.net.Uri
+import java.io.File
+import java.io.FileOutputStream
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
-import android.util.Log
-import java.io.ByteArrayOutputStream
+
 
 object ImageUtils {
-    fun Bitmap.toBase64(): String {
-        val outputStream = ByteArrayOutputStream()
-        this.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        val imageBytes = outputStream.toByteArray()
-        return Base64.encodeToString(imageBytes, Base64.NO_WRAP)
+    fun Uri.toFile(context: Context): File {
+        // Create a temporary file
+        val tempFile = File.createTempFile("temp_image", ".jpg", context.cacheDir)
+
+        context.contentResolver.openInputStream(this)?.use { inputStream ->
+            FileOutputStream(tempFile).use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+
+        return tempFile
     }
 }

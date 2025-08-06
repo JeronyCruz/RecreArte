@@ -6,7 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.ArtistRepository
-import edu.ucne.recrearte.data.repository.ImageRepository
 import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
@@ -26,7 +25,6 @@ class HomeViewModel @Inject constructor(
     private val workRepository: WorkRepository,
     private val likeRepository: LikeRepository,
     private val artistRepository: ArtistRepository,
-    private val imageRepository: ImageRepository,
     private val techniqueRepository: TechniqueRepository
 ): ViewModel(){
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -76,25 +74,12 @@ class HomeViewModel @Inject constructor(
             else -> _uiState.value.works
         }
 
-        val filtered = if (query.isBlank()) {
+        return if (query.isBlank()) {
             currentList
         } else {
             currentList.filter {
                 it.title.contains(query, ignoreCase = true) ||
                         (it.description?.contains(query, ignoreCase = true) ?: false)
-            }
-        }
-
-        return filtered.map { work ->
-            if (work.imageId > 0 && work.base64.isNullOrEmpty()) {
-                try {
-                    val image = imageRepository.getImageById(work.imageId)
-                    work.copy(base64 = image.data?.base64 ?: "")
-                } catch (e: Exception) {
-                    work.copy(base64 = "")
-                }
-            } else {
-                work
             }
         }
     }
@@ -107,23 +92,9 @@ class HomeViewModel @Inject constructor(
                         _uiState.update { it.copy(isLoading = true) }
                     }
                     is Resource.Success -> {
-                        // Procesar las imágenes
-                        val worksWithImages = getting.data?.map { work ->
-                            if (work.imageId > 0) {
-                                try {
-                                    val image = imageRepository.getImageById(work.imageId)
-                                    work.copy(base64 = image.data?.base64 ?: "")
-                                } catch (e: Exception) {
-                                    work.copy(base64 = "")
-                                }
-                            } else {
-                                work
-                            }
-                        } ?: emptyList()
-
                         _uiState.update {
                             it.copy(
-                                works = worksWithImages,
+                                works = getting.data ?: emptyList(),
                                 isLoading = false
                             )
                         }
@@ -170,29 +141,14 @@ class HomeViewModel @Inject constructor(
             workRepository.getWorksByArtist(artistId).collect { result ->
                 when (result) {
                     is Resource.Loading -> _uiState.update { it.copy(isLoading = true) }
-
                     is Resource.Success -> {
-                        val worksWithImages = result.data?.map { work ->
-                            if (work.imageId > 0) {
-                                try {
-                                    val image = imageRepository.getImageById(work.imageId)
-                                    work.copy(base64 = image.data?.base64 ?: "")
-                                } catch (e: Exception) {
-                                    work.copy(base64 = "")
-                                }
-                            } else {
-                                work
-                            }
-                        } ?: emptyList()
-
                         _uiState.update {
                             it.copy(
-                                worksByArtistsDto = worksWithImages,
+                                worksByArtistsDto = result.data ?: emptyList(),
                                 isLoading = false
                             )
                         }
                     }
-
                     is Resource.Error -> {
                         _uiState.update {
                             it.copy(
@@ -212,29 +168,14 @@ class HomeViewModel @Inject constructor(
             workRepository.getWorksByTechnique(techniqueId).collect { result ->
                 when (result) {
                     is Resource.Loading -> _uiState.update { it.copy(isLoading = true) }
-
                     is Resource.Success -> {
-                        val worksWithImages = result.data?.map { work ->
-                            if (work.imageId > 0) {
-                                try {
-                                    val image = imageRepository.getImageById(work.imageId)
-                                    work.copy(base64 = image.data?.base64 ?: "")
-                                } catch (e: Exception) {
-                                    work.copy(base64 = "")
-                                }
-                            } else {
-                                work
-                            }
-                        } ?: emptyList()
-
                         _uiState.update {
                             it.copy(
-                                worksByTechnique = worksWithImages,
+                                worksByTechnique = result.data ?: emptyList(),
                                 isLoading = false
                             )
                         }
                     }
-
                     is Resource.Error -> {
                         _uiState.update {
                             it.copy(

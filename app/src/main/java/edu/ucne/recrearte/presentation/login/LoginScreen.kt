@@ -49,6 +49,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import edu.ucne.recrearte.R
 import androidx.compose.ui.res.painterResource
 
@@ -274,14 +275,64 @@ fun LoginBodyScreen(
                 )
             }
 
-            Image(
-                painter = painterResource(id = R.drawable.generated),
-                contentDescription = "Social Media Links",
+            Row(
                 modifier = Modifier
-                    .size(230.dp)
-                    .clip(CircleShape)
-                    .padding(bottom = 64.dp)
-            )
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Icono 1 - WhatsApp
+                IconButton(
+                    onClick = { /* Acción para WhatsApp */ },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.whatsapp_icn), // Asegúrate de tener estos recursos
+                        contentDescription = "WhatsApp",
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.Unspecified
+                    )
+                }
+
+                // Icono 2 - Instagram
+                IconButton(
+                    onClick = { /* Acción para Instagram */ },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.instagram_icn),
+                        contentDescription = "Instagram",
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.Unspecified
+                    )
+                }
+
+                // Icono 3 - Facebook
+                IconButton(
+                    onClick = { /* Acción para Facebook */ },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.facebook_icn),
+                        contentDescription = "Facebook",
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.Unspecified
+                    )
+                }
+
+                // Icono 4 - Twitter
+                IconButton(
+                    onClick = { /* Acción para Twitter */ },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.twitter_icn),
+                        contentDescription = "Twitter",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
         }
     }
 }

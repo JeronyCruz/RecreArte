@@ -42,7 +42,7 @@ class FavoritesViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    errorMessage = "Usuario no autenticado"
+                    errorMessage = "Unauthenticated user"
                 )
             }
             return
@@ -67,7 +67,7 @@ class FavoritesViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = e.message ?: "Error al cargar favoritos"
+                        errorMessage = e.message ?: "Error loading favorites"
                     )
                 }
             }
@@ -88,7 +88,7 @@ class FavoritesViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = result.message ?: "Error desconocido"
+                        errorMessage = result.message ?: "Unknown error"
                     )
                 }
             }

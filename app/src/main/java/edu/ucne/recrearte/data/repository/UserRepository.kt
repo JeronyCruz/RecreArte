@@ -71,7 +71,7 @@ class UserRepository @Inject constructor(
             if (success) {
                 Resource.Success(true)
             } else {
-                Resource.Error("La contraseña introducida no es la actual!")
+                Resource.Error("The password entered is not the current one!")
             }
         } catch (e: HttpException) {
             val errorMsg = when (e.code()) {
@@ -83,9 +83,9 @@ class UserRepository @Inject constructor(
             }
             Resource.Error(errorMsg)
         } catch (e: IOException) {
-            Resource.Error("Error de conexión: ${e.message ?: "Verifique su conexión a internet"}")
+            Resource.Error("Connection error: ${e.message ?: "Check your internet connection"}")
         } catch (e: Exception) {
-            Resource.Error("Error inesperado: ${e.message ?: "Ocurrió un error"}")
+            Resource.Error("Unexpected error: ${e.message ?: "An error occurred"}")
         }
     }
 }

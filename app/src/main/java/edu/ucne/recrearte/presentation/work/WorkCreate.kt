@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
+import edu.ucne.recrearte.presentation.work.ImageUtils.toFile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,18 +81,8 @@ fun WorkScreenCreate(
         onResult = { uri ->
             uri?.let {
                 selectedImageUri = it
-                val imageBytes = context.contentResolver.openInputStream(uri)?.readBytes()
-                imageBytes?.let { bytes ->
-                    val base64 = Base64.encodeToString(bytes, Base64.DEFAULT)
-                    viewModel.onEvent(
-                        WorkEvent.ImageUpdate(
-                            ImagesDto(
-                                imageId = uiState.imageId,
-                                base64 = base64
-                            )
-                        )
-                    )
-                }
+                val imageFile = it.toFile(context) // Use the extension function
+                viewModel.selectImage(imageFile)
             }
         }
     )
@@ -267,7 +258,7 @@ fun WorkScreenCreate(
                 if (isGranted) {
                     launcher.launch("image/*")
                 } else {
-                    Toast.makeText(context, "permission denied", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -287,7 +278,7 @@ fun WorkScreenCreate(
                     }
                 }
             }) {
-                Text(if (uiState.imageId > 0) "Change Image" else "Select Image")
+                Text(if (uiState.imageUrl != null) "Change Image" else "Select Image")
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -304,13 +295,21 @@ fun WorkScreenCreate(
             }
 
             // Vista previa de imagen existente (si no hay nueva selección)
-            if (selectedImageUri == null && !uiState.base64.isNullOrBlank()) {
+            if (selectedImageUri == null && uiState.imageUrl != null) {
                 AsyncImage(
-                    model = "data:image/*;base64,${uiState.base64}",
+                    model = uiState.imageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
+                )
+            }
+
+            if (showErrors && uiState.errorMessage?.contains("image") == true) {
+                Text(
+                    text = uiState.errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
 
@@ -322,20 +321,11 @@ fun WorkScreenCreate(
                     showErrors = true
                     if (workId != null && workId != 0) {
                         viewModel.onEvent(WorkEvent.UpdateWork(workId))
+                        viewModel.onEvent(WorkEvent.GetWorks)
                     } else {
                         viewModel.onEvent(WorkEvent.CreateWork)
+                        viewModel.onEvent(WorkEvent.GetWorks)
                     }
-
-                    // Verificar si hay errores después de la validación
-                    val hasErrors = listOf(
-                        uiState.errorTitle,
-                        uiState.errorDimension,
-                        uiState.errorDescription,
-                        uiState.errorPrice,
-                        uiState.errorMessage
-                    ).any { !it.isNullOrEmpty() }
-
-                    // Navegar solo si no hay errores (el éxito se maneja en LaunchedEffect)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
