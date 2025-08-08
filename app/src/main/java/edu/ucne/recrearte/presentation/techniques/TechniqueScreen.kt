@@ -56,7 +56,7 @@ fun TechniqueScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (techniqueId != 0) "Update technique" else "Create technique ",
+                        text = "Create technique".takeIf { techniqueId == 0 } ?: "Update technique",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -166,8 +166,7 @@ fun TechniqueBodyScreen(
 
             LaunchedEffect(uiState.isSuccess) {
                 if (uiState.isSuccess) {
-                    val message = if (techniqueId == null || techniqueId == 0)
-                        "Create Technique" else "Update Technique"
+                    val message = "Create Technique".takeIf { techniqueId == null || techniqueId == 0 } ?: "Update Technique"
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                     delay(1000)
                     viewModel.onEvent(TechniqueEvent.ResetSuccessMessage)

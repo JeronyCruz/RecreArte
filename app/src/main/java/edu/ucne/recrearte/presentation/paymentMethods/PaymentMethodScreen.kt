@@ -58,7 +58,7 @@ fun PaymentMethodScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (paymentMethodId != 0) "Update Payment Method" else "Create Payment Method",
+                        text = "Create Payment Method".takeIf { paymentMethodId == 0 } ?: "Update Payment Method",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
