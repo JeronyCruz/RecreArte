@@ -261,7 +261,7 @@ fun WorkListBodyScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        val worksToShow = if (query.isNotBlank()) searchResults else uiState.worksByArtistsDto
+                        val worksToShow = searchResults.takeIf { query.isNotBlank() } ?: uiState.worksByArtistsDto
 
                         items(worksToShow) { work ->
                             ArtistWorkCard(
