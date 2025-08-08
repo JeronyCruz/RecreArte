@@ -1,10 +1,8 @@
 package edu.ucne.recrearte.presentation.work
 
-import android.app.Activity
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,12 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import edu.ucne.recrearte.data.remote.dto.ImagesDto
-import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
 import edu.ucne.recrearte.presentation.work.ImageUtils.toFile
 
 @OptIn(ExperimentalMaterial3Api::class)

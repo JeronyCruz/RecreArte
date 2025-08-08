@@ -5,7 +5,6 @@ import edu.ucne.recrearte.data.local.entities.PaymentMethodsEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
-import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException

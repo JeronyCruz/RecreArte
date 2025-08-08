@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import edu.ucne.recrearte.data.local.entities.ArtistsListEntity
-import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 
 
 @Dao

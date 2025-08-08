@@ -13,7 +13,6 @@ import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WishListRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
-import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.flow.MutableStateFlow

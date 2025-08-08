@@ -11,9 +11,9 @@ import dagger.hilt.components.SingletonComponent
 import edu.ucne.recrearte.data.remote.NetworkMonitor
 import edu.ucne.recrearte.data.remote.RecreArteingApi
 import edu.ucne.recrearte.data.remote.RemoteDataSource
-import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.data.repository.AuthInterceptor
 import edu.ucne.recrearte.util.TokenManagement
+import edu.ucne.recrearte.util.TokenManager
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

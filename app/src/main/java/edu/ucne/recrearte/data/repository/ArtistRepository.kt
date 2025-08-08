@@ -2,20 +2,16 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.local.dao.ArtistDao
 import edu.ucne.recrearte.data.local.dao.ArtistListDao
-import edu.ucne.recrearte.data.local.dao.UserDao
 import edu.ucne.recrearte.data.local.entities.ArtistsEntity
 import edu.ucne.recrearte.data.local.entities.ArtistsListEntity
-import edu.ucne.recrearte.data.local.entities.UsersEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
 import edu.ucne.recrearte.data.remote.dto.ArtistsDto
-import edu.ucne.recrearte.data.remote.dto.CustomersDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import java.io.IOException
-import java.util.Date
 import javax.inject.Inject
 
 class ArtistRepository @Inject constructor(

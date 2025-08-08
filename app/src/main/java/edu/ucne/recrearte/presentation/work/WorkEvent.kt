@@ -1,8 +1,5 @@
 package edu.ucne.recrearte.presentation.work
 
-import edu.ucne.recrearte.data.remote.dto.ImagesDto
-import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
-
 sealed interface WorkEvent {
     data class WorkdIdChange(val workId: Int): WorkEvent
     data class TitleChange(val title: String): WorkEvent

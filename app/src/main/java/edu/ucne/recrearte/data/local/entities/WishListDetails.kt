@@ -2,8 +2,6 @@ package edu.ucne.recrearte.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
-import edu.ucne.recrearte.data.remote.dto.WorksDto
 
 @Entity(
     tableName = "WishListDetails",

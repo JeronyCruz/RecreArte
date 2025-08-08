@@ -3,15 +3,8 @@ package edu.ucne.recrearte.presentation.bills
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import edu.ucne.recrearte.data.remote.dto.BillsDetailsDto
-import edu.ucne.recrearte.data.remote.dto.BillsDto
-import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.data.repository.BillRepository
-import edu.ucne.recrearte.data.repository.CustomerRepository
 import edu.ucne.recrearte.data.repository.ShoppingCartRepository
-import edu.ucne.recrearte.data.repository.WorkRepository
-import edu.ucne.recrearte.di.DateAdapter
-import edu.ucne.recrearte.presentation.work.WorkViewModel
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
 import edu.ucne.recrearte.util.isValidCreditCardNumber
@@ -19,9 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.util.Date
 import javax.inject.Inject
+
 @HiltViewModel
 class BillViewModel @Inject constructor(
     private val billRepository: BillRepository,
