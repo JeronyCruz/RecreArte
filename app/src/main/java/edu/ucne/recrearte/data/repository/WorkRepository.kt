@@ -1,7 +1,5 @@
 package edu.ucne.recrearte.data.repository
 
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import edu.ucne.recrearte.data.local.dao.WorkDao
 import edu.ucne.recrearte.data.local.entities.WorksEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource

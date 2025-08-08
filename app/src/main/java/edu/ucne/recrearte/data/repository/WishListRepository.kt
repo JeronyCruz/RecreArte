@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import java.net.ConnectException
 import javax.inject.Inject
-import kotlin.collections.emptyList
-import kotlin.collections.map
 
 class WishListRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource,

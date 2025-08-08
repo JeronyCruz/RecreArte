@@ -13,7 +13,6 @@ import edu.ucne.recrearte.data.repository.LikeRepository
 import edu.ucne.recrearte.data.repository.TechniqueRepository
 import edu.ucne.recrearte.data.repository.WishListRepository
 import edu.ucne.recrearte.data.repository.WorkRepository
-import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -453,8 +452,8 @@ class WorkViewModel @Inject constructor(
         val titleError = isValidField(_uiState.value.title)
         val dimensionError = isValidField(_uiState.value.dimension)
         val descriptionError = isValidField(_uiState.value.description)
-        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
-        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
+        val priceError = "The price must be greater than zero".takeIf { _uiState.value.price <= 0.0 }
+        val techniqueError = "Select a technique".takeIf { _uiState.value.techniqueId <= 0 }
 
 
         _uiState.value = _uiState.value.copy(
@@ -527,8 +526,8 @@ class WorkViewModel @Inject constructor(
         val titleError = isValidField(_uiState.value.title)
         val dimensionError = isValidField(_uiState.value.dimension)
         val descriptionError = isValidField(_uiState.value.description)
-        val priceError = if (_uiState.value.price <= 0.0) "The price must be greater than zero" else null
-        val techniqueError = if (_uiState.value.techniqueId <= 0) "Select a technique" else null
+        val priceError = "The price must be greater than zero".takeIf { _uiState.value.price <= 0.0 }
+        val techniqueError = "Select a technique".takeIf { _uiState.value.techniqueId <= 0 }
 
         _uiState.value = _uiState.value.copy(
             errorTitle = titleError ?: "",

@@ -11,7 +11,6 @@ import edu.ucne.recrearte.data.repository.CustomerRepository
 import edu.ucne.recrearte.data.repository.UserRepository
 import edu.ucne.recrearte.presentation.profile.ProfileUiState.Error
 import edu.ucne.recrearte.presentation.profile.ProfileUiState.Loading
-import edu.ucne.recrearte.presentation.profile.ProfileUiState.Success
 import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.util.getUserId
 import kotlinx.coroutines.flow.MutableStateFlow

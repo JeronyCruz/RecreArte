@@ -1,7 +1,5 @@
 package edu.ucne.recrearte.data.remote.dto
 
-import java.util.Date
-
 data class BillsDto(
     val billId: Int?,
     val date: String,

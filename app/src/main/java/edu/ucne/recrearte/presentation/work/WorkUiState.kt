@@ -1,7 +1,6 @@
 package edu.ucne.recrearte.presentation.work
 
 import edu.ucne.recrearte.data.remote.dto.ArtistListDto
-import edu.ucne.recrearte.data.remote.dto.ImagesDto
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 

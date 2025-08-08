@@ -2,7 +2,6 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
-import edu.ucne.recrearte.data.remote.dto.ChangePasswordDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

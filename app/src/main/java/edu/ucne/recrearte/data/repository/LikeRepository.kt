@@ -7,7 +7,6 @@ import edu.ucne.recrearte.data.local.entities.WorksEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.LikesDto
-import edu.ucne.recrearte.data.remote.dto.TechniquesDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

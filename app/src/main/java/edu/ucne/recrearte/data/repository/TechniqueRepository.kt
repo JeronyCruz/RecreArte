@@ -2,7 +2,6 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.local.dao.TechniqueDao
 import edu.ucne.recrearte.data.local.entities.TechniquesEntity
-import edu.ucne.recrearte.data.local.entities.WorksEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.TechniquesDto

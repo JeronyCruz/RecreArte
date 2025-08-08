@@ -1,14 +1,12 @@
 package edu.ucne.recrearte.util
 
 import android.content.Context
+import android.util.Base64
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
-import android.util.Base64
-import androidx.compose.runtime.compositionLocalOf
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Singleton
 class TokenManagement @Inject constructor(
