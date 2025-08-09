@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -198,7 +200,9 @@ fun BillScreen(
                     CheckoutContent(
                         bill = state.createdBill!!,
                         works = workState.works,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 80.dp)
                     )
                 }
             }
@@ -295,7 +299,8 @@ private fun CheckoutContent(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier.padding(16.dp)
+        modifier = modifier
+            .padding(16.dp)
     ) {
         item {
             Spacer(modifier = Modifier.height(20.dp))
