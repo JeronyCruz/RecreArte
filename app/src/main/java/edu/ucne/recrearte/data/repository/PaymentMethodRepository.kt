@@ -133,13 +133,11 @@ class PaymentMethodRepository @Inject constructor(
         }
     }
 
-    // Conversión de DTO a Entity
     private fun PaymentMethodsDto.toEntity() = PaymentMethodsEntity(
         paymentMethodId = this.paymentMethodId,
         paymentMethodName = this.paymentMethodName
     )
 
-    // Conversión de Entity a DTO
     private fun PaymentMethodsEntity.toDto() = PaymentMethodsDto(
         paymentMethodId = this.paymentMethodId,
         paymentMethodName = this.paymentMethodName
@@ -149,5 +147,13 @@ class PaymentMethodRepository @Inject constructor(
 
     suspend fun updatePaymentMethod(id: Int, paymentMethodsDto: PaymentMethodsDto) = remoteDataSource.updatePaymentMethod(id, paymentMethodsDto)
 
-    suspend fun deletePaymentMethod(id: Int) = remoteDataSource.deletePaymentMethod(id)
+    suspend fun deletePaymentMethod(id: Int): Boolean{
+        return try {
+            remoteDataSource.deletePaymentMethod(id)
+            paymentMethodDao.deleteById(id)
+            true
+        }catch (e: Exception){
+            false
+        }
+    }
 }

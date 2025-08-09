@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.PaymentMethodsDto
 import edu.ucne.recrearte.data.repository.PaymentMethodRepository
+import edu.ucne.recrearte.presentation.techniques.TechniqueEvent
 import edu.ucne.recrearte.util.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -184,14 +185,22 @@ class PaymentMethodViewModel @Inject constructor(
     private fun deletePaymentMethods(id: Int){
         viewModelScope.launch {
             try {
-                repository.deletePaymentMethod(id)
-                _uiState.value = _uiState.value.copy(
-                    isSuccess = true,
-                    successMessage = "Payment method successfully removed"
-                )
-                onEvent(PaymentMethodEvent.GetPaymentMethods)
+                val isDeleted = repository.deletePaymentMethod(id)
+                if (isDeleted) {
+                    _uiState.value = _uiState.value.copy(
+                        isSuccess = true,
+                        successMessage = "Payment Method successfully removed"
+                    )
+                    onEvent(PaymentMethodEvent.GetPaymentMethods)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Failed to delete Payment Method"
+                    )
+                }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error deleting: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error deleting Payment Method: ${e.message}"
+                )
             }
         }
     }
