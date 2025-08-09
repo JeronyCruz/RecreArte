@@ -81,7 +81,26 @@ class LikeRepository @Inject constructor(
 
     suspend fun toggleLike(customerId: Int, workId: Int): Resource<Boolean> {
         return try {
+            // 1. Verificar si ya existe el like localmente
+            val existingLike = likeDao.getLikeByCustomerAndWork(customerId, workId)
+            val isLiked = existingLike != null
+
+            // 2. Hacer la llamada remota
             val result = remoteDataSource.toggleLike(customerId, workId)
+
+            // 3. Actualizar la base de datos local según el resultado
+            if (result) {
+                if (!isLiked) {
+                    // Si no estaba likeado y ahora sí, obtener todos los likes del usuario
+                    val remoteLikes = remoteDataSource.getLikes()
+                        .filter { it.customerId == customerId }
+                    likeDao.save(remoteLikes.map { it.toEntity() })
+                }
+            } else {
+                // Si estaba likeado y ahora no, eliminar el like local
+                likeDao.deleteByCustomerAndWork(customerId, workId)
+            }
+
             Resource.Success(result)
         } catch (e: HttpException) {
             Resource.Error("Internet error: ${e.message()}")
@@ -121,7 +140,7 @@ class LikeRepository @Inject constructor(
             val remoteWorks = remoteDataSource.getTop10MostLikedWorks()
             workDao.save(remoteWorks.map { it.toEntity() })
 
-            emit(Resource.Success(remoteWorks.take(5)))
+            emit(Resource.Success(remoteWorks.take(6)))
         } catch (e: Exception) {
             // En caso de error, usa los datos locales
             val localTop5 = workDao.getTop5().map { it.toDto() }
