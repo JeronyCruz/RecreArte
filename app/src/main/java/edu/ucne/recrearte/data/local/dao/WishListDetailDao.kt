@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import edu.ucne.recrearte.data.local.entities.WishListDetailsEntity
+import edu.ucne.recrearte.data.local.entities.WorksEntity
 
 @Dao
 interface WishListDetailsDao {
@@ -21,4 +22,12 @@ interface WishListDetailsDao {
 
     @Query("DELETE FROM WishListDetails WHERE wishListId = :wishListId")
     suspend fun deleteByWishListId(wishListId: Int)
+
+    @Query("""
+    SELECT w.* 
+    FROM Works w
+    INNER JOIN WishListDetails wld ON w.workId = wld.workId
+    WHERE wld.wishListId = :wishListId
+""")
+    suspend fun getWorksInWishlist(wishListId: Int): List<WorksEntity>
 }
