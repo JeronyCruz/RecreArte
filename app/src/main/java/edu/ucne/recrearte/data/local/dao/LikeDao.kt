@@ -25,10 +25,17 @@ interface LikeDao {
     @Query("SELECT * FROM Likes")
     suspend fun getAll(): List<LikesEntity>
     @Query("""
-    SELECT w.* 
-    FROM Works w
-    INNER JOIN Likes l ON w.workId = l.workId
-    WHERE l.customerId = :customerId and statusId = 1
+        SELECT DISTINCT w.* 
+        FROM Works w
+        INNER JOIN Likes l ON w.workId = l.workId
+        WHERE l.customerId = :customerId AND w.statusId = 1
     """)
     suspend fun getWorksLikedByCustomer(customerId: Int): List<WorksEntity>
+
+    @Query("SELECT * FROM Likes WHERE customerId = :customerId AND workId = :workId LIMIT 1")
+    suspend fun getLikeByCustomerAndWork(customerId: Int, workId: Int):LikesEntity?
+
+    @Query("DELETE FROM Likes WHERE customerId = :customerId AND workId = :workId")
+    suspend fun deleteByCustomerAndWork(customerId: Int, workId: Int)
+
 }
