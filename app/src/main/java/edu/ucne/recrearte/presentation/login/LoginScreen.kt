@@ -1,6 +1,5 @@
 package edu.ucne.recrearte.presentation.login
 
-//imagen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -68,7 +67,6 @@ fun LoginScreen(
         }
     }
 
-
     LoginBodyScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
@@ -76,7 +74,6 @@ fun LoginScreen(
         goToSocialLogin = { /* Lógica para login social */ }
     )
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,7 +96,7 @@ fun LoginBodyScreen(
     ) {
 
         Spacer(modifier = Modifier.height(24.dp))
-        // Título
+
         Text(
             text = "RecreArte",
             style = MaterialTheme.typography.headlineLarge.copy(
@@ -121,7 +118,6 @@ fun LoginBodyScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Subtítulo
         Text(
             text = "Welcome back",
             style = MaterialTheme.typography.titleMedium.copy(
@@ -130,12 +126,10 @@ fun LoginBodyScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        // Campos de formulario
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Campo de Email
             OutlinedTextField(
                 value = uiState.email,
                 onValueChange = { onEvent(LoginEvent.EmailChange(it)) },
@@ -160,7 +154,6 @@ fun LoginBodyScreen(
                 )
             }
 
-            // Campo de Password
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = { onEvent(LoginEvent.PasswordChange(it)) },
@@ -196,7 +189,6 @@ fun LoginBodyScreen(
             }
         }
 
-        // Botón de Login
         Button(
             onClick = { onEvent(LoginEvent.LoginUser) },
             modifier = Modifier
@@ -221,7 +213,6 @@ fun LoginBodyScreen(
             }
         }
 
-        // Mensajes de error
         uiState.errorMessage?.let { error ->
             Text(
                 text = error,
@@ -234,7 +225,6 @@ fun LoginBodyScreen(
             )
         }
 
-        // Opciones inferiores
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -242,7 +232,6 @@ fun LoginBodyScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // División con líneas
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -263,7 +252,6 @@ fun LoginBodyScreen(
                 )
             }
 
-            // Botón de registro como texto
             TextButton(
                 onClick = goToRegister,
                 modifier = Modifier.fillMaxWidth()
@@ -282,20 +270,19 @@ fun LoginBodyScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Icono 1 - WhatsApp
+
                 IconButton(
                     onClick = { /* Acción para WhatsApp */ },
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.whatsapp_icn), // Asegúrate de tener estos recursos
+                        painter = painterResource(id = R.drawable.whatsapp_icn),
                         contentDescription = "WhatsApp",
                         modifier = Modifier.size(32.dp),
                         tint = Color.Unspecified
                     )
                 }
 
-                // Icono 2 - Instagram
                 IconButton(
                     onClick = { /* Acción para Instagram */ },
                     modifier = Modifier.size(48.dp)
@@ -308,7 +295,6 @@ fun LoginBodyScreen(
                     )
                 }
 
-                // Icono 3 - Facebook
                 IconButton(
                     onClick = { /* Acción para Facebook */ },
                     modifier = Modifier.size(48.dp)
@@ -321,7 +307,6 @@ fun LoginBodyScreen(
                     )
                 }
 
-                // Icono 4 - Twitter
                 IconButton(
                     onClick = { /* Acción para Twitter */ },
                     modifier = Modifier.size(48.dp)

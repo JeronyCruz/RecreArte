@@ -77,12 +77,11 @@ fun WorkDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val scope = rememberCoroutineScope()
-    // Cargar los datos de la obra (siempre, independientemente de la conexión)
+
     LaunchedEffect(workId) {
         viewModel.loadWork(workId)
     }
 
-    // Mostrar snackbar cuando no hay conexión
     LaunchedEffect(isOnline) {
         if (!isOnline) {
             scope.launch {
@@ -94,12 +93,10 @@ fun WorkDetailScreen(
         }
     }
 
-    // Cargar los datos de la obra
     LaunchedEffect(workId) {
         viewModel.loadWork(workId)
     }
 
-    // Obtener los datos actuales del ViewModel
     val uiState by viewModel.uiSate.collectAsState()
     val work = remember(uiState.works, workId) {
         uiState.works.find { it.workId == workId } ?: WorksDto(
@@ -131,7 +128,6 @@ fun WorkDetailScreen(
 
     val cartState by shoppingCartViewModel.uiSate.collectAsState()
 
-    // Mostrar mensajes de éxito/error
     LaunchedEffect(cartState.isSuccess, cartState.errorMessage) {
         if (cartState.isSuccess) {
             scope.launch {
@@ -152,8 +148,6 @@ fun WorkDetailScreen(
             }
         }
     }
-
-
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -220,7 +214,6 @@ fun WorkDetailScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Descripción
             Text(
                 text = work.description ?: "No description",
                 style = MaterialTheme.typography.bodyLarge,
@@ -229,7 +222,6 @@ fun WorkDetailScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Precio
             Text(
                 text = "$${work.price ?: 0.0}",
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -252,7 +244,6 @@ fun WorkDetailScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Icono con la primera letra del nombre del artista
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -270,7 +261,6 @@ fun WorkDetailScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Texto del nombre del artista alineado al centro vertical del ícono
                 Text(
                     text = uiState.nameArtist ?: "Unknown artist",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -301,7 +291,6 @@ fun WorkDetailScreen(
                     )
                 }
 
-                // Contador de likes
                 Text(
                     text = "$likeCount",
                     style = MaterialTheme.typography.bodyLarge,
@@ -310,7 +299,6 @@ fun WorkDetailScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Botón de Favoritos
                 IconButton(
                     onClick = { viewModel.onEvent(WorkEvent.ToggleWishlist) },
                     modifier = Modifier.size(48.dp)
@@ -328,7 +316,6 @@ fun WorkDetailScreen(
 
             Button(
                 onClick = {
-                     //Agregar al carrito
                     shoppingCartViewModel.onEvent(
                         ShoppingCartEvent.AddToCart( workId)
                     )

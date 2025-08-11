@@ -407,7 +407,6 @@ class WorkViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(networkMessage = null)
     }
 
-    //para los artistas
     fun findArtist(id: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
@@ -444,7 +443,6 @@ class WorkViewModel @Inject constructor(
             return
         }
 
-        // Nueva validación para la imagen
         val imageError = if (_selectedImage.value == null && _uiState.value.imageUrl.isNullOrEmpty()) {
             "You must select an image"
         } else null
@@ -680,7 +678,6 @@ class WorkViewModel @Inject constructor(
         }
     }
 
-    // Cambia la definición de toggleLike en el ViewModel
     private fun toggleLike() {
         viewModelScope.launch {
             try {
@@ -724,7 +721,6 @@ class WorkViewModel @Inject constructor(
                 when (val result = wishListRepository.toggleWorkInWishlist(customerId, workId)) {
                     is Resource.Success -> {
                         _isInWishlist.value = result.data ?: false
-                        // You might want to show a snackbar or other feedback here
                     }
                     is Resource.Error -> {
                         _uiState.update { it.copy(errorMessage = result.message) }
@@ -775,7 +771,6 @@ class WorkViewModel @Inject constructor(
         }
     }
 
-    //para actualizar el status
     private fun updateWorksStatus(workIds: List<Int>, statusId: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
@@ -796,7 +791,7 @@ class WorkViewModel @Inject constructor(
                                     price = updatedWork.price,
                                     description = updatedWork.description,
                                     statusId = 2,
-                                    imageFile = null // No actualizamos la imagen
+                                    imageFile = null
                                 )
                             }
                         }
@@ -819,7 +814,6 @@ class WorkViewModel @Inject constructor(
                     successMessage = "States updated successfully"
                 )
 
-                // Refresh works list
                 getWorks()
 
             } catch (e: Exception) {

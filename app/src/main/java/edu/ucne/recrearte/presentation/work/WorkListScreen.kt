@@ -84,15 +84,12 @@ fun WorkListScreen(
     val searchQuery by homeViewModel.searchQuery.collectAsState()
     val searchResults by homeViewModel.searchResults.collectAsState()
 
-    // Estados para el diálogo de confirmación
     var workToDelete by remember { mutableStateOf<WorksDto?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    // Obtener el ID del artista logueado
     val userId by remember { derivedStateOf { tokenManager.getUserId() } }
     val artistId = userId
 
-    // Manejar la eliminación
     val handleDelete = { work: WorksDto ->
         workToDelete = work
         showDeleteConfirmation = true
@@ -112,7 +109,6 @@ fun WorkListScreen(
         workToDelete = null
     }
 
-    // Cargar obras del artista logueado
     LaunchedEffect(artistId) {
         if (artistId != null) {
             homeViewModel.onEvent(HomeEvent.GetWorksByArtist(artistId))
@@ -121,7 +117,6 @@ fun WorkListScreen(
         }
     }
 
-    // Mostrar diálogo de confirmación
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },

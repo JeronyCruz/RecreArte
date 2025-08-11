@@ -46,8 +46,7 @@ fun BottomNavigationBar(
         BottomNavItem.RecreArteScreen,
         BottomNavItem.Favorites,
         BottomNavItem.Cart,
-        BottomNavItem.Profile,
-//        BottomNavItem.AdminArtistMenu
+        BottomNavItem.Profile
     )
 
     val filteredItems = if (userRoleId == 1 || userRoleId == 2) {

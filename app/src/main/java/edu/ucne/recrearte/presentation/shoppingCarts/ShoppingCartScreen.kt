@@ -211,7 +211,6 @@ fun ShoppingCartScreen(
                 }
             }
 
-            // Mostrar mensajes de éxito
             if (uiState.isSuccess && !uiState.successMessage.isNullOrEmpty()) {
                 Box(
                     modifier = Modifier
@@ -230,7 +229,6 @@ fun ShoppingCartScreen(
                     )
                 }
 
-                // Resetear el mensaje después de mostrarlo
                 LaunchedEffect(Unit) {
                     viewModel.onEvent(ShoppingCartEvent.ResetSuccessMessage)
                 }
@@ -282,7 +280,6 @@ fun ShoppingCartItem(
         }
     }
 
-    // Línea divisoria opcional
     Divider(
         modifier = Modifier.padding(horizontal = 16.dp),
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),

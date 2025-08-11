@@ -75,7 +75,6 @@ fun RecreArteHomeScreen(
         onRefresh = { viewModel.onEvent(HomeEvent.GetTop10MostLikedWorks) }
     )
 
-    // Obtener datos al iniciar
     LaunchedEffect(Unit) {
         viewModel.onEvent(HomeEvent.GetTop10MostLikedWorks)
         viewModel.onEvent(HomeEvent.GetTechniques)
@@ -120,14 +119,13 @@ fun RecreArteHomeScreen(
                     .verticalScroll(rememberScrollState())
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                // Barra de búsqueda estilo Techniques
+
                 SearchBarHome(
                     query = searchQuery,
                     onQueryChanged = viewModel::onSearchQueryChanged,
                     modifier = Modifier.padding(top = 8.dp)
                 )
 
-                // División visual
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -135,7 +133,6 @@ fun RecreArteHomeScreen(
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 )
 
-                // Sección de Obras Destacadas
                 SectionTitle(
                     if (searchQuery.isNotBlank()) "Search Result" else "Main Works"
                 )
@@ -156,8 +153,6 @@ fun RecreArteHomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-
-                // División visual
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -165,7 +160,6 @@ fun RecreArteHomeScreen(
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 )
 
-                // Sección de Técnicas
                 SectionTitle("Techniques")
 
                 if (uiState.techniquesL.isEmpty() && !uiState.isLoading) {
@@ -185,7 +179,6 @@ fun RecreArteHomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // División visual
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -193,7 +186,6 @@ fun RecreArteHomeScreen(
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 )
 
-                // Sección de Artistas
                 SectionTitle("Main Artists")
 
                 if (uiState.listArtist.isEmpty() && !uiState.isLoading) {
@@ -402,7 +394,6 @@ fun FeaturedWorkCard(work: WorksDto, onClick: () -> Unit) {
     ) {
         Column {
             if (!work.imageUrl.isNullOrEmpty()) {
-                // Add more detailed logging
                 println("Attempting to load image from URL: ${work.imageUrl}")
 
                 AsyncImage(

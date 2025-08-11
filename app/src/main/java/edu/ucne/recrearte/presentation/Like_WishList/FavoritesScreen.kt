@@ -143,7 +143,7 @@ private fun FavoritesGrid(
         items(works) { work ->
             FavoriteWorkCard(
                 work = work,
-                onClick = { onWorkClick(work.workId ?: 0) } // 👈 usa aquí el campo correcto de tu DTO
+                onClick = { onWorkClick(work.workId ?: 0) }
             )
         }
     }

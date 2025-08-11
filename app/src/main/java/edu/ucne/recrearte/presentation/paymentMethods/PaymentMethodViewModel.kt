@@ -133,7 +133,7 @@ class PaymentMethodViewModel @Inject constructor(
             }
         }
     }
-//revisar
+
     private fun updatePaymentMethod(id: Int){
         val name = _uiState.value.paymentMethodName.trim()
         val validationError = isValidPaymentMethodName(name)

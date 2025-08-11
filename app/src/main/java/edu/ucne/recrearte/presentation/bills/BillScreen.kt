@@ -78,7 +78,6 @@ fun BillScreen(
         }
     }
 
-    // Diálogo para validación de tarjeta
     if (showCardDialog) {
         CardValidationDialog(
             cardNumber = cardNumber,
@@ -99,7 +98,6 @@ fun BillScreen(
         )
     }
 
-    // Diálogo de compra exitosa
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = {

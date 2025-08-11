@@ -35,7 +35,7 @@ fun AdminArtistMenuSheet(
     roleId: Int,
     onDismiss: () -> Unit,
     navController: NavHostController,
-    sheetState: SheetState, // Nuevo parámetro
+    sheetState: SheetState,
     scope: CoroutineScope
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -55,12 +55,12 @@ fun AdminArtistMenuSheet(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            if (roleId == 1) { // Admin
+            if (roleId == 1) {
                 MenuItem(
                     text = "Payments Methods",
                     icon = Icons.Default.Payment,
                     onClick = {
-                        // Cerrar el modal antes de navegar
+
                         scope.launch {
                             sheetState.hide()
                         }.invokeOnCompletion {
@@ -96,7 +96,7 @@ fun AdminArtistMenuSheet(
                 )
             }
 
-            if (roleId == 2) { // Artista
+            if (roleId == 2) {
                 MenuItem(
                     text = "My Works",
                     icon = Icons.Default.Palette,

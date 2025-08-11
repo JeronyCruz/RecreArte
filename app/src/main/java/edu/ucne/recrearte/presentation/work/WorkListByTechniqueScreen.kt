@@ -65,7 +65,6 @@ fun WorkListByTechniqueScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
 
-    // Obtener obras por técnica al iniciar o cuando cambia el techniqueId
     LaunchedEffect(techniqueId) {
         Log.d("WorkListByTechnique", "Fetching works for techniqueId = $techniqueId")
         viewModel.onEvent(HomeEvent.GetWorksByTechnique(techniqueId))

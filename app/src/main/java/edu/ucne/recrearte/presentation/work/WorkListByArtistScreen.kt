@@ -136,7 +136,6 @@ fun WorkListByArtistScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        // Barra de búsqueda idéntica a WorkListScreen
                         item {
                             SearchBar(
                                 query = searchQuery,

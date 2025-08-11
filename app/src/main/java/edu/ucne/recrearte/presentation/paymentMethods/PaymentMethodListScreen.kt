@@ -83,7 +83,6 @@ fun PaymentMethodListScreen(
         methodToDelete = null
     }
 
-    // Cargar lista
     LaunchedEffect(Unit) {
         viewModel.onEvent(PaymentMethodEvent.GetPaymentMethods)
     }
@@ -200,7 +199,6 @@ fun PaymentMethodListBodyScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        // Busqueda
                         item {
                             SearchBar(
                                 query = query,
@@ -311,7 +309,6 @@ fun PaymentMethodCard(
                 )
             }
 
-            // Botón de eliminar
             IconButton(
                 onClick = { deletePaymentMethod(paymentMethod) },
                 modifier = Modifier.size(40.dp)
