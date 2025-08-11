@@ -18,8 +18,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -85,7 +83,6 @@ fun PaymentMethodListScreen(
         methodToDelete = null
     }
 
-    // Cargar lista
     LaunchedEffect(Unit) {
         viewModel.onEvent(PaymentMethodEvent.GetPaymentMethods)
     }
@@ -202,7 +199,6 @@ fun PaymentMethodListBodyScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        // Busqueda
                         item {
                             SearchBar(
                                 query = query,
@@ -313,7 +309,6 @@ fun PaymentMethodCard(
                 )
             }
 
-            // Botón de eliminar
             IconButton(
                 onClick = { deletePaymentMethod(paymentMethod) },
                 modifier = Modifier.size(40.dp)

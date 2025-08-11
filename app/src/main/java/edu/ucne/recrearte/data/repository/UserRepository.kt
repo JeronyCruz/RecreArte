@@ -2,7 +2,6 @@ package edu.ucne.recrearte.data.repository
 
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
-import edu.ucne.recrearte.data.remote.dto.ChangePasswordDto
 import edu.ucne.recrearte.data.remote.dto.UsersDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -24,18 +23,18 @@ class UserRepository @Inject constructor(
             emit(Resource.Success(methods))
         } catch (e: HttpException) {
             val errorMsg = when (e.code()) {
-                401 -> "Tu sesión ha expirado. Por favor inicia sesión nuevamente"
-                403 -> "No tienes permiso para acceder a este recurso"
-                else -> "Error del servidor (${e.code()})"
+                401 -> "Your session has expired. Please log in again."
+                403 -> "You do not have permission to access this resource"
+                else -> "Server error (${e.code()})"
             }
             println("[DEBUG] Error HTTP: $errorMsg")
             emit(Resource.Error(errorMsg))
         } catch (e: IOException) {
-            val errorMsg = "Error de conexión: ${e.message}"
+            val errorMsg = "Connection error: ${e.message}"
             println("[DEBUG] Network Error: $errorMsg")
             emit(Resource.Error(errorMsg))
         } catch (e: Exception) {
-            val errorMsg = "Error inesperado: ${e.message}"
+            val errorMsg = "Unexpected error: ${e.message}"
             println("[DEBUG] Unexpected Error: $errorMsg")
             emit(Resource.Error(errorMsg))
         }catch (e: HttpException){
@@ -71,21 +70,21 @@ class UserRepository @Inject constructor(
             if (success) {
                 Resource.Success(true)
             } else {
-                Resource.Error("La contraseña introducida no es la actual!")
+                Resource.Error("The password entered is not the current one!")
             }
         } catch (e: HttpException) {
             val errorMsg = when (e.code()) {
-                400 -> "Datos inválidos"
-                401 -> "Contraseña actual incorrecta"
-                403 -> "No autorizado"
-                500 -> "Error del servidor"
-                else -> "Error desconocido (${e.code()})"
+                400 -> "Invalid data"
+                401 -> "Current password incorrect"
+                403 -> "Unauthorized"
+                500 -> "Server error"
+                else -> "Unknown error (${e.code()})"
             }
             Resource.Error(errorMsg)
         } catch (e: IOException) {
-            Resource.Error("Error de conexión: ${e.message ?: "Verifique su conexión a internet"}")
+            Resource.Error("Connection error: ${e.message ?: "Check your internet connection"}")
         } catch (e: Exception) {
-            Resource.Error("Error inesperado: ${e.message ?: "Ocurrió un error"}")
+            Resource.Error("Unexpected error: ${e.message ?: "An error occurred"}")
         }
     }
 }

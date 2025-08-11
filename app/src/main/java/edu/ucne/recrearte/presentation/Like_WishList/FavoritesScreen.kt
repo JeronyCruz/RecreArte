@@ -1,11 +1,18 @@
 package edu.ucne.recrearte.presentation.Like_WishList
 
-import android.graphics.BitmapFactory
-import android.util.Base64
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -14,18 +21,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.navigation.Screen
@@ -46,7 +66,7 @@ fun FavoritesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis Favoritos") },
+                title = { Text("My Favorites") },
                 actions = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -123,7 +143,7 @@ private fun FavoritesGrid(
         items(works) { work ->
             FavoriteWorkCard(
                 work = work,
-                onClick = { onWorkClick(work.workId ?: 0) } // 👈 usa aquí el campo correcto de tu DTO
+                onClick = { onWorkClick(work.workId ?: 0) }
             )
         }
     }
@@ -136,69 +156,35 @@ private fun FavoriteWorkCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(200.dp)
+            .height(250.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            // Imagen
-            Box(
+            // Imagen desde URL
+            AsyncImage(
+                model = work.imageUrl ?: R.drawable.placeholder_image,
+                contentDescription = work.title,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                val base64 = work.base64
-                    ?.replace("data:image/png;base64,", "")
-                    ?.replace("data:image/jpeg;base64,", "")
-                    ?.replace("data:image/jpg;base64,", "")
-                    ?.replace("data:image/gif;base64,", "")
-                    ?.trim()
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.placeholder_image),
+                error = painterResource(R.drawable.placeholder_image)
+            )
 
-                val bitmap = remember(base64) {
-                    try {
-                        base64?.let {
-                            val imageBytes = Base64.decode(it, Base64.DEFAULT)
-                            BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)?.asImageBitmap()
-                        }
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = work.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(R.drawable.placeholder_image),
-                        contentDescription = "Placeholder",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
-
-            // Info
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
+            Column(modifier = Modifier.padding(8.dp)) {
                 Text(
-                    text = work.title ?: "Sin título",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = work.title,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "$${work.price ?: 0.0}",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "$${work.price}",
+                    fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
@@ -224,9 +210,9 @@ private fun EmptyFavoritesMessage(
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = if (showWishlist)
-                "No tienes obras en tu wishlist"
+                "You don't have works in your WishList"
             else
-                "No has dado like a ninguna obra",
+                "You haven't liked any work",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center

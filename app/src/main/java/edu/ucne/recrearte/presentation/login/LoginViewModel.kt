@@ -2,11 +2,13 @@ package edu.ucne.recrearte.presentation.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavHostController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.recrearte.data.remote.InvalidCredentialsException
-import edu.ucne.recrearte.util.TokenManager
 import edu.ucne.recrearte.data.remote.dto.LoginRequestDto
 import edu.ucne.recrearte.data.repository.LoginRepository
+import edu.ucne.recrearte.presentation.navigation.Screen
+import edu.ucne.recrearte.util.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,17 +43,15 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(password = password) }
     }
 
-    // En LoginViewModel.kt
     private fun loginUser() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
-                // Validación básica de campos
                 if (_uiState.value.email.isBlank() || _uiState.value.password.isBlank()) {
                     _uiState.update {
                         it.copy(
-                            errorMessage = "Por favor ingrese correo y contraseña",
+                            errorMessage = "Please enter your email and password.",
                             isLoading = false
                         )
                     }
@@ -78,26 +78,29 @@ class LoginViewModel @Inject constructor(
             } catch (e: InvalidCredentialsException) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = e.message, // "Correo o contraseña incorrectos"
+                        errorMessage = e.message,
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = "Error de conexión. Intente nuevamente",
+                        errorMessage = "Connection error. Please try again.",
                         isLoading = false
                     )
                 }
-                println("❌ [LOGIN ERROR] ${e.message}")
+                println("[LOGIN ERROR] ${e.message}")
             }
         }
     }
 
-    fun logout() {
+    fun logout(navController: NavHostController) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             repository.logout()
+            navController.navigate(Screen.LoginScreen) {
+                popUpTo(0)
+            }
             _uiState.update {
                 it.copy(
                     isLoading = false,

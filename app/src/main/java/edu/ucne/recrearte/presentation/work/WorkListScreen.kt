@@ -1,6 +1,5 @@
 package edu.ucne.recrearte.presentation.work
 
-import android.util.Base64
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -49,8 +48,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +58,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.Home.HomeEvent
 import edu.ucne.recrearte.presentation.Home.HomeUiState
@@ -83,15 +84,12 @@ fun WorkListScreen(
     val searchQuery by homeViewModel.searchQuery.collectAsState()
     val searchResults by homeViewModel.searchResults.collectAsState()
 
-    // Estados para el diálogo de confirmación
     var workToDelete by remember { mutableStateOf<WorksDto?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    // Obtener el ID del artista logueado
     val userId by remember { derivedStateOf { tokenManager.getUserId() } }
     val artistId = userId
 
-    // Manejar la eliminación
     val handleDelete = { work: WorksDto ->
         workToDelete = work
         showDeleteConfirmation = true
@@ -111,7 +109,6 @@ fun WorkListScreen(
         workToDelete = null
     }
 
-    // Cargar obras del artista logueado
     LaunchedEffect(artistId) {
         if (artistId != null) {
             homeViewModel.onEvent(HomeEvent.GetWorksByArtist(artistId))
@@ -120,23 +117,22 @@ fun WorkListScreen(
         }
     }
 
-    // Mostrar diálogo de confirmación
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Confirmar eliminación") },
-            text = { Text("¿Estás seguro de que quieres eliminar la obra ${workToDelete?.title}?") },
+            title = { Text("Confirm removing ") },
+            text = { Text("¿Are you sure that you want to remove the work ${workToDelete?.title}?") },
             confirmButton = {
                 TextButton(
                     onClick = onDeleteConfirmed,
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text("Cancelar")
+                    Text("Cancel")
                 }
             }
         )
@@ -187,7 +183,7 @@ fun WorkListBodyScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Mis Obras de Arte",
+                        text = "My main Works",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -214,7 +210,7 @@ fun WorkListBodyScreen(
             FloatingActionButton(
                 onClick = createWork,
             ) {
-                Icon(Icons.Filled.Add, "Crear obra")
+                Icon(Icons.Filled.Add, "Create Work")
             }
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -238,7 +234,7 @@ fun WorkListBodyScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No se encontraron obras",
+                            text = "Art works not found",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -255,12 +251,12 @@ fun WorkListBodyScreen(
                             SearchBar(
                                 query = query,
                                 onQueryChanged = onSearchQueryChanged,
-                                placeholder = "Buscar obras..."
+                                placeholder = "Search works..."
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        val worksToShow = if (query.isNotBlank()) searchResults else uiState.worksByArtistsDto
+                        val worksToShow = searchResults.takeIf { query.isNotBlank() } ?: uiState.worksByArtistsDto
 
                         items(worksToShow) { work ->
                             ArtistWorkCard(
@@ -317,7 +313,7 @@ fun WorkListBodyScreen(
 fun SearchBar(
     query: String,
     onQueryChanged: (String) -> Unit,
-    placeholder: String = "Buscar..."
+    placeholder: String = "Look for..."
 ) {
     androidx.compose.material3.OutlinedTextField(
         value = query,
@@ -355,28 +351,26 @@ fun ArtistWorkCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Mostrar imagen si está disponible
-            if (!work.base64.isNullOrEmpty()) {
-                val imageBytes = Base64.decode(work.base64, Base64.DEFAULT)
-                val bitmap = remember(work.base64) {
-                    try {
-                        android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                            ?.asImageBitmap()
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-
-                bitmap?.let {
-                    Image(
-                        bitmap = it,
-                        contentDescription = work.title,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(end = 12.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
+            // Mostrar imagen desde URL (Cloudinary)
+            work.imageUrl?.let { imageUrl ->
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = work.title,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(end = 12.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.placeholder_image),
+                    error = painterResource(R.drawable.placeholder_image)
+                )
+            } ?: Image(
+                painter = painterResource(R.drawable.placeholder_image),
+                contentDescription = "Placeholder",
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(end = 12.dp),
+                contentScale = ContentScale.Crop
+                )
 
             Column(
                 modifier = Modifier
@@ -395,21 +389,21 @@ fun ArtistWorkCard(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Técnica: ")
+                            append("Techniques: ")
                         }
                         append(work.techniqueId.toString())
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Dimensiones: ")
+                            append("Dimensions: ")
                         }
                         append(work.dimension)
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Precio: ")
+                            append("Price: ")
                         }
                         append("$${work.price}")
                     },
@@ -417,7 +411,7 @@ fun ArtistWorkCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-           
+
             if (showDelete) {
                 IconButton(
                     onClick = onDelete,
@@ -425,7 +419,7 @@ fun ArtistWorkCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = "Delete",
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(24.dp)
                     )

@@ -46,8 +46,7 @@ fun BottomNavigationBar(
         BottomNavItem.RecreArteScreen,
         BottomNavItem.Favorites,
         BottomNavItem.Cart,
-        BottomNavItem.Profile,
-//        BottomNavItem.AdminArtistMenu
+        BottomNavItem.Profile
     )
 
     val filteredItems = if (userRoleId == 1 || userRoleId == 2) {
@@ -123,35 +122,35 @@ sealed class BottomNavItem(
     val screen: Screen
 ) {
     object RecreArteScreen : BottomNavItem(
-        title = "Inicio",
+        title = "Start",
         filledIcon = Icons.Filled.Home,
         outlinedIcon = Icons.Outlined.Home,
         screen = Screen.RecreArteScreen
     )
 
     object Favorites : BottomNavItem(
-        title = "Favoritos",
+        title = "Favorites",
         filledIcon = Icons.Filled.Favorite,
         outlinedIcon = Icons.Outlined.Favorite,
         screen = Screen.FavoritesScreen
     )
 
     object Cart : BottomNavItem(
-        title = "Carrito",
+        title = "Cart",
         filledIcon = Icons.Filled.ShoppingCart,
         outlinedIcon = Icons.Outlined.ShoppingCart,
         screen = Screen.CartScreen
     )
 
     object Profile : BottomNavItem(
-        title = "Perfil",
+        title = "Profile",
         filledIcon = Icons.Filled.Person,
         outlinedIcon = Icons.Outlined.Person,
         screen = Screen.ProfileScreen
     )
 
     object AdminArtistMenu : BottomNavItem(
-        title = "Menú",
+        title = "Menu",
         filledIcon = Icons.Filled.Menu,
         outlinedIcon = Icons.Outlined.Menu,
         screen = Screen.AdminArtistMenuScreen

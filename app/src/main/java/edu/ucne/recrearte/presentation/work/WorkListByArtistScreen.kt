@@ -1,8 +1,6 @@
 package edu.ucne.recrearte.presentation.work
 
-import android.util.Base64
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,11 +35,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -50,9 +47,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import edu.ucne.recrearte.R
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.Home.HomeEvent
 import edu.ucne.recrearte.presentation.Home.HomeViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -81,7 +81,7 @@ fun WorkListByArtistScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Obras del Artista",
+                        text = "Artist Works",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -92,7 +92,7 @@ fun WorkListByArtistScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Go back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -123,7 +123,7 @@ fun WorkListByArtistScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No se encontraron obras",
+                            text = "Art works works not found",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -136,12 +136,11 @@ fun WorkListByArtistScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        // Barra de búsqueda idéntica a WorkListScreen
                         item {
                             SearchBar(
                                 query = searchQuery,
                                 onQueryChanged = viewModel::onSearchQueryChanged,
-                                placeholder = "Buscar obras..."
+                                placeholder = "Search works..."
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }
@@ -205,29 +204,18 @@ fun ArtistWorkCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Mostrar imagen si está disponible
-            if (!work.base64.isNullOrEmpty()) {
-                val imageBytes = Base64.decode(work.base64, Base64.DEFAULT)
-                val bitmap = remember(work.base64) {
-                    try {
-                        android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                            ?.asImageBitmap()
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
 
-                bitmap?.let {
-                    Image(
-                        bitmap = it,
-                        contentDescription = work.title,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(end = 12.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
+            AsyncImage(
+                model = work.imageUrl ?: R.drawable.placeholder_image,
+                contentDescription = work.title,
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(end = 12.dp),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.placeholder_image),
+                error = painterResource(R.drawable.placeholder_image)
+            )
+
 
             Column(
                 modifier = Modifier
@@ -246,21 +234,21 @@ fun ArtistWorkCard(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Técnica: ")
+                            append("Techniques: ")
                         }
                         append(work.techniqueId.toString())
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Dimensiones: ")
+                            append("Dimensions: ")
                         }
                         append(work.dimension)
 
                         append("\n")
 
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Precio: ")
+                            append("Price: ")
                         }
                         append("$${work.price}")
                     },

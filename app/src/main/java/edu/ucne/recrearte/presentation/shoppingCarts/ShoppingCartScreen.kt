@@ -20,8 +20,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import edu.ucne.recrearte.data.remote.dto.ShoppingCartDetailsDto
-import edu.ucne.recrearte.presentation.shoppingCarts.ShoppingCartEvent.GetCart
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -214,7 +211,6 @@ fun ShoppingCartScreen(
                 }
             }
 
-            // Mostrar mensajes de éxito
             if (uiState.isSuccess && !uiState.successMessage.isNullOrEmpty()) {
                 Box(
                     modifier = Modifier
@@ -233,7 +229,6 @@ fun ShoppingCartScreen(
                     )
                 }
 
-                // Resetear el mensaje después de mostrarlo
                 LaunchedEffect(Unit) {
                     viewModel.onEvent(ShoppingCartEvent.ResetSuccessMessage)
                 }
@@ -285,7 +280,6 @@ fun ShoppingCartItem(
         }
     }
 
-    // Línea divisoria opcional
     Divider(
         modifier = Modifier.padding(horizontal = 16.dp),
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),

@@ -34,7 +34,7 @@ fun ChangesPasswordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Cambiar Contraseña") },
+        title = { Text("Change Password") },
         text = {
             Column {
                 if (errorMessage != null) {
@@ -51,7 +51,7 @@ fun ChangesPasswordDialog(
                 OutlinedTextField(
                     value = currentPassword,
                     onValueChange = { currentPassword = it },
-                    label = { Text("Contraseña Actual") },
+                    label = { Text("Current Password") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -63,7 +63,7 @@ fun ChangesPasswordDialog(
                 OutlinedTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
-                    label = { Text("Nueva Contraseña") },
+                    label = { Text("New Password") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -75,7 +75,7 @@ fun ChangesPasswordDialog(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirmar Nueva Contraseña") },
+                    label = { Text("Confirm New Password") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -90,7 +90,7 @@ fun ChangesPasswordDialog(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Cambiar Contraseña")
+                Text("Change Password")
             }
         },
         dismissButton = {
@@ -98,7 +98,7 @@ fun ChangesPasswordDialog(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Cancelar")
+                Text("Cancel")
             }
         }
     )

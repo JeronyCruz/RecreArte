@@ -18,12 +18,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
@@ -38,9 +34,10 @@ fun MainAppScreen(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val userRoleId by remember { derivedStateOf { tokenManager.getRoleId() } } // <- Esta es la línea clave
 
-    // Lista de pantallas que SÍ deben mostrar la barra
+    // Usar rememberUpdatedState para el roleId para garantizar actualizaciones
+    val currentRoleId by rememberUpdatedState(tokenManager.getRoleId())
+
     val bottomBarRoutes = listOf(
         Screen.RecreArteScreen::class.qualifiedName,
         Screen.FavoritesScreen::class.qualifiedName,
@@ -48,31 +45,30 @@ fun MainAppScreen(
         Screen.ProfileScreen::class.qualifiedName
     )
 
-    // ¿La ruta actual está en la lista?
     val showBottomBar = bottomBarRoutes.contains(currentRoute)
-
-    // Determinar el índice seleccionado basado en la ruta actual
-    val selectedDestination = remember(currentRoute) {
-        BottomNavDestination.entries.indexOfFirst { dest ->
-            currentRoute == dest.screen::class.qualifiedName
-        }.takeIf { it != -1 } ?: 0
-    }
 
     Scaffold(
         modifier = modifier,
         bottomBar = {
             if (showBottomBar) {
+                val roleId by rememberUpdatedState(currentRoleId)
                 NavigationBar {
                     // Filtramos los items basados en el roleId
-                    val visibleItems = if (userRoleId == 1 || userRoleId == 2) {
-                        BottomNavDestination.entries // Muestra todos los items incluyendo AdminArtistMenu
-                    } else {
-                        BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
+                    val visibleItems = when (roleId) {
+                        1, 2 -> {
+                            BottomNavDestination.entries.filter { it != BottomNavDestination.Cart }
+                        }
+                        3 -> {
+                            BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
+                        }
+                        else -> {
+                            BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
+                        }
                     }
 
-                    visibleItems.forEachIndexed { index, destination ->
+                    visibleItems.forEach { destination ->
                         NavigationBarItem(
-                            selected = selectedDestination == index,
+                            selected = currentRoute == destination.screen::class.qualifiedName,
                             onClick = {
                                 navController.navigate(destination.screen) {
                                     launchSingleTop = true
@@ -84,7 +80,7 @@ fun MainAppScreen(
                             },
                             icon = {
                                 Icon(
-                                    imageVector = if (selectedDestination == index)
+                                    imageVector = if (currentRoute == destination.screen::class.qualifiedName)
                                         destination.filledIcon
                                     else destination.outlinedIcon,
                                     contentDescription = destination.title
@@ -108,37 +104,37 @@ fun MainAppScreen(
 
 enum class BottomNavDestination(
     val title: String,
-    val filledIcon: ImageVector,  // Icono relleno
-    val outlinedIcon: ImageVector, // Icono de contorno
+    val filledIcon: ImageVector,
+    val outlinedIcon: ImageVector,
     val screen: Screen
 ) {
     RecreArteScreen(
-        title = "Inicio",
+        title = "Start",
         filledIcon = Icons.Filled.Home,
         outlinedIcon = Icons.Outlined.Home,
         screen = Screen.RecreArteScreen
     ),
     Favorites(
-        title = "Favoritos",
+        title = "Favorites",
         filledIcon = Icons.Filled.Favorite,
         outlinedIcon = Icons.Outlined.FavoriteBorder,
         screen = Screen.FavoritesScreen
     ),
     Cart(
-        title = "Carrito",
+        title = "Cart",
         filledIcon = Icons.Filled.ShoppingCart,
         outlinedIcon = Icons.Outlined.ShoppingCart,
         screen = Screen.CartScreen
     ),
     Profile(
-        title = "Perfil",
+        title = "Profile",
         filledIcon = Icons.Filled.Person,
         outlinedIcon = Icons.Outlined.Person,
         screen = Screen.ProfileScreen
     ),
     AdminArtistMenu(
-    title = "Menú",
-    filledIcon = Icons.Default.Menu, // Asegúrate de importar el icono
+    title = "Menu",
+    filledIcon = Icons.Default.Menu,
     outlinedIcon = Icons.Outlined.Menu,
     screen = Screen.AdminArtistMenuScreen
     );

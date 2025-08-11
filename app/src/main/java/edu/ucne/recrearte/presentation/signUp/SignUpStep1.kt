@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,7 +49,8 @@ import edu.ucne.recrearte.R
 @Composable
 fun SignUpStep1(
     uiState: SignUpUiState,
-    onEvent: (SignUpEvent) -> Unit
+    onEvent: (SignUpEvent) -> Unit,
+    goToLogin: () -> Unit
 ) {
     var showPassword by remember { mutableStateOf(false) }
     val roundedShape = RoundedCornerShape(16.dp)
@@ -76,11 +79,24 @@ fun SignUpStep1(
             painter = painterResource(id = R.drawable.logorecrearte),
             contentDescription = "Logo",
             modifier = Modifier
-                .size(180.dp)
+                .size(230.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.scrim)
                 .padding(bottom = 32.dp)
         )
 
-        // Email Field
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Welcome",
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = MaterialTheme.colorScheme.secondary
+            ),
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = uiState.email,
             onValueChange = { onEvent(SignUpEvent.EmailChange(it)) },
@@ -107,7 +123,6 @@ fun SignUpStep1(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password Field
         OutlinedTextField(
             value = uiState.password,
             onValueChange = { onEvent(SignUpEvent.PasswordChange(it)) },
@@ -144,7 +159,6 @@ fun SignUpStep1(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Next Button
         Button(
             onClick = {  onEvent(SignUpEvent.NextStep)},
             modifier = Modifier
@@ -168,7 +182,6 @@ fun SignUpStep1(
             }
         }
 
-        // Error message
         uiState.errorMessage?.let { error ->
             Text(
                 text = error,
@@ -181,16 +194,14 @@ fun SignUpStep1(
             )
         }
 
-//        Spacer(modifier = Modifier.weight(1f))
 
-        // Already have an account?
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Already have an account?")
-            TextButton(onClick = {  }) {
+            TextButton(onClick =  goToLogin  ) {
                 Text("Login")
             }
         }

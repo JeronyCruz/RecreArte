@@ -11,9 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -21,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -28,17 +34,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import edu.ucne.recrearte.data.remote.dto.BillsDto
 import edu.ucne.recrearte.data.remote.dto.WorksDto
 import edu.ucne.recrearte.presentation.work.WorkEvent
 import edu.ucne.recrearte.presentation.work.WorkViewModel
+import edu.ucne.recrearte.util.isValidCreditCardNumber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,31 +62,90 @@ fun BillScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val workState by workViewModel.uiSate.collectAsState()
+    var showCardDialog by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var cardNumber by remember { mutableStateOf("") }
 
-    // Cargar datos del checkout al iniciar
     LaunchedEffect(Unit) {
         viewModel.onEvent(BillEvent.LoadCheckout)
         workViewModel.onEvent(WorkEvent.GetWorks)
     }
 
-    // Manejar el estado de éxito
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
-            navController.popBackStack()
+            workViewModel.onEvent(WorkEvent.GetWorks)
+            showSuccessDialog = true
         }
+    }
+
+    if (showCardDialog) {
+        CardValidationDialog(
+            cardNumber = cardNumber,
+            onCardNumberChange = { cardNumber = it },
+            onValidate = {
+                if (cardNumber.isValidCreditCardNumber()) {
+                    viewModel.onEvent(BillEvent.CreateBill)
+                    val workIds = state.createdBill?.billDetails?.map { it.workId } ?: emptyList()
+                    if (workIds.isNotEmpty()) {
+                        workViewModel.onEvent(WorkEvent.UpdateWorksStatus(workIds, 2))
+                    }
+                    showCardDialog = false
+                }
+            },
+            onDismiss = { showCardDialog = false },
+            errorMessage = if (cardNumber.isNotEmpty() && !cardNumber.isValidCreditCardNumber())
+                "Invalid card number" else null
+        )
+    }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSuccessDialog = false
+                navController.popBackStack()
+            },
+            title = {
+                Text(
+                    text = "¡Successful Purchase!",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            },
+            text = {
+                Text(
+                    text = "Your purchase has been successful. Thank you for your preference..",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.popBackStack()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Finalize Purchase",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )},
+                title = {
+                    Text("Finalize Purchase",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Go back")
@@ -89,14 +161,7 @@ fun BillScreen(
                     .background(MaterialTheme.colorScheme.surface)
             ) {
                 Button(
-                    onClick = {
-                        viewModel.onEvent(BillEvent.CreateBill)
-                        // Luego actualizamos el estado de las obras
-                        val workIds = state.createdBill?.billDetails?.map { it.workId } ?: emptyList()
-                        if (workIds.isNotEmpty()) {
-                            workViewModel.onEvent(WorkEvent.UpdateWorksStatus(workIds, 2))
-                        }
-                              },
+                    onClick = { showCardDialog = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -133,8 +198,92 @@ fun BillScreen(
                     CheckoutContent(
                         bill = state.createdBill!!,
                         works = workState.works,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 80.dp)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CardValidationDialog(
+    cardNumber: String,
+    onCardNumberChange: (String) -> Unit,
+    onValidate: () -> Unit,
+    onDismiss: () -> Unit,
+    errorMessage: String?
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Enter your card details",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                OutlinedTextField(
+                    value = cardNumber,
+                    onValueChange = {
+                        if (it.length <= 16 && it.all { c -> c.isDigit() }) {
+                            onCardNumberChange(it)
+                        }
+                    },
+                    label = { Text("Card number") },
+                    placeholder = { Text("1234567890123456") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    isError = errorMessage != null,
+                    singleLine = true
+                )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .fillMaxWidth()
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    Button(
+                        onClick = onValidate,
+                        enabled = cardNumber.length == 16 && cardNumber.isValidCreditCardNumber()
+                    ) {
+                        Text("Pay")
+                    }
                 }
             }
         }
@@ -148,11 +297,11 @@ private fun CheckoutContent(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier.padding(16.dp)
+        modifier = modifier
+            .padding(16.dp)
     ) {
         item {
             Spacer(modifier = Modifier.height(20.dp))
-            // Sección de información del cliente
             Text(
                 text = "Customer Information",
                 style = MaterialTheme.typography.titleMedium,
@@ -170,7 +319,6 @@ private fun CheckoutContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Sección de método de pago (estático)
             Text(
                 text = "Payment Method",
                 style = MaterialTheme.typography.titleMedium,
@@ -188,7 +336,6 @@ private fun CheckoutContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Sección de resumen de compra
             Text(
                 text = "Purchase Summary",
                 style = MaterialTheme.typography.titleMedium,
@@ -196,7 +343,6 @@ private fun CheckoutContent(
             )
             Divider()
 
-            // Lista de obras (solo título)
             bill.billDetails.forEach { item ->
                 val work = works.find { it.workId == item.workId }
                 Row(
@@ -222,7 +368,6 @@ private fun CheckoutContent(
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            // Totales
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween

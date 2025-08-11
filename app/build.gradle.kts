@@ -56,6 +56,11 @@ dependencies {
     implementation ("androidx.compose.material:material-icons-extended")
 
 
+    implementation("com.google.code.gson:gson:2.8.9")
+
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
+
     //room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.androidx.junit.ktx)

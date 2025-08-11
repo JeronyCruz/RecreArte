@@ -36,13 +36,35 @@ class FavoritesViewModel @Inject constructor(
         _showWishlist.update { !it }
         loadFavorites()
     }
+    fun toggleLike(workId: Int) {
+        val customerId = tokenManager.getUserId() ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            when (val result = likeRepository.toggleLike(customerId, workId)) {
+                is Resource.Success -> {
+                    // Recargar los favoritos después del cambio
+                    loadFavorites()
+                }
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.message ?: "Error toggling like"
+                        )
+                    }
+                }
+                is Resource.Loading -> {}
+            }
+            }
+        }
 
     fun loadFavorites() {
         val customerId = tokenManager.getUserId() ?: run {
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    errorMessage = "Usuario no autenticado"
+                    errorMessage = "Unauthenticated user"
                 )
             }
             return
@@ -52,22 +74,48 @@ class FavoritesViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                if (_showWishlist.value) {
-                    // Manejar WishList (suspending function)
-                    val result = wishListRepository.getWorksInWishlistByCustomer(customerId)
-                    handleRepositoryResult(result)
+                val result = if (_showWishlist.value) {
+                    // Para Wishlist
+                    wishListRepository.getWorksInWishlistByCustomer(customerId)
                 } else {
-                    // Manejar Likes (Flow)
+                    // Para Likes
+                    var resource: Resource<List<WorksDto>> = Resource.Loading()
                     likeRepository.getWorksLikedByCustomer(customerId)
-                        .collect { result ->
-                            handleRepositoryResult(result)
+                        .collect { flowResult ->
+                            resource = when (flowResult) {
+                                is Resource.Success -> Resource.Success(flowResult.data ?: emptyList())
+                                is Resource.Error -> Resource.Error(flowResult.message ?: "Unknown error")
+                                is Resource.Loading -> Resource.Loading()
+                            }
                         }
+                    resource
+                }
+
+                when (result) {
+                    is Resource.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                works = result.data ?: emptyList(),
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.message ?: "Error loading favorites"
+                            )
+                        }
+                    }
+                    is Resource.Loading -> {
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = e.message ?: "Error al cargar favoritos"
+                        errorMessage = e.message ?: "Error loading favorites"
                     )
                 }
             }
@@ -88,7 +136,7 @@ class FavoritesViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = result.message ?: "Error desconocido"
+                        errorMessage = result.message ?: "Unknown error"
                     )
                 }
             }

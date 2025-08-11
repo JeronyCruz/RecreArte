@@ -1,5 +1,11 @@
 package edu.ucne.recrearte.data.repository
 
+import edu.ucne.recrearte.data.local.dao.WishListDao
+import edu.ucne.recrearte.data.local.dao.WishListDetailsDao
+import edu.ucne.recrearte.data.local.dao.WorkDao
+import edu.ucne.recrearte.data.local.entities.WishListDetailsEntity
+import edu.ucne.recrearte.data.local.entities.WishListsEntity
+import edu.ucne.recrearte.data.local.entities.WorksEntity
 import edu.ucne.recrearte.data.remote.RemoteDataSource
 import edu.ucne.recrearte.data.remote.Resource
 import edu.ucne.recrearte.data.remote.dto.WishListsDto
@@ -7,10 +13,14 @@ import edu.ucne.recrearte.data.remote.dto.WorksDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
+import java.net.ConnectException
 import javax.inject.Inject
 
 class WishListRepository @Inject constructor(
-    private val remoteDataSource: RemoteDataSource
+    private val remoteDataSource: RemoteDataSource,
+    private val worksDao: WorkDao,
+    private val wishListDao: WishListDao,
+    private val wishListDetailsDao: WishListDetailsDao
 ) {
     fun getWishLists(): Flow<Resource<List<WishListsDto>>> = flow {
         try {
@@ -24,36 +34,164 @@ class WishListRepository @Inject constructor(
         }
     }
 
+
     suspend fun getWorksInWishlistByCustomer(customerId: Int): Resource<List<WorksDto>> {
         return try {
-            val works = remoteDataSource.getWorksInWishlistByCustomer(customerId)
-            Resource.Success(works)
-        } catch (e: HttpException) {
-            Resource.Error("Internet error: ${e.message()}")
+            val remoteWishlist = remoteDataSource.getWorksInWishlistByCustomer(customerId)
+
+            // Limpiar datos antiguos primero
+            val wishList = wishListDao.findByCustomerId(customerId)
+            wishList?.let {
+                wishListDetailsDao.deleteByWishListId(it.wishListId)
+            }
+
+            // Guardar solo los datos remotos
+            remoteWishlist.forEach { workDto ->
+                worksDao.saveOne(workDto.toEntity())
+            }
+
+            val newWishList = wishList ?: WishListsEntity(
+                wishListId = 0,
+                customerId = customerId,
+                userName = null
+            ).also {
+                wishListDao.saveOne(it)
+            }
+
+            val details = remoteWishlist.map { work ->
+                WishListDetailsEntity(
+                    wishListId = newWishList.wishListId,
+                    workId = work.workId!!
+                )
+            }
+            wishListDetailsDao.save(details)
+
+            Resource.Success(remoteWishlist)
         } catch (e: Exception) {
-            Resource.Error("Unknown error: ${e.message}")
+            when (e) {
+                is HttpException, is ConnectException, is java.net.UnknownHostException -> {
+                    // Obtener solo las obras que están en la wishlist del usuario
+                    val localWishList = wishListDao.findByCustomerId(customerId)
+                    if (localWishList != null) {
+                        val localWorks = wishListDetailsDao.getWorksInWishlist(localWishList.wishListId)
+                            .map { it.toDto() }
+                        Resource.Success(localWorks)
+                    } else {
+                        Resource.Error("No local data available")
+                    }
+                }
+                else -> Resource.Error("Unknown error: ${e.message}")
+            }
         }
     }
+
 
     suspend fun toggleWorkInWishlist(customerId: Int, workId: Int): Resource<Boolean> {
         return try {
             val result = remoteDataSource.toggleWorkInWishlist(customerId, workId)
+
+            // Sincronizar con local
+            val wishList = wishListDao.findByCustomerId(customerId) ?: run {
+                val newWishList = WishListsEntity(
+                    wishListId = 0,
+                    customerId = customerId,
+                    userName = null
+                )
+                wishListDao.saveOne(newWishList)
+                newWishList
+            }
+
+            if (result) {
+                wishListDetailsDao.saveOne(
+                    WishListDetailsEntity(
+                        wishListId = wishList.wishListId,
+                        workId = workId
+                    )
+                )
+            } else {
+                wishListDetailsDao.delete(wishList.wishListId, workId)
+            }
+
             Resource.Success(result)
-        } catch (e: HttpException) {
-            Resource.Error("Internet error: ${e.message()}")
         } catch (e: Exception) {
-            Resource.Error("Unknown error: ${e.message}")
+            when (e) {
+                is HttpException, is ConnectException, is java.net.UnknownHostException -> {
+                    val wishList = wishListDao.findByCustomerId(customerId) ?: run {
+                        val newWishList = WishListsEntity(
+                            wishListId = 0,
+                            customerId = customerId,
+                            userName = null
+                        )
+                        wishListDao.saveOne(newWishList)
+                        newWishList
+                    }
+
+                    val isInWishlist = wishListDetailsDao.exists(wishList.wishListId, workId)
+
+                    if (isInWishlist) {
+                        wishListDetailsDao.delete(wishList.wishListId, workId)
+                        Resource.Success(false)
+                    } else {
+                        // Verificar que la obra existe antes de añadirla
+                        val workExists = worksDao.find(workId) != null
+                        if (workExists) {
+                            wishListDetailsDao.saveOne(
+                                WishListDetailsEntity(
+                                    wishListId = wishList.wishListId,
+                                    workId = workId
+                                )
+                            )
+                            Resource.Success(true)
+                        } else {
+                            Resource.Error("Work not found in local database")
+                        }
+                    }
+                }
+                else -> Resource.Error("Unknown error: ${e.message}")
+            }
         }
     }
 
     suspend fun isWorkInWishlist(customerId: Int, workId: Int): Resource<Boolean> {
         return try {
+
             val result = remoteDataSource.isWorkInWishlist(customerId, workId)
             Resource.Success(result)
-        } catch (e: HttpException) {
-            Resource.Error("Internet error: ${e.message()}")
         } catch (e: Exception) {
-            Resource.Error("Unknown error: ${e.message}")
+            when (e) {
+                is HttpException, is ConnectException, is java.net.UnknownHostException -> {
+
+                    val wishList = wishListDao.findByCustomerId(customerId) ?: return Resource.Success(false)
+                    val exists = wishListDetailsDao.exists(wishList.wishListId, workId)
+                    Resource.Success(exists)
+                }
+                else -> Resource.Error("Unknown error: ${e.message}")
+            }
         }
     }
+
+    private fun WorksDto.toEntity() = WorksEntity(
+        workId = this.workId,
+        title = this.title ?: "",
+        dimension = this.dimension ?: "",
+        techniqueId = this.techniqueId ?: 0,
+        artistId = this.artistId ?: 0,
+        statusId = this.statusId ?: 0,
+        price = this.price ?: 0.0,
+        description = this.description ?: "",
+        imageUrl = this.imageUrl ?: ""
+    )
+
+    private fun WorksEntity.toDto() = WorksDto(
+        workId = this.workId,
+        title = this.title ?: "",
+        dimension = this.dimension ?: "",
+        techniqueId = this.techniqueId ?: 0,
+        artistId = this.artistId ?: 0,
+        statusId = this.statusId ?: 0,
+        price = this.price ?: 0.0,
+        description = this.description ?: "",
+        imageUrl = this.imageUrl ?: ""
+    )
+
 }

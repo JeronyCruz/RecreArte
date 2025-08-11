@@ -29,9 +29,8 @@ fun SignUpScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            // Navegar a Home y limpiar el back stack
             navController.navigate(Screen.RecreArteScreen) {
-                // Esto llevará al usuario directamente a Home sin poder volver atrás
+
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }
@@ -49,7 +48,8 @@ fun SignUpScreen(
             } else {
                 navController.popBackStack()
             }
-        }
+        },
+        goToLogin = {navController.navigate(Screen.LoginScreen)}
     )
 }
 
@@ -58,7 +58,8 @@ fun SignUpScreen(
 fun SignUpContent(
     uiState: SignUpUiState,
     onEvent: (SignUpEvent) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    goToLogin: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -83,7 +84,7 @@ fun SignUpContent(
                 .padding(paddingValues)
         ) {
             when (uiState.currentStep) {
-                1 -> SignUpStep1(uiState, onEvent)
+                1 -> SignUpStep1(uiState, onEvent, goToLogin)
                 2 -> SignUpStep2(uiState, onEvent)
             }
         }

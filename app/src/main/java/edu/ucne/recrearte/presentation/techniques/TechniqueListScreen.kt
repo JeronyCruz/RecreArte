@@ -18,8 +18,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -93,7 +91,7 @@ fun TechniqueListScreen(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Confirm deletion") },
+            title = { Text("Confirm removing") },
             text = { Text("¿Are you sure you want to delete the technique ${techniqueToDelete?.techniqueName}?") },
             confirmButton = {
                 TextButton(onClick = onDeleteConfirmed) {
@@ -202,7 +200,6 @@ fun TechniqueListBodyScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        // Búsqueda
                         item {
                             SearchBar(
                                 query = query,
