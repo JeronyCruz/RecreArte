@@ -96,7 +96,11 @@ class ProfileViewModel @Inject constructor(
                 userName = validateUserName(artist.userName).also { if (it != null) isValid = false },
                 email = validateEmail(artist.email).also { if (it != null) isValid = false },
                 phoneNumber = validatePhoneNumber(artist.phoneNumber).also { if (it != null) isValid = false },
-                documentNumber = validateDocumentNumber(artist.documentNumber).also { if (it != null) isValid = false }
+                documentNumber = validateDocumentNumber(artist.documentNumber).also { if (it != null) isValid = false },
+                firstName = validateFirstName(artist.firstName).also { if (it != null) isValid = false },
+                lastName = validateLastName(artist.lastName).also { if (it != null) isValid = false },
+                artStyle = validateArtStyle(artist.artStyle).also { if (it != null) isValid = false },
+                socialMediaLinks = validateSocialMediaLinks(artist.socialMediaLinks).also { if (it != null) isValid = false }
             )
         }
 
@@ -105,7 +109,10 @@ class ProfileViewModel @Inject constructor(
                 userName = validateUserName(customer.userName).also { if (it != null) isValid = false },
                 email = validateEmail(customer.email).also { if (it != null) isValid = false },
                 phoneNumber = validatePhoneNumber(customer.phoneNumber).also { if (it != null) isValid = false },
-                documentNumber = validateDocumentNumber(customer.documentNumber).also { if (it != null) isValid = false }
+                documentNumber = validateDocumentNumber(customer.documentNumber).also { if (it != null) isValid = false },
+                firstName = validateFirstName(customer.firstName).also { if (it != null) isValid = false },
+                lastName = validateLastName(customer.lastName).also { if (it != null) isValid = false },
+                address = validateAddress(customer.address).also { if (it != null) isValid = false }
             )
         }
 
@@ -113,6 +120,49 @@ class ProfileViewModel @Inject constructor(
         _uiState.value = currentState.copy(validationErrors = newErrors)
 
         return isValid
+    }
+
+    private fun validateArtStyle(artStyle: String?): String? {
+        return when {
+            artStyle.isNullOrBlank() -> "El estilo artístico es requerido"
+            artStyle.length < 3 -> "Debe tener al menos 3 caracteres"
+            !artStyle.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+\$")) -> "Solo letras y espacios"
+            else -> null
+        }
+    }
+    private fun validateSocialMediaLinks(links: String?): String? {
+        return when {
+            links.isNullOrBlank() -> "Al menos un enlace es requerido"
+            links.split(",").any { link ->
+                !link.trim().matches(Regex("^(https?://)?([\\w-]+\\.)+[\\w-]+(/[\\w-./?%&=]*)?\$"))
+            } -> "Formato de enlace inválido (ej: https://example.com)"
+            else -> null
+        }
+    }
+    private fun validateAddress(address: String?): String? {
+        return when {
+            address.isNullOrBlank() -> "La dirección es requerida"
+            address.length < 5 -> "Debe tener al menos 5 caracteres"
+            else -> null
+        }
+    }
+
+    private fun validateFirstName(firstName: String?): String? {
+        return when {
+            firstName.isNullOrBlank() -> "El nombre es requerido"
+            firstName.length < 2 -> "El nombre debe tener al menos 2 caracteres"
+            !firstName.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+\$")) -> "Solo letras y espacios"
+            else -> null
+        }
+    }
+
+    private fun validateLastName(lastName: String?): String? {
+        return when {
+            lastName.isNullOrBlank() -> "El apellido es requerido"
+            lastName.length < 2 -> "El apellido debe tener al menos 2 caracteres"
+            !lastName.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+\$")) -> "Solo letras y espacios"
+            else -> null
+        }
     }
 
     private fun validateUserName(userName: String?): String? {
@@ -189,10 +239,18 @@ class ProfileViewModel @Inject constructor(
             is ProfileEvent.FirstNameChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(firstName = event.firstName)
                 _editableCustomer.value = _editableCustomer.value?.copy(firstName = event.firstName)
+                val newErrors = currentState.validationErrors.copy(
+                    firstName = validateFirstName(event.firstName)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.LastNameChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(lastName = event.lastName)
                 _editableCustomer.value = _editableCustomer.value?.copy(lastName = event.lastName)
+                val newErrors = currentState.validationErrors.copy(
+                    lastName = validateLastName(event.lastName)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.EmailChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(email = event.email)
@@ -223,12 +281,24 @@ class ProfileViewModel @Inject constructor(
             }
             is ProfileEvent.ArtStyleChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(artStyle = event.artStyle)
+                val newErrors = currentState.validationErrors.copy(
+                    artStyle = validateArtStyle(event.artStyle)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.SocialMediaLinksChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(socialMediaLinks = event.socialMediaLinks)
+                val newErrors = currentState.validationErrors.copy(
+                    socialMediaLinks = validateSocialMediaLinks(event.socialMediaLinks)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.AddressChange -> {
                 _editableCustomer.value = _editableCustomer.value?.copy(address = event.address)
+                val newErrors = currentState.validationErrors.copy(
+                    address = validateAddress(event.address)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             else -> {}
         }
