@@ -454,7 +454,16 @@ private fun EditableProfileFields(
                             value = currentData.firstName ?: "",
                             onValueChange = { onEvent(ProfileEvent.FirstNameChange(it)) },
                             label = { Text("Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = validationErrors.firstName != null,
+                            supportingText = {
+                                validationErrors.firstName?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -462,7 +471,16 @@ private fun EditableProfileFields(
                             value = currentData.lastName ?: "",
                             onValueChange = { onEvent(ProfileEvent.LastNameChange(it)) },
                             label = { Text("Lastname") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = validationErrors.lastName != null,
+                            supportingText = {
+                                validationErrors.lastName?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -521,7 +539,16 @@ private fun EditableProfileFields(
                             value = currentData.artStyle ?: "",
                             onValueChange = { onEvent(ProfileEvent.ArtStyleChange(it)) },
                             label = { Text("Art style") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = validationErrors.artStyle != null,
+                            supportingText = {
+                                validationErrors.artStyle?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -529,7 +556,16 @@ private fun EditableProfileFields(
                             value = currentData.socialMediaLinks ?: "",
                             onValueChange = { onEvent(ProfileEvent.SocialMediaLinksChange(it)) },
                             label = { Text("Social Media") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = validationErrors.socialMediaLinks != null,
+                            supportingText = {
+                                validationErrors.socialMediaLinks?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                     }
                     is CustomersDto -> {
@@ -553,7 +589,16 @@ private fun EditableProfileFields(
                             value = currentData.firstName ?: "",
                             onValueChange = { onEvent(ProfileEvent.FirstNameChange(it)) },
                             label = { Text("Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = validationErrors.firstName != null,
+                            supportingText = {
+                                validationErrors.firstName?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -561,7 +606,16 @@ private fun EditableProfileFields(
                             value = currentData.lastName ?: "",
                             onValueChange = { onEvent(ProfileEvent.LastNameChange(it)) },
                             label = { Text("Last name") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = validationErrors.lastName != null,
+                            supportingText = {
+                                validationErrors.lastName?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -620,7 +674,16 @@ private fun EditableProfileFields(
                             value = currentData.address ?: "455 Oak Ave, Airytown, USA",
                             onValueChange = { onEvent(ProfileEvent.AddressChange(it)) },
                             label = { Text("Address") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = validationErrors.address != null,
+                            supportingText = {
+                                validationErrors.address?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                     }
                 }
