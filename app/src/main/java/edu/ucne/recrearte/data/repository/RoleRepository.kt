@@ -32,9 +32,9 @@ class RoleRepository @Inject constructor(
 
         } catch (e: HttpException) {
             val errorMsg = when (e.code()) {
-                401 -> "Tu sesión ha expirado. Por favor inicia sesión nuevamente"
-                403 -> "No tienes permiso para acceder a este recurso"
-                else -> "Error del servidor (${e.code()})"
+                401 -> "Your session has expired. Please log in again."
+                403 -> "You do not have permission to access this resource"
+                else -> "Server error (${e.code()})"
             }
             println("[DEBUG] Error HTTP: $errorMsg")
 

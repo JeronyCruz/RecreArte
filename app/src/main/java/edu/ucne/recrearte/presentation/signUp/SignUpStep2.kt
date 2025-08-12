@@ -61,7 +61,6 @@ fun SignUpStep2(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // First Name
         OutlinedTextField(
             value = uiState.firstName,
             onValueChange = { onEvent(SignUpEvent.FirstNameChange(it)) },
@@ -87,7 +86,6 @@ fun SignUpStep2(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Last Name
         OutlinedTextField(
             value = uiState.lastName,
             onValueChange = { onEvent(SignUpEvent.LastNameChange(it)) },
@@ -113,7 +111,6 @@ fun SignUpStep2(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Username
         OutlinedTextField(
             value = uiState.userName,
             onValueChange = { onEvent(SignUpEvent.UserNameChange(it)) },
@@ -139,7 +136,6 @@ fun SignUpStep2(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Phone Number
         OutlinedTextField(
             value = uiState.phoneNumber,
             onValueChange = { onEvent(SignUpEvent.PhoneNumberChange(it)) },
@@ -166,7 +162,6 @@ fun SignUpStep2(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Document Number
         OutlinedTextField(
             value = uiState.documentNumber,
             onValueChange = { onEvent(SignUpEvent.DocumentNumberChange(it)) },
@@ -193,7 +188,6 @@ fun SignUpStep2(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Role Selection
         Text(
             text = "Select your role:",
             style = MaterialTheme.typography.bodyMedium,
@@ -230,9 +224,8 @@ fun SignUpStep2(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Conditional fields based on role
         if (uiState.isArtist) {
-            // Art Style
+
             OutlinedTextField(
                 value = uiState.artStyle,
                 onValueChange = { onEvent(SignUpEvent.ArtStyleChange(it)) },
@@ -258,7 +251,6 @@ fun SignUpStep2(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Social Media Links
             OutlinedTextField(
                 value = uiState.socialMediaLinks,
                 onValueChange = { onEvent(SignUpEvent.SocialMediaLinksChange(it)) },
@@ -282,7 +274,7 @@ fun SignUpStep2(
                 )
             }
         } else {
-            // Address
+
             OutlinedTextField(
                 value = uiState.address,
                 onValueChange = { onEvent(SignUpEvent.AddressChange(it)) },
@@ -309,7 +301,6 @@ fun SignUpStep2(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Sign Up Button
         Button(
             onClick = { onEvent(SignUpEvent.SignUp) },
             modifier = Modifier
@@ -333,7 +324,6 @@ fun SignUpStep2(
             }
         }
 
-        // Error message
         uiState.errorMessage?.let { error ->
             Text(
                 text = error,

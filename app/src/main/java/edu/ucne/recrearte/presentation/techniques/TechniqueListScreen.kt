@@ -200,7 +200,6 @@ fun TechniqueListBodyScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        // Búsqueda
                         item {
                             SearchBar(
                                 query = query,

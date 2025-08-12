@@ -38,7 +38,6 @@ class BillViewModel @Inject constructor(
         return tokenManager.getUserId()
     }
 
-    // Nuevo método para validar tarjeta
     fun validateCreditCard(cardNumber: String) {
         val isValid = cardNumber.isValidCreditCardNumber()
         _uiState.update { it.copy(

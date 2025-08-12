@@ -38,7 +38,6 @@ fun MainAppScreen(
     // Usar rememberUpdatedState para el roleId para garantizar actualizaciones
     val currentRoleId by rememberUpdatedState(tokenManager.getRoleId())
 
-    // Lista de pantallas que SÍ deben mostrar la barra
     val bottomBarRoutes = listOf(
         Screen.RecreArteScreen::class.qualifiedName,
         Screen.FavoritesScreen::class.qualifiedName,
@@ -46,7 +45,6 @@ fun MainAppScreen(
         Screen.ProfileScreen::class.qualifiedName
     )
 
-    // ¿La ruta actual está en la lista?
     val showBottomBar = bottomBarRoutes.contains(currentRoute)
 
     Scaffold(
@@ -57,13 +55,13 @@ fun MainAppScreen(
                 NavigationBar {
                     // Filtramos los items basados en el roleId
                     val visibleItems = when (roleId) {
-                        1, 2 -> { // Admin/Artist - muestra todo excepto Carrito
+                        1, 2 -> {
                             BottomNavDestination.entries.filter { it != BottomNavDestination.Cart }
                         }
-                        3 -> { // Cliente - muestra todo excepto AdminArtistMenu
+                        3 -> {
                             BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
                         }
-                        else -> { // Otros casos (¿invitado?) - mismo comportamiento que cliente
+                        else -> {
                             BottomNavDestination.entries.filter { it != BottomNavDestination.AdminArtistMenu }
                         }
                     }
@@ -106,37 +104,37 @@ fun MainAppScreen(
 
 enum class BottomNavDestination(
     val title: String,
-    val filledIcon: ImageVector,  // Icono relleno
-    val outlinedIcon: ImageVector, // Icono de contorno
+    val filledIcon: ImageVector,
+    val outlinedIcon: ImageVector,
     val screen: Screen
 ) {
     RecreArteScreen(
-        title = "Inicio",
+        title = "Start",
         filledIcon = Icons.Filled.Home,
         outlinedIcon = Icons.Outlined.Home,
         screen = Screen.RecreArteScreen
     ),
     Favorites(
-        title = "Favoritos",
+        title = "Favorites",
         filledIcon = Icons.Filled.Favorite,
         outlinedIcon = Icons.Outlined.FavoriteBorder,
         screen = Screen.FavoritesScreen
     ),
     Cart(
-        title = "Carrito",
+        title = "Cart",
         filledIcon = Icons.Filled.ShoppingCart,
         outlinedIcon = Icons.Outlined.ShoppingCart,
         screen = Screen.CartScreen
     ),
     Profile(
-        title = "Perfil",
+        title = "Profile",
         filledIcon = Icons.Filled.Person,
         outlinedIcon = Icons.Outlined.Person,
         screen = Screen.ProfileScreen
     ),
     AdminArtistMenu(
-    title = "Menú",
-    filledIcon = Icons.Default.Menu, // Asegúrate de importar el icono
+    title = "Menu",
+    filledIcon = Icons.Default.Menu,
     outlinedIcon = Icons.Outlined.Menu,
     screen = Screen.AdminArtistMenuScreen
     );

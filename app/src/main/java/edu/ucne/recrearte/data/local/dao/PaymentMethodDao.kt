@@ -23,6 +23,8 @@ interface PaymentMethodDao {
     suspend fun find(id: Int): PaymentMethodsEntity?
     @Delete
     suspend fun delete(paymentMethod: PaymentMethodsEntity)
+    @Query("DELETE FROM PaymentMethods WHERE paymentMethodId = :id")
+    suspend fun deleteById(id: Int)
     @Query("SELECT * FROM PaymentMethods")
     suspend fun getAll(): List<PaymentMethodsEntity>
 }

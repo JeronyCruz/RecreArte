@@ -39,23 +39,28 @@ class WishListRepository @Inject constructor(
         return try {
             val remoteWishlist = remoteDataSource.getWorksInWishlistByCustomer(customerId)
 
+            // Limpiar datos antiguos primero
+            val wishList = wishListDao.findByCustomerId(customerId)
+            wishList?.let {
+                wishListDetailsDao.deleteByWishListId(it.wishListId)
+            }
+
+            // Guardar solo los datos remotos
             remoteWishlist.forEach { workDto ->
                 worksDao.saveOne(workDto.toEntity())
             }
 
-            val wishList = wishListDao.findByCustomerId(customerId) ?: run {
-                val newWishList = WishListsEntity(
-                    wishListId = 0,
-                    customerId = customerId,
-                    userName = null
-                )
-                wishListDao.saveOne(newWishList)
-                newWishList
+            val newWishList = wishList ?: WishListsEntity(
+                wishListId = 0,
+                customerId = customerId,
+                userName = null
+            ).also {
+                wishListDao.saveOne(it)
             }
 
             val details = remoteWishlist.map { work ->
                 WishListDetailsEntity(
-                    wishListId = wishList.wishListId,
+                    wishListId = newWishList.wishListId,
                     workId = work.workId!!
                 )
             }
@@ -63,14 +68,16 @@ class WishListRepository @Inject constructor(
 
             Resource.Success(remoteWishlist)
         } catch (e: Exception) {
-
             when (e) {
                 is HttpException, is ConnectException, is java.net.UnknownHostException -> {
-                    val localWorks = wishListDao.getByCustomer(customerId)
-                    if (localWorks.isNotEmpty()) {
-                        Resource.Success(localWorks.map { it.toDto() })
+                    // Obtener solo las obras que están en la wishlist del usuario
+                    val localWishList = wishListDao.findByCustomerId(customerId)
+                    if (localWishList != null) {
+                        val localWorks = wishListDetailsDao.getWorksInWishlist(localWishList.wishListId)
+                            .map { it.toDto() }
+                        Resource.Success(localWorks)
                     } else {
-                        Resource.Error("There is no connection and no local data available.")
+                        Resource.Error("No local data available")
                     }
                 }
                 else -> Resource.Error("Unknown error: ${e.message}")
@@ -81,9 +88,9 @@ class WishListRepository @Inject constructor(
 
     suspend fun toggleWorkInWishlist(customerId: Int, workId: Int): Resource<Boolean> {
         return try {
-
             val result = remoteDataSource.toggleWorkInWishlist(customerId, workId)
 
+            // Sincronizar con local
             val wishList = wishListDao.findByCustomerId(customerId) ?: run {
                 val newWishList = WishListsEntity(
                     wishListId = 0,
@@ -95,7 +102,6 @@ class WishListRepository @Inject constructor(
             }
 
             if (result) {
-
                 wishListDetailsDao.saveOne(
                     WishListDetailsEntity(
                         wishListId = wishList.wishListId,
@@ -103,7 +109,6 @@ class WishListRepository @Inject constructor(
                     )
                 )
             } else {
-
                 wishListDetailsDao.delete(wishList.wishListId, workId)
             }
 
@@ -111,7 +116,6 @@ class WishListRepository @Inject constructor(
         } catch (e: Exception) {
             when (e) {
                 is HttpException, is ConnectException, is java.net.UnknownHostException -> {
-
                     val wishList = wishListDao.findByCustomerId(customerId) ?: run {
                         val newWishList = WishListsEntity(
                             wishListId = 0,
@@ -128,13 +132,19 @@ class WishListRepository @Inject constructor(
                         wishListDetailsDao.delete(wishList.wishListId, workId)
                         Resource.Success(false)
                     } else {
-                        wishListDetailsDao.saveOne(
-                            WishListDetailsEntity(
-                                wishListId = wishList.wishListId,
-                                workId = workId
+                        // Verificar que la obra existe antes de añadirla
+                        val workExists = worksDao.find(workId) != null
+                        if (workExists) {
+                            wishListDetailsDao.saveOne(
+                                WishListDetailsEntity(
+                                    wishListId = wishList.wishListId,
+                                    workId = workId
+                                )
                             )
-                        )
-                        Resource.Success(true)
+                            Resource.Success(true)
+                        } else {
+                            Resource.Error("Work not found in local database")
+                        }
                     }
                 }
                 else -> Resource.Error("Unknown error: ${e.message}")

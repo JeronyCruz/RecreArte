@@ -33,9 +33,9 @@ class PaymentMethodRepository @Inject constructor(
 
         } catch (e: HttpException) {
             val errorMsg = when (e.code()) {
-                401 -> "Tu sesión ha expirado. Por favor inicia sesión nuevamente"
-                403 -> "No tienes permiso para acceder a este recurso"
-                else -> "Error del servidor (${e.code()})"
+                401 -> "Your session has expired. Please log in again."
+                403 -> "You do not have permission to access this resource"
+                else -> "Server error (${e.code()})"
             }
             println("[DEBUG] Error HTTP: $errorMsg")
 
@@ -49,7 +49,7 @@ class PaymentMethodRepository @Inject constructor(
             }
 
         } catch (e: IOException) {
-            val errorMsg = "Error de conexión: ${e.message}"
+            val errorMsg = "Connection error: ${e.message}"
             println("[DEBUG] Network Error: $errorMsg")
 
 
@@ -133,13 +133,11 @@ class PaymentMethodRepository @Inject constructor(
         }
     }
 
-    // Conversión de DTO a Entity
     private fun PaymentMethodsDto.toEntity() = PaymentMethodsEntity(
         paymentMethodId = this.paymentMethodId,
         paymentMethodName = this.paymentMethodName
     )
 
-    // Conversión de Entity a DTO
     private fun PaymentMethodsEntity.toDto() = PaymentMethodsDto(
         paymentMethodId = this.paymentMethodId,
         paymentMethodName = this.paymentMethodName
@@ -149,5 +147,13 @@ class PaymentMethodRepository @Inject constructor(
 
     suspend fun updatePaymentMethod(id: Int, paymentMethodsDto: PaymentMethodsDto) = remoteDataSource.updatePaymentMethod(id, paymentMethodsDto)
 
-    suspend fun deletePaymentMethod(id: Int) = remoteDataSource.deletePaymentMethod(id)
+    suspend fun deletePaymentMethod(id: Int): Boolean{
+        return try {
+            remoteDataSource.deletePaymentMethod(id)
+            paymentMethodDao.deleteById(id)
+            true
+        }catch (e: Exception){
+            false
+        }
+    }
 }

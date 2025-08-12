@@ -29,9 +29,8 @@ fun SignUpScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            // Navegar a Home y limpiar el back stack
             navController.navigate(Screen.RecreArteScreen) {
-                // Esto llevará al usuario directamente a Home sin poder volver atrás
+
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }

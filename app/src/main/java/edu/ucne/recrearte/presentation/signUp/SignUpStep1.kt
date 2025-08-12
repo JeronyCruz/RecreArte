@@ -87,7 +87,6 @@ fun SignUpStep1(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Subtítulo
         Text(
             text = "Welcome",
             style = MaterialTheme.typography.titleMedium.copy(
@@ -98,7 +97,6 @@ fun SignUpStep1(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Email Field
         OutlinedTextField(
             value = uiState.email,
             onValueChange = { onEvent(SignUpEvent.EmailChange(it)) },
@@ -125,7 +123,6 @@ fun SignUpStep1(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password Field
         OutlinedTextField(
             value = uiState.password,
             onValueChange = { onEvent(SignUpEvent.PasswordChange(it)) },
@@ -162,7 +159,6 @@ fun SignUpStep1(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Next Button
         Button(
             onClick = {  onEvent(SignUpEvent.NextStep)},
             modifier = Modifier
@@ -186,7 +182,6 @@ fun SignUpStep1(
             }
         }
 
-        // Error message
         uiState.errorMessage?.let { error ->
             Text(
                 text = error,
@@ -199,9 +194,7 @@ fun SignUpStep1(
             )
         }
 
-//        Spacer(modifier = Modifier.weight(1f))
 
-        // Already have an account?
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,

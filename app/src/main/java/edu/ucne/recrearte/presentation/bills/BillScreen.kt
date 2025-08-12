@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -76,7 +78,6 @@ fun BillScreen(
         }
     }
 
-    // Diálogo para validación de tarjeta
     if (showCardDialog) {
         CardValidationDialog(
             cardNumber = cardNumber,
@@ -97,7 +98,6 @@ fun BillScreen(
         )
     }
 
-    // Diálogo de compra exitosa
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -152,29 +152,6 @@ fun BillScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Button(
-                    onClick = { showCardDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    enabled = !state.isLoading && state.createdBill != null,
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
-                    } else {
-                        Text("Confirm Purchase")
-                    }
-                }
-            }
         }
     ) { padding ->
         Box(
@@ -195,11 +172,47 @@ fun BillScreen(
                     )
                 }
                 state.createdBill != null -> {
-                    CheckoutContent(
-                        bill = state.createdBill!!,
-                        works = workState.works,
-                        modifier = Modifier.fillMaxSize()
-                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ){
+                        CheckoutContent(
+                            bill = state.createdBill!!,
+                            works = workState.works,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 80.dp)
+                                .weight(1f)
+                        )
+                        Divider(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        )
+
+                        Button(
+                            onClick = { showCardDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            enabled = !state.isLoading && state.createdBill != null,
+                            shape = MaterialTheme.shapes.medium,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            if (state.isLoading) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                            } else {
+                                Text("Confirm Purchase")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(55.dp))
+                    }
+
                 }
             }
         }
@@ -295,7 +308,8 @@ private fun CheckoutContent(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier.padding(16.dp)
+        modifier = modifier
+            .padding(16.dp)
     ) {
         item {
             Spacer(modifier = Modifier.height(20.dp))

@@ -43,17 +43,15 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(password = password) }
     }
 
-    // En LoginViewModel.kt
     private fun loginUser() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
-                // Validación básica de campos
                 if (_uiState.value.email.isBlank() || _uiState.value.password.isBlank()) {
                     _uiState.update {
                         it.copy(
-                            errorMessage = "Por favor ingrese correo y contraseña",
+                            errorMessage = "Please enter your email and password.",
                             isLoading = false
                         )
                     }
@@ -80,14 +78,14 @@ class LoginViewModel @Inject constructor(
             } catch (e: InvalidCredentialsException) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = e.message, // "Correo o contraseña incorrectos"
+                        errorMessage = e.message,
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = "Error de conexión. Intente nuevamente",
+                        errorMessage = "Connection error. Please try again.",
                         isLoading = false
                     )
                 }

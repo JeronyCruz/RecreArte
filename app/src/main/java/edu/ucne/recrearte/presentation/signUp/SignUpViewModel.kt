@@ -47,7 +47,6 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
-    // === Actualizaciones de estado ===
     private fun updateEmail(email: String) {
         val emailRegex = Regex(
             "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$",
@@ -57,14 +56,14 @@ class SignUpViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             email = email,
             errorEmail = when {
-                email.isBlank() -> "El correo electrónico es requerido"
-                !email.matches(emailRegex) -> "Formato de correo inválido (ej: usuario@ucne.edu.do)"
-                !email.contains("@") -> "Falta el símbolo @"
-                email.count { it == '@' } > 1 -> "Solo puede tener un @"
-                email.substringAfterLast('@').isEmpty() -> "Falta el dominio después del @"
-                email.substringBefore('@').isEmpty() -> "Falta el nombre antes del @"
-                !email.substringAfterLast('@').contains(".") -> "El dominio debe contener un punto (.)"
-                email.substringAfterLast('.').length < 2 -> "La extensión del dominio es muy corta (ej: .com)"
+                email.isBlank() -> "Email is required"
+                !email.matches(emailRegex) -> "Invalid email format (example: user@gmail.com)"
+                !email.contains("@") -> "The @ symbol is missing"
+                email.count { it == '@' } > 1 -> "It can only have one @"
+                email.substringAfterLast('@').isEmpty() -> "The domain is missing after the @"
+                email.substringBefore('@').isEmpty() -> "The name is missing before the @"
+                !email.substringAfterLast('@').contains(".") -> "The domain must contain a period (.)"
+                email.substringAfterLast('.').length < 2 -> "The domain extension is very short (e.g. .com)"
                 else -> null
             }
         )
@@ -73,15 +72,15 @@ class SignUpViewModel @Inject constructor(
     private fun updatePassword(password: String) {
         _uiState.value = _uiState.value.copy(
             password = password,
-            errorPassword = if (password.length < 6) "Mínimo 6 caracteres" else null
+            errorPassword = if (password.length < 6) "Minimum 6 characters" else null
         )
     }
 
     private fun updateFirstName(firstName: String) {
         _uiState.value = _uiState.value.copy(
             firstName = firstName,
-            errorFirstName = if (firstName.isBlank()) "Nombre es requerido"
-            else if (!firstName.matches(Regex("^[a-zA-Z\\s]+\$"))) "Solo letras"
+            errorFirstName = if (firstName.isBlank()) "FirstName is required"
+            else if (!firstName.matches(Regex("^[a-zA-Z\\s]+\$"))) "Only letters"
             else null
         )
     }
@@ -89,8 +88,8 @@ class SignUpViewModel @Inject constructor(
     private fun updateLastName(lastName: String) {
         _uiState.value = _uiState.value.copy(
             lastName = lastName,
-            errorLastName = if (lastName.isBlank()) "Apellido es requerido"
-            else if (!lastName.matches(Regex("^[a-zA-Z\\s]+\$"))) "Solo letras"
+            errorLastName = if (lastName.isBlank()) "LastName is required"
+            else if (!lastName.matches(Regex("^[a-zA-Z\\s]+\$"))) "Only letters"
             else null
         )
     }
@@ -99,44 +98,39 @@ class SignUpViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             userName = userName,
             errorUserName = when {
-                userName.isBlank() -> "Usuario es requerido"
-                !userName.matches(Regex("^[a-zA-Z0-9]+\$")) -> "Solo letras y números"
-                userName.length < 4 -> "Mínimo 4 caracteres"
-                userName.length > 20 -> "Máximo 20 caracteres"
+                userName.isBlank() -> "User is required"
+                !userName.matches(Regex("^[a-zA-Z0-9]+\$")) -> "Only letters and numbers"
+                userName.length < 4 -> "Minimum 4 characters"
+                userName.length > 20 -> "Maximum 20 characters"
                 else -> null
             }
         )
     }
 
     private fun updatePhoneNumber(phoneNumber: String) {
-        // Validación para República Dominicana:
-        // - Debe empezar con 809, 829, 849 (o permitir otros formatos)
-        // - Exactamente 10 dígitos
+
         val phoneRegex = Regex("^(809|829|849)[0-9]{7}\$")
 
         _uiState.value = _uiState.value.copy(
             phoneNumber = phoneNumber,
             errorPhoneNumber = when {
-                phoneNumber.isBlank() -> "Teléfono es requerido"
-                !phoneNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
-                phoneNumber.length != 10 -> "Debe tener 10 dígitos"
-                !phoneNumber.matches(phoneRegex) -> "Formato inválido (ej: 8091234567)"
+                phoneNumber.isBlank() -> "PhoneNumber is required"
+                !phoneNumber.matches(Regex("^[0-9]+\$")) -> "Only numbers"
+                phoneNumber.length != 10 -> "Must have 10 digits"
+                !phoneNumber.matches(phoneRegex) -> "Invalid format (ex: 8091234567)"
                 else -> null
             }
         )
     }
 
     private fun updateDocumentNumber(documentNumber: String) {
-        // Validación para cédula dominicana:
-        // - 11 dígitos exactos
-        // - Puedes añadir validación del dígito verificador si lo deseas
 
         _uiState.value = _uiState.value.copy(
             documentNumber = documentNumber,
             errorDocumentNumber = when {
-                documentNumber.isBlank() -> "Cédula es requerida"
-                !documentNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
-                documentNumber.length != 11 -> "La cédula debe tener 11 dígitos"
+                documentNumber.isBlank() -> "ID is required"
+                !documentNumber.matches(Regex("^[0-9]+\$")) -> "Only numbers"
+                documentNumber.length != 11 -> "The ID must have 11 digits"
                 else -> null
             }
         )
@@ -149,8 +143,8 @@ class SignUpViewModel @Inject constructor(
     private fun updateAddress(address: String) {
         _uiState.value = _uiState.value.copy(
             address = address,
-            errorAddress = if (address.isBlank()) "Dirección es requerida"
-            else if (!address.matches(Regex("^[a-zA-Z0-9\\s]+\$"))) "Caracteres inválidos"
+            errorAddress = if (address.isBlank()) "Address is required"
+            else if (!address.matches(Regex("^[a-zA-Z0-9\\s]+\$"))) "Invalid characters"
             else null
         )
     }
@@ -158,8 +152,8 @@ class SignUpViewModel @Inject constructor(
     private fun updateArtStyle(artStyle: String) {
         _uiState.value = _uiState.value.copy(
             artStyle = artStyle,
-            errorArtStyle = if (artStyle.isBlank() && _uiState.value.isArtist) "Estilo artístico es requerido"
-            else if (!artStyle.matches(Regex("^[a-zA-Z\\s]+\$")) && _uiState.value.isArtist) "Solo letras"
+            errorArtStyle = if (artStyle.isBlank() && _uiState.value.isArtist) "Art style is required"
+            else if (!artStyle.matches(Regex("^[a-zA-Z\\s]+\$")) && _uiState.value.isArtist) "Only letters"
             else null
         )
     }
@@ -167,7 +161,7 @@ class SignUpViewModel @Inject constructor(
     private fun updateSocialMediaLinks(links: String) {
         _uiState.value = _uiState.value.copy(
             socialMediaLinks = links,
-            errorSocialMediaLinks = if (links.isBlank() && _uiState.value.isArtist) "Redes sociales son requeridas"
+            errorSocialMediaLinks = if (links.isBlank() && _uiState.value.isArtist) "Social networks are required"
             else null
         )
     }
@@ -180,8 +174,8 @@ class SignUpViewModel @Inject constructor(
         val isPasswordValid = current.password.length >= 6
 
         _uiState.value = current.copy(
-            errorEmail = if (!isEmailValid) "Email inválido" else null,
-            errorPassword = if (!isPasswordValid) "Mínimo 6 caracteres" else null
+            errorEmail = if (!isEmailValid) "Invalid email" else null,
+            errorPassword = if (!isPasswordValid) "Minimum 6 characters" else null
         )
 
         if (isEmailValid && isPasswordValid) {
@@ -195,38 +189,38 @@ class SignUpViewModel @Inject constructor(
 
         if (current.firstName.isBlank()) {
             isValid = false
-            _uiState.value = current.copy(errorFirstName = "Campo requerido")
+            _uiState.value = current.copy(errorFirstName = "Required field")
         }
         if (current.lastName.isBlank()) {
             isValid = false
-            _uiState.value = current.copy(errorLastName = "Campo requerido")
+            _uiState.value = current.copy(errorLastName = "Required field")
         }
         if (current.userName.isBlank()) {
             isValid = false
-            _uiState.value = current.copy(errorUserName = "Campo requerido")
+            _uiState.value = current.copy(errorUserName = "Required field")
         }
         if (current.phoneNumber.isBlank()) {
             isValid = false
-            _uiState.value = current.copy(errorPhoneNumber = "Campo requerido")
+            _uiState.value = current.copy(errorPhoneNumber = "Required field")
         }
         if (current.documentNumber.isBlank()) {
             isValid = false
-            _uiState.value = current.copy(errorDocumentNumber = "Campo requerido")
+            _uiState.value = current.copy(errorDocumentNumber = "Required field")
         }
 
         if (current.isArtist) {
             if (current.artStyle.isBlank()) {
                 isValid = false
-                _uiState.value = current.copy(errorArtStyle = "Estilo artístico es requerido")
+                _uiState.value = current.copy(errorArtStyle = "Art style is required")
             }
             if (current.socialMediaLinks.isBlank()) {
                 isValid = false
-                _uiState.value = current.copy(errorSocialMediaLinks = "Redes sociales son requeridas")
+                _uiState.value = current.copy(errorSocialMediaLinks = "Social networks are required")
             }
         } else {
             if (current.address.isBlank()) {
                 isValid = false
-                _uiState.value = current.copy(errorAddress = "Dirección es requerida")
+                _uiState.value = current.copy(errorAddress = "Address is required")
             }
         }
 
@@ -237,7 +231,6 @@ class SignUpViewModel @Inject constructor(
         return isValid
     }
 
-    // === Lógica de Registro ===
     private fun signUpUser() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
@@ -251,11 +244,11 @@ class SignUpViewModel @Inject constructor(
 
                 when (result) {
                     is Resource.Success -> {
-                        // Para Success, sabemos que data no es null
+
                         val token = when (val data = result.data) {
                             is ArtistsDto -> data.token
                             is CustomersDto -> data.token
-                            else -> throw IllegalStateException("Tipo de dato no esperado")
+                            else -> throw IllegalStateException("Unexpected data type")
                         }
 
                         tokenManager.saveToken(token ?: "")
@@ -270,11 +263,10 @@ class SignUpViewModel @Inject constructor(
                     is Resource.Error -> {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            errorMessage = result.message ?: "Error desconocido"
+                            errorMessage = result.message ?: "Unknown error"
                         )
                     }
                     is Resource.Loading -> {
-                        // No deberíamos entrar aquí normalmente
                         _uiState.value = _uiState.value.copy(
                             isLoading = true
                         )
@@ -283,7 +275,7 @@ class SignUpViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error: ${e.message ?: "Desconocido"}"
+                    errorMessage = "Error: ${e.message ?: "Unknown"}"
                 )
             }
         }
