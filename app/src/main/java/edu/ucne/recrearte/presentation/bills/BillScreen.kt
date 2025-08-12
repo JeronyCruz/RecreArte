@@ -152,29 +152,6 @@ fun BillScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Button(
-                    onClick = { showCardDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    enabled = !state.isLoading && state.createdBill != null,
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
-                    } else {
-                        Text("Confirm Purchase")
-                    }
-                }
-            }
         }
     ) { padding ->
         Box(
@@ -195,13 +172,47 @@ fun BillScreen(
                     )
                 }
                 state.createdBill != null -> {
-                    CheckoutContent(
-                        bill = state.createdBill!!,
-                        works = workState.works,
+
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = 80.dp)
-                    )
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ){
+                        CheckoutContent(
+                            bill = state.createdBill!!,
+                            works = workState.works,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 80.dp)
+                                .weight(1f)
+                        )
+                        Divider(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        )
+
+                        Button(
+                            onClick = { showCardDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            enabled = !state.isLoading && state.createdBill != null,
+                            shape = MaterialTheme.shapes.medium,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            if (state.isLoading) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                            } else {
+                                Text("Confirm Purchase")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(55.dp))
+                    }
+
                 }
             }
         }
