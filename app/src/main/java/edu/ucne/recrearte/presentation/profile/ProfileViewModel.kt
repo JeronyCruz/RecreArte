@@ -96,7 +96,11 @@ class ProfileViewModel @Inject constructor(
                 userName = validateUserName(artist.userName).also { if (it != null) isValid = false },
                 email = validateEmail(artist.email).also { if (it != null) isValid = false },
                 phoneNumber = validatePhoneNumber(artist.phoneNumber).also { if (it != null) isValid = false },
-                documentNumber = validateDocumentNumber(artist.documentNumber).also { if (it != null) isValid = false }
+                documentNumber = validateDocumentNumber(artist.documentNumber).also { if (it != null) isValid = false },
+                firstName = validateFirstName(artist.firstName).also { if (it != null) isValid = false },
+                lastName = validateLastName(artist.lastName).also { if (it != null) isValid = false },
+                artStyle = validateArtStyle(artist.artStyle).also { if (it != null) isValid = false },
+                socialMediaLinks = validateSocialMediaLinks(artist.socialMediaLinks).also { if (it != null) isValid = false }
             )
         }
 
@@ -105,7 +109,10 @@ class ProfileViewModel @Inject constructor(
                 userName = validateUserName(customer.userName).also { if (it != null) isValid = false },
                 email = validateEmail(customer.email).also { if (it != null) isValid = false },
                 phoneNumber = validatePhoneNumber(customer.phoneNumber).also { if (it != null) isValid = false },
-                documentNumber = validateDocumentNumber(customer.documentNumber).also { if (it != null) isValid = false }
+                documentNumber = validateDocumentNumber(customer.documentNumber).also { if (it != null) isValid = false },
+                firstName = validateFirstName(customer.firstName).also { if (it != null) isValid = false },
+                lastName = validateLastName(customer.lastName).also { if (it != null) isValid = false },
+                address = validateAddress(customer.address).also { if (it != null) isValid = false }
             )
         }
 
@@ -115,12 +122,55 @@ class ProfileViewModel @Inject constructor(
         return isValid
     }
 
+    private fun validateArtStyle(artStyle: String?): String? {
+        return when {
+            artStyle.isNullOrBlank() -> "The Art Style is required"
+            artStyle.length < 3 -> "Must have at least 3 characters"
+            !artStyle.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+\$")) -> "Only letters and spaces"
+            else -> null
+        }
+    }
+    private fun validateSocialMediaLinks(links: String?): String? {
+        return when {
+            links.isNullOrBlank() -> "At least one link is required"
+            links.split(",").any { link ->
+                !link.trim().matches(Regex("^(https?://)?([\\w-]+\\.)+[\\w-]+(/[\\w-./?%&=]*)?\$"))
+            } -> "Invalid link format (ej: https://example.com)"
+            else -> null
+        }
+    }
+    private fun validateAddress(address: String?): String? {
+        return when {
+            address.isNullOrBlank() -> "The address is required"
+            address.length < 5 -> "Must have at least 5 characters"
+            else -> null
+        }
+    }
+
+    private fun validateFirstName(firstName: String?): String? {
+        return when {
+            firstName.isNullOrBlank() -> "The name is required"
+            firstName.length < 2 -> "The name must have at least 2 characters"
+            !firstName.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+\$")) -> "Only letters and spaces"
+            else -> null
+        }
+    }
+
+    private fun validateLastName(lastName: String?): String? {
+        return when {
+            lastName.isNullOrBlank() -> "The last name is required"
+            lastName.length < 2 -> "The last name must have at least 2 characters"
+            !lastName.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+\$")) -> "Only letters and spaces"
+            else -> null
+        }
+    }
+
     private fun validateUserName(userName: String?): String? {
         return when {
-            userName.isNullOrBlank() -> "Usuario es requerido"
-            !userName.matches(Regex("^[a-zA-Z0-9]+\$")) -> "Solo letras y números"
-            userName.length < 4 -> "Mínimo 4 caracteres"
-            userName.length > 20 -> "Máximo 20 caracteres"
+            userName.isNullOrBlank() -> "User is required"
+            !userName.matches(Regex("^[a-zA-Z0-9]+\$")) -> "Only letters and spaces"
+            userName.length < 4 -> "Minimum 4 characters"
+            userName.length > 20 -> "Maximum 20 characters"
             else -> null
         }
     }
@@ -132,14 +182,14 @@ class ProfileViewModel @Inject constructor(
         )
 
         return when {
-            email.isNullOrBlank() -> "El correo electrónico es requerido"
-            !email.matches(emailRegex) -> "Formato de correo inválido (ej: usuario@ucne.edu.do)"
-            !email.contains("@") -> "Falta el símbolo @"
-            email.count { it == '@' } > 1 -> "Solo puede tener un @"
-            email.substringAfterLast('@').isEmpty() -> "Falta el dominio después del @"
-            email.substringBefore('@').isEmpty() -> "Falta el nombre antes del @"
-            !email.substringAfterLast('@').contains(".") -> "El dominio debe contener un punto (.)"
-            email.substringAfterLast('.').length < 2 -> "La extensión del dominio es muy corta (ej: .com)"
+            email.isNullOrBlank() -> "Email is required"
+            !email.matches(emailRegex) -> "Invalid email format (ex: usuario@ucne.edu.do)"
+            !email.contains("@") -> "The symbol is missing @"
+            email.count { it == '@' } > 1 -> "You can only have one @"
+            email.substringAfterLast('@').isEmpty() -> "The domain is missing after the @"
+            email.substringBefore('@').isEmpty() -> "The name is missing before the @"
+            !email.substringAfterLast('@').contains(".") -> "The domain must contain a period (.)"
+            email.substringAfterLast('.').length < 2 -> "The domain extension is very short (ex: .com)"
             else -> null
         }
     }
@@ -148,19 +198,19 @@ class ProfileViewModel @Inject constructor(
         val phoneRegex = Regex("^(809|829|849)[0-9]{7}\$")
 
         return when {
-            phoneNumber.isNullOrBlank() -> "Teléfono es requerido"
-            !phoneNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
-            phoneNumber.length != 10 -> "Debe tener 10 dígitos"
-            !phoneNumber.matches(phoneRegex) -> "Formato inválido (ej: 8091234567)"
+            phoneNumber.isNullOrBlank() -> "Phone is required"
+            !phoneNumber.matches(Regex("^[0-9]+\$")) -> "Only numbers"
+            phoneNumber.length != 10 -> "Must have 10 digits"
+            !phoneNumber.matches(phoneRegex) -> "Invalid format (ej: 8091234567)"
             else -> null
         }
     }
 
     private fun validateDocumentNumber(documentNumber: String?): String? {
         return when {
-            documentNumber.isNullOrBlank() -> "Cédula es requerida"
-            !documentNumber.matches(Regex("^[0-9]+\$")) -> "Solo números"
-            documentNumber.length != 11 -> "La cédula debe tener 11 dígitos"
+            documentNumber.isNullOrBlank() -> "Cedula is required"
+            !documentNumber.matches(Regex("^[0-9]+\$")) -> "Only numbers"
+            documentNumber.length != 11 -> "The cédula Must have 10 digits"
             else -> null
         }
     }
@@ -189,10 +239,18 @@ class ProfileViewModel @Inject constructor(
             is ProfileEvent.FirstNameChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(firstName = event.firstName)
                 _editableCustomer.value = _editableCustomer.value?.copy(firstName = event.firstName)
+                val newErrors = currentState.validationErrors.copy(
+                    firstName = validateFirstName(event.firstName)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.LastNameChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(lastName = event.lastName)
                 _editableCustomer.value = _editableCustomer.value?.copy(lastName = event.lastName)
+                val newErrors = currentState.validationErrors.copy(
+                    lastName = validateLastName(event.lastName)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.EmailChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(email = event.email)
@@ -223,12 +281,24 @@ class ProfileViewModel @Inject constructor(
             }
             is ProfileEvent.ArtStyleChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(artStyle = event.artStyle)
+                val newErrors = currentState.validationErrors.copy(
+                    artStyle = validateArtStyle(event.artStyle)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.SocialMediaLinksChange -> {
                 _editableArtist.value = _editableArtist.value?.copy(socialMediaLinks = event.socialMediaLinks)
+                val newErrors = currentState.validationErrors.copy(
+                    socialMediaLinks = validateSocialMediaLinks(event.socialMediaLinks)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             is ProfileEvent.AddressChange -> {
                 _editableCustomer.value = _editableCustomer.value?.copy(address = event.address)
+                val newErrors = currentState.validationErrors.copy(
+                    address = validateAddress(event.address)
+                )
+                _uiState.value = currentState.copy(validationErrors = newErrors)
             }
             else -> {}
         }
@@ -273,7 +343,7 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error(e.message ?: "Error al cargar perfil")
+                _uiState.value = ProfileUiState.Error(e.message ?: "Error loading profile")
             }
         }
     }
@@ -289,11 +359,11 @@ class ProfileViewModel @Inject constructor(
                             return@collect
                         }
                     }
-                    _uiState.value = ProfileUiState.Error("Perfil no encontrado")
+                    _uiState.value = ProfileUiState.Error("Profile not found")
                 }
                 is Resource.Error -> {
                     _uiState.value = ProfileUiState.Error(
-                        customerResult.message ?: "Error al cargar perfil de cliente"
+                        customerResult.message ?: "Error loading customer profile"
                     )
                 }
                 is Resource.Loading -> {
@@ -349,17 +419,17 @@ class ProfileViewModel @Inject constructor(
                 _passwordChangeError.value = null
 
                 if (newPassword != confirmPassword) {
-                    _passwordChangeError.value = "Las contraseñas no coinciden"
+                    _passwordChangeError.value = "Passwords do not match"
                     return@launch
                 }
 
                 if (newPassword.length < 6) {
-                    _passwordChangeError.value = "La contraseña debe tener al menos 6 caracteres"
+                    _passwordChangeError.value = "The password must be at least 6 characters long."
                     return@launch
                 }
 
                 val userId = tokenManager.getUserId() ?: run {
-                    _passwordChangeError.value = "Usuario no autenticado"
+                    _passwordChangeError.value = "Unauthenticated user"
                     return@launch
                 }
 
@@ -374,16 +444,16 @@ class ProfileViewModel @Inject constructor(
                             onSuccess()
                             _showChangePasswordDialog.value = false
                         } else {
-                            _passwordChangeError.value = "La contraseña actual es incorrecta"
+                            _passwordChangeError.value = "The current password is incorrect"
                         }
                     }
                     is Resource.Error -> {
-                        _passwordChangeError.value = result.message ?: "Error al cambiar contraseña"
+                        _passwordChangeError.value = result.message ?: "Error changing password"
                     }
                     is Resource.Loading -> Unit
                 }
             } catch (e: Exception) {
-                _passwordChangeError.value = "Error: ${e.message ?: "Error desconocido"}"
+                _passwordChangeError.value = "Error: ${e.message ?: "Unknown error"}"
             }
         }
     }
